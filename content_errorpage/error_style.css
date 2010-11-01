@@ -1,0 +1,71 @@
+﻿/*html, body {margin:0; padding:0; font-size:14px; line-height:1.4; color:#777676; font-family:Arial, Helvetica, sans-serif;}
+*/
+html, body {margin:0; padding:0; font-size:14px; line-height:1.4;}
+#errorLongDesc{font-size:13.2px;}
+*:active {outline:none;} 
+*:focus {-moz-outline-tyle:none;outline:none;}
+
+ul, ol {margin:0; padding:0;}
+.interchange-list > li {height:20px; line-height:20px;}
+.row-list > li {float:left; width:100px;}
+
+.panel .tab-title {padding:0; text-align:center; color:#777676; font-weight:bold;}
+.panel .tab-title-current {background-color:#fff; height:28px !important; }
+
+#search {height:50px; margin-right:7px; margin-left:90px; width:632px;}
+#search > ul {height:30px; display:none;}
+#search > ul li {float:left;}
+#search > ul li a {text-align:center; font-weight:bold; width:68px; border-left:solid 1px #c4c2c2; height:25px; line-height:26px; display:inline-block; vertical-align:middle; cursor:pointer; border-bottom-width:0;}
+#search > ul li:first-child a {border-left:none; margin:0;}
+#search > ul li a:hover {text-decoration:none;}
+#search > ul li a.current {background:transparent url(../images/li_now.png) repeat-x scroll center center; border:none; width:69px; color:#fff; height:30px; cursor:default; line-height:26px;}
+#search > ul li:first-child a.current {width:68px;}
+#search > form {height:30px; margin-top:-5px; padding:8px 0 0 8px;}
+#search > form a {border-bottom-width:0; float:left; display:block; vertical-align:top; padding-top:4px; margin-right:5px;}
+#search > form a img {width:84px; height:25px;}
+#search > form input[type="text"]{float:left; width:416px; border:solid 1px #466BAE; margin-right:3px; padding:2px 0 2px 2px; height:19px; line-height:17px;}
+#search > form iframe {float:left; display:none; width:530px; height:35px; line-height:26px;}
+#search >form input.search_button{float:left;height:25px; width: 95px; font-size:14px; }
+
+#search_radios {height:30px; margin:3px; width:600px; padding-left:100px;}
+#search_radios ul li {float:left; margin-right: 50px;}
+
+#search_and_links {margin: 20px 0 0 -23px;}
+#google_frame {margin:-8px; 0 0 -8px;}
+
+#links .panel-title .column-tab li {text-align:center; width:120px;}
+#links .row-list li {text-align:center;}
+#links { width:600px; margin: 10px; padding-left: 70px;}
+
+#inside_frame {width:750px; height:400px;}
+
+.notes {padding-left:105px; list-style-type:square}
+
+/*ul, ol {margin:0; padding:0; list-style-type:none;}*/
+
+.radio-list{list-style:none !important;}
+.row-list{list-style:none !important;}
+.column-tab{list-style:none !important;}
+.round-box {border-radius:3px; -moz-border-radius:3px; -webkit-border-radius:3px;}
+.trans-box {opacity:0.95; -moz-opacity:0.95; -webkit-opacity:0.95;}
+.grad-box_2 {background:url(../images/background.png) repeat-x scroll left center #eee; background:-moz-linear-gradient(-90deg, #fff, #ddd); background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ddd));}
+.grad-box {background:url(../images/background.png) repeat-x scroll left center #eee; background:-moz-linear-gradient(-90deg, #fff, #ddd); background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#fff), to(#ddd));}
+
+
+li a {text-align:left;}
+a:link, a:visited {text-decoration:none; color:#466bae; border-bottom:solid 1px transparent;}
+a:hover, a:active {border-bottom-color:#466bae;}
+a.button {border:solid 1px #999; padding:3px;}
+a.button span.arrow {background:transparent url(../images/e_arrow.png) no-repeat scroll left center; padding-left:15px;}
+a.cancel:link, a.cancel:visited {color:#f00; font-size:75%; border:none; vertical-align:bottom;}
+a.cancel:hover, a.cancel:active {text-decoration:underline;}
+img {border:none; vertical-align:middle;}
+img.frame {border:solid 1px #c4c2c2;}
+p {color:#000;}
+.float-left {float:left;}
+.float-right {float:right;}
+.float-container {overflow:hidden;}
+.iframe-cover {position:absolute; background-color:#fff; opacity:0.01; -moz-opacity:0.01; -webkit-opacity:0.01;}
+
+.split_white {width: 120px; position:absolute; z-index: 999; background-color: white; border-left: 1px solid #C4C2C2; border-right: 1px solid #C4C2C2; height: 1px;}
+ 
