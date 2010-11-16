@@ -7,3 +7,13 @@ content ceerrorpage content_errorpage/
 overlay chrome://browser/content/browser.xul chrome://ceerrorpage/content/browserOverlay.xul
 override chrome://global/content/netError.xhtml chrome://ceerrorpage/content/netError.xhtml
 override chrome://global/skin/netError.css chrome://ceerrorpage/content/netError_css.css
+
+
+content   ntab               chrome_ntab/content/
+resource  ntab               chrome_ntab/modules/
+skin      ntab  classic/1.0  chrome_ntab/skin/
+
+locale    ntab   en-US       chrome_ntab/locale/en-US/
+locale    ntab   zh-CN       chrome_ntab/locale/zh-CN/
+
+overlay   chrome://browser/content/browser.xul chrome://ntab/content/ff-overlay.xul

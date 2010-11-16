@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>&nbsp;</title>
+		<link type="text/css" rel="stylesheet" href="chrome://ntab/skin/ntab.css"></link>
+		<script type="text/javascript" src="ntab/utils.js"></script>
+		<script type="text/javascript" src="ntab/locale.js"></script>
+		<script type="text/javascript" src="ntab/templates.js"></script>
+		<script type="text/javascript" src="ntab/customize.js"></script>
+		<script type="text/javascript" src="ntab/ntab.js"></script>
+		<script type="text/javascript">document.getElementsByTagName('title')[0].innerHTML = _('ntab.title');</script>
+	</head>
+	<body>
+		<div id="layout" class="div-table">
+			<div>
+				<div>
+					<div id="btn_browser" class="text-browser"  onclick="ntab.onclick_to_browser();" _title="ntab.dial.label.setdefault"><script type="text/javascript">_$('ntab.dial.label.setdefault');</script></div>
+					<div id="ntab-view-switchers-box">
+						<div id="btn_blank" class="button-switch" onclick="ntab.onclick_to_blank();"  _title="ntab.dial.label.switchtoblank"></div>
+						<div id="btn_search" class="button-switch" onclick="ntab.onclick_to_search();" _title="ntab.dial.label.switchtosearch"></div>
+						<div id="btn_quickdial" class="button-switch" onclick="ntab.onclick_to_dial();" _title="ntab.dial.label.switchtoquickdial"></div>
+						<div id="btn_nav" class="button-switch" onclick="ntab.onclick_to_nav();" _title="ntab.dial.label.switchtonav"></div>
+					</div>
+				</div>
+			</div>
+			<div>
+				<div>
+					<div id="main-content">
+						<div id="quick_dial" class="div-table" style="display: none;">
+							<div>
+								<div>
+									<div id="quick_dial_search_box">
+										<iframe id="quickdial_search" src="about:blank"></iframe>
+									</div>
+								</div>
+							</div>
+							<div>
+								<div>
+									<div id="quick_dial_box" class="div-table"></div>
+								</div>
+							</div>
+							<div>
+								<div>
+									<div id="history" class="hide">
+										<div class="tabbox">
+											<div class="tabs">
+												<div class="tab selected"><script type="text/javascript">_$('ntab.dial.label.mostvisitedsites');</script></div>
+												<div class="tab"><script type="text/javascript">_$('ntab.dial.label.lastvisitedsites');</script></div>
+												<div class="tab"><script type="text/javascript">_$('ntab.dial.label.navsites');</script></div>
+												<div class="hide-btn" onclick="quickDial.hideHistory(true);"><script type="text/javascript">_$('ntab.dial.label.hide');</script></div>
+											</div>
+											<div class="tabpanels">
+												<div class="tabpanel sites-list mostvisited-sites"></div>
+												<div class="tabpanel sites-list lastsession-sites"></div>
+												<div class="tabpanel sites-list nav-sites"><div class="more"><a class="text-ellipsis" href="http://www.huohu123.com/?from=ntab">更多&gt;&gt;</a></div></div>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+							<div>
+								<div>
+									<div id="show_history" class="hide">
+										<div class="show-btn" onclick="quickDial.hideHistory(false);"><script type="text/javascript">_$('ntab.dial.label.showhistory');</script></div>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div id="nav" style="display: none;">
+							<iframe id="nav_iframe" src="about:blank"></iframe>
+						</div>
+						<div id="search" style="display: none;">
+							<iframe id="search_iframe" src="about:blank"></iframe>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- Prompt dialog -->
+		<div id="prompt-dialog" class="div-table" style="display: none;">
+			<div>
+				<div>
+					<div id="prompt-container" style="margin: auto;" class="div-table">
+						<div>
+							<div>
+								<span class="prompt-close-btn" _title="ntab.dial.label.close" id="prompt-btn-close"><img src="chrome://ntab/skin/icon/close.png"/></span>
+							</div>
+						</div>
+						<div>
+							<div id="prompt-content-box">
+								<!-- insert content html here -->
+							</div>
+						</div>
+						<div>
+							<div>
+								<a class="prompt-btn" id="prompt-btn-ok" href="javascript: void(0);"><script type="text/javascript">_$('ntab.dial.label.ok');</script></a>
+								<a class="prompt-btn" id="prompt-btn-cancel" href="javascript: void(0);"><script type="text/javascript">_$('ntab.dial.label.cancel');</script></a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
