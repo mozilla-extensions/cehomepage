@@ -236,8 +236,9 @@ DIV.quick-dial-item:hover DIV.btn-opt {
 	visibility: visible;	
 }
 
+/*height: 100% is not working under firefox3.5*/
 DIV.quick-dial-item > DIV > DIV {
-	height: 100%;
+	height: 150px;
 }
 
 DIV.quick-dial-item > DIV:first-child > DIV {

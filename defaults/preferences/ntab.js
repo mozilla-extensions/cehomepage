@@ -3,7 +3,7 @@ pref("extensions.cntab.intpref", 0);
 pref("extensions.cntab.stringpref", "A string");
 
 // https://developer.mozilla.org/en/Localizing_extension_descriptions
-pref("extensions.ntab@mozillaonline.com.description", "chrome://cntab/locale/overlay.properties");
+pref("extensions.ntab@mozillaonline.com.description", "chrome://ntab/locale/overlay.properties");
 
 pref("moa.ntab.view", "quickdial");
 pref("moa.ntab.openInNewTab", true);
