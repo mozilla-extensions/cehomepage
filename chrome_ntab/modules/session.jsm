@@ -22,7 +22,7 @@ var session = {
 		try {
 			json = JSON.parse(utils.readStrFromProFile(['ntab', 'session.json']));
 		} catch (e) {
-			dump(e);
+			// dump(e);
 		}
 		
 		var result = [];
