@@ -17,3 +17,9 @@ locale    ntab   en-US       chrome_ntab/locale/en-US/
 locale    ntab   zh-CN       chrome_ntab/locale/zh-CN/
 
 overlay   chrome://browser/content/browser.xul chrome://ntab/content/ff-overlay.xul
+
+
+# components have to be defined in chrome manifest in FF4
+# The {classID} here must match the classID in mycomponent.js
+component {3ce0f801-b121-4a20-9188-3b92b13e9809} components/aboutNTab.js
+contract @mozilla.org/network/protocol/about;1?what=ntab {3ce0f801-b121-4a20-9188-3b92b13e9809}

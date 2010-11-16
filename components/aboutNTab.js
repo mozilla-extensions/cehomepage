@@ -28,7 +28,11 @@ AboutNTab.prototype = {
 	}
 };
 
-function NSGetModule(aCompMgr, aFileSpec) {
-	return XPCOMUtils.generateModule([AboutNTab]);
+// Definition for Firefox4
+if (XPCOMUtils.generateNSGetFactory) {
+	const NSGetFactory = XPCOMUtils.generateNSGetFactory([AboutNTab]);
+} else {
+	const NSGetModule = function (aCompMgr, aFileSpec) {
+		return XPCOMUtils.generateModule([AboutNTab]);
+	}
 }
-

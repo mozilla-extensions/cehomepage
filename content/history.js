@@ -60,8 +60,12 @@ var progListener = {
         throw Components.results.NS_NOINTERFACE;
     },
     onLocationChange: function(aWebProgress, aRequest, aURI) {
-        log(['inject', aURI.host.toLowerCase()]);
-        inject(aURI.host.toLowerCase(), aWebProgress.DOMWindow);
+    	try {
+        	log(['inject', aURI.host.toLowerCase()]);
+	        inject(aURI.host.toLowerCase(), aWebProgress.DOMWindow);
+    	} catch (e) {
+    		log('Error occurs when injecting.');
+    	}
     },
     onStateChange: function() {},
     onProgressChange: function() {},
@@ -94,11 +98,21 @@ window.addEventListener('load', function(evt) {
   }
   
   //the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
-  if (Application.extensions.get("cehomepage@mozillaonline.com").firstRun){
+  if (Application.extensions && Application.extensions.get("cehomepage@mozillaonline.com").firstRun){
     var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
     if (autoSetHomepage){
       cehomepage_autoSetHomepage();
     }
+  } else if (Application.getExtensions) {
+  	// Application.extensions is obsolete in Gecko 2.0
+  	Application.getExtensions(function(exts) {
+		if (exts.get("cehomepage@mozillaonline.com").firstRun) {
+			var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
+		    if (autoSetHomepage){
+		      cehomepage_autoSetHomepage();
+		    }
+		}
+  	});
   }
 }, false);
 window.addEventListener('unload', function(evt) {
