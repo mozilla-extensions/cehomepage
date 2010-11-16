@@ -47,36 +47,42 @@ if (!!str) {
 if(!dialData) {
 	dialData = {
 		'1': {
+			title: decodeURIComponent('%E7%81%AB%E7%8B%90%E7%BD%91%E5%9D%80%E5%A4%A7%E5%85%A8'),
+			url: 'http://www.huohu123.com/?src=ntab',
+			icon: 'chrome://ntab/skin/logo/mozilla.ico'
+		},
+		
+		'2': {
 			title: decodeURIComponent('%E7%99%BE%E5%BA%A6%E4%B8%80%E4%B8%8B'),
 			url: 'http://www.baidu.com/index.php?tn=monline_5_dg',
 			icon: 'chrome://ntab/skin/logo/baidu.ico'
 		},
 		
-		'2': {
-			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E7%BD%91'),
-			url: 'http://pindao.huoban.taobao.com/channel/channelCode.htm?pid=mm_12811289_2324927_9001404',
-			icon: 'chrome://ntab/skin/logo/taobao.ico'
-		},
-		
 		'3': {
-			title: decodeURIComponent('%E4%BA%BA%E4%BA%BA%E7%BD%91'),
-			url: 'http://www.renren.com/',
-			icon: 'chrome://ntab/skin/logo/renren.ico'
-		},
-		
-		'4': {
 			title: decodeURIComponent('%E6%96%B0%E6%B5%AA%E7%BD%91'),
 			url: 'http://www.sina.com.cn/',
 			icon: 'chrome://ntab/skin/logo/sina.ico'
 		},
 		
+		'4': {
+			title: decodeURIComponent('%E4%BA%BA%E4%BA%BA%E7%BD%91'),
+			url: 'http://www.renren.com/',
+			icon: 'chrome://ntab/skin/logo/renren.ico'
+		},
+		
 		'5': {
-			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
-			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=4&to=http://www.360buy.com/',
-			icon: 'chrome://ntab/skin/logo/360.ico'
+			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E5%95%86%E5%9F%8E'),
+			url: 'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F',
+			icon: 'chrome://ntab/skin/logo/taobao.ico'
 		},
 		
 		'6': {
+			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
+			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/',
+			icon: 'chrome://ntab/skin/logo/360.ico'
+		},
+		
+		'7': {
 			title: decodeURIComponent('%E4%BC%98%E9%85%B7%E7%BD%91'),
 			url: 'http://www.youku.com/',
 			icon: 'chrome://ntab/skin/logo/youku.ico'
