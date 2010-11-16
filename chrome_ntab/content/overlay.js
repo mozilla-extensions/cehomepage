@@ -5,7 +5,7 @@
                .getService(Components.interfaces.nsIPrefService)
                .QueryInterface(Components.interfaces.nsIPrefBranch2);
     
-    var _url = 'chrome://ntab/content/ntab.html';
+    var _url = 'about:ntab';
 	Components.utils['import']('resource://ntab/quickdial.jsm');
     
 	function loadInExistingTabs() {
