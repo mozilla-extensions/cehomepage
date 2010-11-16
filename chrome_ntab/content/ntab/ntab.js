@@ -18,25 +18,38 @@ function getShellService() {
 }
 		
 var ntab = (function(){
+	function _t(view) {
+		tracker.track({
+			type: 'view',
+			action: 'switch',
+			sid: view
+		});
+	}
+	
 	return {
 		// TODO change pref: moa.ntab.view
 		onclick_to_browser: function() {
 			ntab.check_browser();
 		},
+		
 		onclick_to_blank: function() {
 			ntab.switch_to('blank');
+			_t('blank');
 		},
 		
 		onclick_to_search: function() {
 			ntab.switch_to('search');
+			_t('search');
 		},
 		
 		onclick_to_dial: function() {
 			ntab.switch_to('quickdial');
+			_t('quickdial');
 		},
 		
 		onclick_to_nav: function() {
 			ntab.switch_to('nav');
+			_t('nav');
 		},
 		
 		switch_to: function(view_name) {
@@ -408,7 +421,7 @@ var quickDial = (function() {
 			var backgournd = !thumbnail ? '' : 'background:url(' + thumbnail + ') no-repeat scroll center 0 transparent';
 			var className = !thumbnail ? 'loading' : '';
 			html.push('				<div>');
-			html.push('					<a draggable="false" href="' + completeURL(dial.url) + '"><div style="height: 100%; width: 100%;' + backgournd + '" class="' + className + '"></div></a>');
+			html.push('					<a draggable="false" onclick="quickDial.onclickdial(' + num + ');" href="' + completeURL(dial.url) + '"><div style="height: 100%; width: 100%;' + backgournd + '" class="' + className + '"></div></a>');
 			html.push('				</div>');
 			html.push('			</div>');
 			html.push('		</div>');
@@ -824,6 +837,14 @@ var quickDial = (function() {
 				CSS.add($('show_history'), 'hide');
 				CSS.del($('history'), 'hide');
 			}
+		},
+		
+		onclickdial: function(num) {
+			tracker.track({
+				type: 'quickdial',
+				action: 'click',
+				sid: num
+			});
 		}
 	}
 })(); 
@@ -884,6 +905,12 @@ window.addEventListener('DOMContentLoaded', function() {
 	fillHistory();
 	ntab.updateView();
 	custom.showBgImage();
+	
+	tracker.track({
+		type: 'view',
+		action: 'load',
+		sid: gPref.getCharPref('moa.ntab.view')
+	});
 }, true);
 
 window.addEventListener('unload', function() {
