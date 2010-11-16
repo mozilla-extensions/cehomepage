@@ -48,27 +48,38 @@ if(!dialData) {
 	dialData = {
 		'1': {
 			title: decodeURIComponent('%E7%99%BE%E5%BA%A6%E4%B8%80%E4%B8%8B'),
-			url: 'http://www.baidu.com/'
+			url: 'http://www.baidu.com/index.php?tn=monline_5_dg',
+			icon: 'chrome://ntab/skin/logo/baidu.ico'
 		},
 		
 		'2': {
-			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E7%BD%91%E4%B8%BB%E9%A1%B5'),
-			url: 'http://www.taobao.com/'
+			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E7%BD%91'),
+			url: 'http://pindao.huoban.taobao.com/channel/channelCode.htm?pid=mm_12811289_2324927_9001404',
+			icon: 'chrome://ntab/skin/logo/taobao.ico'
 		},
 		
 		'3': {
-			title: decodeURIComponent('%E7%81%AB%E7%8B%90%E5%AF%BC%E8%88%AA'),
-			url: 'http://www.huohu123.com/'
+			title: decodeURIComponent('%E4%BA%BA%E4%BA%BA%E7%BD%91'),
+			url: 'http://www.renren.com/',
+			icon: 'chrome://ntab/skin/logo/renren.ico'
 		},
 		
 		'4': {
-			title: decodeURIComponent('%E7%81%AB%E7%8B%90%E7%A4%BE%E5%8C%BA'),
-			url: 'http://17huohu.cn/'
+			title: decodeURIComponent('%E6%96%B0%E6%B5%AA%E7%BD%91'),
+			url: 'http://www.sina.com.cn/',
+			icon: 'chrome://ntab/skin/logo/sina.ico'
 		},
 		
 		'5': {
 			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
-			url: 'http://www.360buy.com/'
+			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=4&to=http://www.360buy.com/',
+			icon: 'chrome://ntab/skin/logo/360.ico'
+		},
+		
+		'6': {
+			title: decodeURIComponent('%E4%BC%98%E9%85%B7%E7%BD%91'),
+			url: 'http://www.youku.com/',
+			icon: 'chrome://ntab/skin/logo/youku.ico'
 		}
 	};
 }

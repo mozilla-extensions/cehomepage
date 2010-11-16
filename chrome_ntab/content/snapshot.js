@@ -12,7 +12,15 @@
 	
 	// Pre-defined snapshot
 	var snapshotMap = {
-		'http://www.baidu.com/': 'chrome://ntab/skin/thumb/baidu.gif'
+		'http://www.baidu.com/': 'chrome://ntab/skin/thumb/baidu.png',
+		'http://www.baidu.com/index.php?tn=monline_5_dg': 'chrome://ntab/skin/thumb/baidu.png',
+		'http://www.renren.com/': 'chrome://ntab/skin/thumb/renren.png',
+		'http://www.360buy.com/': 'chrome://ntab/skin/thumb/360.png',
+		'http://click.union.360buy.com/JdClick/?unionId=206&siteId=4&to=http://www.360buy.com/': 'chrome://ntab/skin/thumb/360.png',
+		'http://www.youku.com/': 'chrome://ntab/skin/thumb/youku.png',
+		'http://www.taobao.com/': 'chrome://ntab/skin/thumb/taobao.png',
+		'http://pindao.huoban.taobao.com/channel/channelCode.htm?pid=mm_12811289_2324927_9001404': 'chrome://ntab/skin/thumb/taobao.png',
+		'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/sina.png',
 	};
 	
 	/*** Implement methods in snapshot object. ***/
