@@ -506,7 +506,7 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 #history > DIV.tabbox > DIV.tabs > DIV.hide-btn {
 	float: right;
 	padding: 16px 10px 0 0;
-	color: #C8C8C8;
+	color: #BBB;
 	cursor: pointer;
 	-moz-user-select: none;
 }
