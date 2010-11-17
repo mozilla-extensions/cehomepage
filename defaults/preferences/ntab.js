@@ -9,7 +9,7 @@ pref("moa.ntab.view", "quickdial");
 pref("moa.ntab.openInNewTab", true);
 pref("moa.ntab.dial.column", 4);
 pref("moa.ntab.dial.row", 2);
-pref("moa.ntab.quickdial.hidehistory", false);
+pref("moa.ntab.quickdial.hidehistory", true);
 
 pref("moa.ntab.view.search.url", "http://i.g-fox.cn/newtab/china-start/index.html");
 pref("moa.ntab.view.nav.url", "http://www.huohu123.com/?from=ntab");
