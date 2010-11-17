@@ -96,6 +96,12 @@ DIV.hide {
 	color: #FFF;
 }
 
+DIV#set_default_browser_msg {
+	float: left;
+	padding-left: 20px;
+	display: none;
+}
+
 #layout > DIV:first-child DIV.selected {
 	cursor: auto;
 }

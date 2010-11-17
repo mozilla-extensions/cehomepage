@@ -30,6 +30,26 @@ var ntab = (function(){
 		// TODO change pref: moa.ntab.view
 		onclick_to_browser: function() {
 			ntab.check_browser();
+			window.setTimeout(function() {
+				if (gPref.getBoolPref('moa.ntab.browser')) {
+					$('set_default_browser_msg').style.display = 'block';
+					window.setTimeout(function() {
+						var _opacity = 1;
+						function _setopacity() {
+							if (_opacity == 0) {
+								$('set_default_browser_msg').style.display = 'none';
+								$('set_default_browser_msg').style.opacity = 0;
+								return;
+							}
+								
+							_opacity -= 0.1;
+							$('set_default_browser_msg').style.opacity = _opacity;
+							window.setTimeout(_setopacity, 50);
+						}
+						_setopacity();
+					}, 2000)
+				}
+			}, 110)
 		},
 		
 		onclick_to_blank: function() {
