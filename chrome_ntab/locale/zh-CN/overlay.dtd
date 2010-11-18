@@ -1,5 +1,5 @@
 <!ENTITY ntab.label "Your localized menuitem">
-<!ENTITY ntabContext.label "添加至九宫格">
+<!ENTITY ntabContext.label "添加至快速拨号">
 <!ENTITY ntabContext.accesskey "Y">
 <!ENTITY ntabToolbarButton.label "Your Toolbar Button">
 <!ENTITY ntabToolbarButton.tooltip "This is your toolbar button!">
@@ -21,7 +21,7 @@
 <!ENTITY ntab.contextmenu.switchto.accesskey "W">
 <!ENTITY ntab.contextmenu.nav "导航">
 <!ENTITY ntab.contextmenu.nav.accesskey "A">
-<!ENTITY ntab.contextmenu.quickdial "九宫格">
+<!ENTITY ntab.contextmenu.quickdial "快速拨号">
 <!ENTITY ntab.contextmenu.quickdial.accesskey "Q">
 <!ENTITY ntab.contextmenu.search "搜索页">
 <!ENTITY ntab.contextmenu.search.accesskey "S">
