@@ -48,18 +48,18 @@ if(!dialData) {
 	dialData = {
 		'1': {
 			title: decodeURIComponent('%E7%81%AB%E7%8B%90%E7%BD%91%E5%9D%80%E5%A4%A7%E5%85%A8'),
-			url: 'http://www.huohu123.com/?src=ntab',
+			url: 'http://www.huohu123.com/?src=qd',
 			icon: 'chrome://ntab/skin/logo/mozilla.ico'
 		},
 		
 		'2': {
-			title: decodeURIComponent('%E7%99%BE%E5%BA%A6%E4%B8%80%E4%B8%8B'),
+			title: decodeURIComponent('%E7%99%BE%E5%BA%A6'),
 			url: 'http://www.baidu.com/index.php?tn=monline_5_dg',
 			icon: 'chrome://ntab/skin/logo/baidu.ico'
 		},
 		
 		'3': {
-			title: decodeURIComponent('%E6%96%B0%E6%B5%AA%E7%BD%91'),
+			title: decodeURIComponent('%E6%96%B0%E6%B5%AA'),
 			url: 'http://www.sina.com.cn/',
 			icon: 'chrome://ntab/skin/logo/sina.ico'
 		},
@@ -77,15 +77,15 @@ if(!dialData) {
 		},
 		
 		'6': {
-			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
-			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/',
-			icon: 'chrome://ntab/skin/logo/360.ico'
+			title: decodeURIComponent('%E5%8D%93%E8%B6%8A%E7%BD%91'),
+			url: 'http://www.amazon.cn/?source=mozilla9-23',
+			icon: 'chrome://ntab/skin/logo/joyo.ico'
 		},
 		
 		'7': {
-			title: decodeURIComponent('%E4%BC%98%E9%85%B7%E7%BD%91'),
-			url: 'http://www.youku.com/',
-			icon: 'chrome://ntab/skin/logo/youku.ico'
+			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
+			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/',
+			icon: 'chrome://ntab/skin/logo/360.ico'
 		}
 	};
 }
