@@ -554,7 +554,6 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 	overflow: hidden;
 	padding: 0 10px;
 	margin-top: 5px;
-	text-align: center;
 }
 
 #history > DIV.tabbox > DIV.tabpanels > DIV.sites-list > DIV.more {
