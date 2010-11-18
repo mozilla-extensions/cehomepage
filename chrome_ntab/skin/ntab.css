@@ -97,9 +97,8 @@ DIV.hide {
 }
 
 DIV#set_default_browser_msg {
-	float: left;
-	padding-left: 20px;
 	display: none;
+	cursor: default !important;
 }
 
 #layout > DIV:first-child DIV.selected {

@@ -36,7 +36,7 @@ var ntab = (function(){
 					window.setTimeout(function() {
 						var _opacity = 1;
 						function _setopacity() {
-							if (_opacity == 0) {
+							if (_opacity <= 0) {
 								$('set_default_browser_msg').style.display = 'none';
 								$('set_default_browser_msg').style.opacity = 0;
 								return;
