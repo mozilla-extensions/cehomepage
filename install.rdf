@@ -23,7 +23,7 @@
             <Description>
                 <em:locale>zh-CN</em:locale>
                 <em:name>中国版定制主页</em:name>
-                <em:description>中国版定制主页，包括最近访问页面、最常访问的页面等</em:description>
+                <em:description>中国版定制主页，包括最近访问页面、最常访问页面以及新标签页等</em:description>
                 <em:creator>Leding Li @ Mozilla Online Limited</em:creator>
                 <em:homepageURL>http://www.mozillaonline.com/</em:homepageURL>
             </Description>
