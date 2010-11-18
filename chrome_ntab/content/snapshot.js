@@ -21,7 +21,7 @@
 		'http://www.360buy.com/': 'chrome://ntab/skin/thumb/360.png',
 		'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/': 'chrome://ntab/skin/thumb/360.png',
 		'http://www.tmall.com/': 'chrome://ntab/skin/thumb/taobao.png',
-		'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/taobao.png',
+		'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/tmall.png',
 		'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/sina.png',
 		'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/joyo.png',
 		'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/joyo.png',
