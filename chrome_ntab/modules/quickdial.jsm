@@ -73,7 +73,7 @@ if(!dialData) {
 		'5': {
 			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E5%95%86%E5%9F%8E'),
 			url: 'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F',
-			icon: 'chrome://ntab/skin/logo/taobao.ico'
+			icon: 'chrome://ntab/skin/logo/tmall.png'
 		},
 		
 		'6': {
