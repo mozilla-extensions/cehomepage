@@ -19,3 +19,5 @@ pref("moa.ntab.dial.search.url", "http://i.g-fox.cn/newtab/newtab_search.html");
 pref("moa.ntab.openLinkInNewTab", false);
 
 pref("moa.ntab.backgroundimage", "");
+
+pref("moa.ntab.dial.showSearch", true);

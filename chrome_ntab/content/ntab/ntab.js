@@ -585,8 +585,11 @@ var quickDial = (function() {
 			}
 			$('quick_dial_box').innerHTML = html.join('');
 			
-			// display search box
-			$('quickdial_search').src = gPref.getCharPref('moa.ntab.dial.search.url');
+			if (gPref.getBoolPref('moa.ntab.dial.showSearch')) {
+				// display search box
+				$('quickdial_search_banner').style.display = '';
+				$('quickdial_search').src = gPref.getCharPref('moa.ntab.dial.search.url');
+			}
 			
 			new iframeLoader({
 				onDOMContentLoaded: function() {
