@@ -399,7 +399,7 @@ function queryHistoryByFreq(n) {
 			});
 		}
 	} catch (e) {
-		alert(e);
+		// alert(e);
 	}
 	
 	return result;
