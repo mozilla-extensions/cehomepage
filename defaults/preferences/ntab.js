@@ -21,3 +21,5 @@ pref("moa.ntab.openLinkInNewTab", false);
 pref("moa.ntab.backgroundimage", "");
 
 pref("moa.ntab.dial.showSearch", true);
+
+pref("moa.ntab.contextMenuItem.show", true);

@@ -183,7 +183,12 @@
 		document.getElementById('nt-menu').openPopupAtScreen(event.screenX, event.screenY, true);
 		event.preventDefault();
 	};
+	
+	ns.onContextMenuGlobal = function() {
+		document.getElementById('context-ntab').hidden = !gPref.getBoolPref('moa.ntab.contextMenuItem.show');
+	};
 })();
 
 window.addEventListener("load", MOA.NTab.onLoad, false);
 gBrowser.addEventListener('load', MOA.NTab.onPageLoad, false);
+gBrowser.addEventListener('contextmenu', MOA.NTab.onContextMenuGlobal, false);
