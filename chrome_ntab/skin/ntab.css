@@ -85,7 +85,9 @@ DIV.hide {
 
 #layout > DIV:first-child DIV.feedback A {
 	text-decoration: none;	
-	margin-right: 10px;
+	margin: 0 10px;
+	padding-left: 23px;
+	background: url("chrome://ntab/skin/icon/feedback.png") no-repeat scroll 0 0 transparent;
 }
 
 #layout > DIV:first-child DIV.feedback A:hover {
