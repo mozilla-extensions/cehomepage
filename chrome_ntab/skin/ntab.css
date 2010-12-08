@@ -78,6 +78,20 @@ DIV.hide {
 	text-align: center;
 }
 
+#layout > DIV:first-child DIV.feedback {
+	float: right;
+	top: -1px;
+}
+
+#layout > DIV:first-child DIV.feedback A {
+	text-decoration: none;	
+	margin-right: 10px;
+}
+
+#layout > DIV:first-child DIV.feedback A:hover {
+	text-decoration: underline;
+}
+
 #layout > DIV:first-child DIV.text-browser {
 	display: none;
 	float: left;
