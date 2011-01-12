@@ -4,8 +4,8 @@
     <Description about="urn:mozilla:install-manifest">
         <em:id>cehomepage@mozillaonline.com</em:id>
         <em:version>0.7.3</em:version>
-        <em:name>China Edition Home Page</em:name>
-        <em:description>Customizied Home Page for Chinese Edition</em:description>
+        <em:name>Firefox Home Page</em:name>
+        <em:description>Customizied Home Page for Firefox</em:description>
         <em:creator>Mozilla Online Limited</em:creator>
 		<em:contributor>Leding Li</em:contributor>
 		<em:contributor>Ray Cheung</em:contributor>
@@ -26,8 +26,8 @@
         <em:localized>
             <Description>
                 <em:locale>zh-CN</em:locale>
-                <em:name>中国版定制主页</em:name>
-                <em:description>中国版定制主页，包括最近访问页面、最常访问页面以及新标签页等</em:description>
+                <em:name>火狐主页</em:name>
+                <em:description>火狐定制主页，包括最近访问页面、最常访问页面以及新标签页等</em:description>
                 <em:creator>Mozilla Online Limited</em:creator>
                 <em:homepageURL>http://www.mozillaonline.com/</em:homepageURL>
             </Description>
