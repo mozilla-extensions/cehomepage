@@ -67,7 +67,7 @@ function check(val) {
 		//alert(el("google_js_sign").value);
 		if((el("google_page_sign").value == "out")&&(el("google_js_sign").value == "out")) {
 		//document.getElementsByTagName('form').item(0).target="_top";
-		document.getElementsByTagName('form').item(0).action="http://i.g-fox.cn/se";
+		document.getElementsByTagName('form').item(0).action="http://i.firefox.com.cn/se";
 		document.getElementsByName("wd")[0].style.display="none";
 		el("search_button").style.display="none";
 		el("google_frame").style.display="block";
@@ -92,7 +92,7 @@ function check(val) {
 		document.getElementsByName("wd")[0].style.display="inline";
 		document.getElementsByName("wd")[0].focus();
 		if(el("baidu_taobao_sign").value == "out") {
-			document.getElementsByTagName('form').item(0).action="http://i.g-fox.cn/se";
+			document.getElementsByTagName('form').item(0).action="http://i.firefox.com.cn/se";
 		}
 		else {
 			document.getElementsByTagName('form').item(0).action="http://www.baidu.com/baidu?";
@@ -311,7 +311,7 @@ var LINKTRACE = {
         var me = this;
         return function(evt, link) {
             link['__linktrace_tracer__'] = function() {};
-            link.setAttribute('href', me.translate('http://i.g-fox.cn/hp', rel, link));
+            link.setAttribute('href', me.translate('http://i.firefox.com.cn/hp', rel, link));
         };
     },
     translate: function(action, rel, link) {
