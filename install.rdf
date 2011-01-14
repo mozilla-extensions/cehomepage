@@ -13,7 +13,7 @@
 		<em:contributor>jiangwei1212@gmail.com</em:contributor>
 		<em:contributor>Wennan Zhu</em:contributor>
 		<em:contributor>Amax Guan</em:contributor>
-        <em:homepageURL>http://www.mozillaonline.com/</em:homepageURL>
+        <em:homepageURL>http://www.firefox.com.cn/</em:homepageURL>
         <em:targetApplication>
             <Description>
                 <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
@@ -29,7 +29,7 @@
                 <em:name>火狐主页</em:name>
                 <em:description>火狐定制主页，包括最近访问页面、最常访问页面以及新标签页等</em:description>
                 <em:creator>Mozilla Online Limited</em:creator>
-                <em:homepageURL>http://www.mozillaonline.com/</em:homepageURL>
+                <em:homepageURL>http://www.firefox.com.cn/</em:homepageURL>
             </Description>
         </em:localized>
     </Description>
