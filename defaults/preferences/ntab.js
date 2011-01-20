@@ -11,10 +11,10 @@ pref("moa.ntab.dial.column", 4);
 pref("moa.ntab.dial.row", 2);
 pref("moa.ntab.quickdial.hidehistory", true);
 
-pref("moa.ntab.view.search.url", "http://i.firefox.com.cn/newtab/china-start/index.html");
+pref("moa.ntab.view.search.url", "http://i.g-fox.cn/newtab/china-start/index.html");
 pref("moa.ntab.view.nav.url", "http://www.huohu123.com/?from=ntab");
-pref("moa.ntab.dial.sitesurl", "http://i.firefox.com.cn/nav/ntab.json");
-pref("moa.ntab.dial.search.url", "http://i.firefox.com.cn/newtab/newtab_search.html");
+pref("moa.ntab.dial.sitesurl", "http://i.g-fox.cn/nav/ntab.json");
+pref("moa.ntab.dial.search.url", "http://i.g-fox.cn/newtab/newtab_search.html");
 
 pref("moa.ntab.openLinkInNewTab", false);
 

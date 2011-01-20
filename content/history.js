@@ -223,7 +223,7 @@ var homepage = {
     homepage_changed: function() { return prefs.changed('browser.startup.homepage') && this.homepage() != this.cehomepage(); },
     page: function() { return prefs.get('browser.startup.page', 1); },
     page_changed: function() { return prefs.changed('browser.startup.page') && this.page() == 1; },
-    cehomepage: function() { return prefs.get('extensions.cehomepage.homepage', 'http://i.firefox.com.cn'); },
+    cehomepage: function() { return prefs.get('extensions.cehomepage.homepage', 'http://i.g-fox.cn'); },
     autostart: function(flag) {
         var ori = prefs.get('extensions.cehomepage.autostartup', true);
         if (typeof flag != 'undefined') {
