@@ -46,7 +46,7 @@ function start() {
 
 	function getlinks(win) {
 		var req = new XMLHttpRequest();  
-		req.open('GET', 'http://i.firefox.com.cn/net_error/portal_links_errorpage.html', true);  
+		req.open('GET', 'http://i.g-fox.cn/net_error/portal_links_errorpage.html', true);  
 
 		req.onreadystatechange = function () {  
 					if (req.readyState == 4) {  
@@ -73,7 +73,7 @@ function start() {
 	function get_google_web(win)
 	{
 		var req = new XMLHttpRequest();
-		req.open('GET', 'http://i.firefox.com.cn/net_error/google_frame.html', true);
+		req.open('GET', 'http://i.g-fox.cn/net_error/google_frame.html', true);
 
 		req.onreadystatechange = function () {  
 					if (req.readyState == 4) {  
@@ -103,7 +103,7 @@ function start() {
 	function get_baidu_taobao(win)
 	{
 		var req = new XMLHttpRequest();  
-		req.open('GET', 'http://i.firefox.com.cn/', true);  
+		req.open('GET', 'http://i.g-fox.cn/', true);  
 		req.onreadystatechange = function () {  
 				if (req.readyState == 4) {  
 					if((req.status == 200)) {
@@ -111,12 +111,12 @@ function start() {
 						win.document.getElementById("baidu_taobao_sign").value="out";
 						if(win.document.getElementById("radio1").checked == true)
 						{
-							win.document.getElementsByTagName('form').item(0).setAttribute("action", "http://i.firefox.com.cn/se");
+							win.document.getElementsByTagName('form').item(0).setAttribute("action", "http://i.g-fox.cn/se");
 						}
 						if(win.document.getElementById("radio2").checked == true)
 						{
 							var temp = win.document.getElementsByTagName('form').item(0).action;
-							win.document.getElementsByTagName('form').item(0).setAttribute("action", "http://i.firefox.com.cn/se");
+							win.document.getElementsByTagName('form').item(0).setAttribute("action", "http://i.g-fox.cn/se");
 						}		
 					}
 					else {

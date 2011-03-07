@@ -97,7 +97,7 @@ window.addEventListener('load', function(evt) {
     prefs.set("extensions.cehomepage.homeSetToProfile",true);
   }
   
-  //the following lines added for z.firefox.com.cn, on first install of the addon, set z.firefox.com.cn to homepage
+  //the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
   if (Application.extensions && Application.extensions.get("cehomepage@mozillaonline.com").firstRun){
     var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
     if (autoSetHomepage){
@@ -223,7 +223,7 @@ var homepage = {
     homepage_changed: function() { return prefs.changed('browser.startup.homepage') && this.homepage() != this.cehomepage(); },
     page: function() { return prefs.get('browser.startup.page', 1); },
     page_changed: function() { return prefs.changed('browser.startup.page') && this.page() == 1; },
-    cehomepage: function() { return prefs.get('extensions.cehomepage.homepage', 'http://i.firefox.com.cn'); },
+    cehomepage: function() { return prefs.get('extensions.cehomepage.homepage', 'http://i.g-fox.cn'); },
     autostart: function(flag) {
         var ori = prefs.get('extensions.cehomepage.autostartup', true);
         if (typeof flag != 'undefined') {
