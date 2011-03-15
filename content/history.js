@@ -97,7 +97,7 @@ window.addEventListener('load', function(evt) {
     prefs.set("extensions.cehomepage.homeSetToProfile",true);
   }
   
-  //the following lines added for z.firefox.com.cn, on first install of the addon, set z.firefox.com.cn to homepage
+  //the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
   if (Application.extensions && Application.extensions.get("cehomepage@mozillaonline.com").firstRun){
     var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
     if (autoSetHomepage){
