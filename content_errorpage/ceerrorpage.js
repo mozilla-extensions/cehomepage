@@ -1,14 +1,10 @@
-const gConsoleService = getService("@mozilla.org/consoleservice;1", "nsIConsoleService");
-const console = {log: function (msg) { gConsoleService.logStringMessage("" + msg + " "); } };
-
-function getService(className, interfaceName) {
-    let componentClass = Components.classes[className];
-    let service = componentClass.getService(Components.interfaces[interfaceName]);
-    return service;
-}
-
 function start() {
-
+	function getService(className, interfaceName) {
+	    let componentClass = Components.classes[className];
+	    let service = componentClass.getService(Components.interfaces[interfaceName]);
+	    return service;
+	}
+	
     let observerService = getService("@mozilla.org/observer-service;1", "nsIObserverService");
     observerService.addObserver({observe: handleFailDocumentLoad}, "FailDocumentLoad", false);
 /*	eval("BrowserReloadWithFlags = " + BrowserReloadWithFlags.toString().replace("var webNav = getWebNavigation();","var webNav = getWebNavigation();\
@@ -201,7 +197,7 @@ function start() {
 try {
   start();
 } catch (e) {
-  alert(e); 
+  // alert(e); 
 }
 
 
