@@ -97,23 +97,20 @@ window.addEventListener('load', function(evt) {
     prefs.set("extensions.cehomepage.homeSetToProfile",true);
   }
   
-  //the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
-  if (Application.extensions && Application.extensions.get("cehomepage@mozillaonline.com").firstRun){
-    var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
-    if (autoSetHomepage){
-      cehomepage_autoSetHomepage();
-    }
-  } else if (Application.getExtensions) {
-  	// Application.extensions is obsolete in Gecko 2.0
-  	Application.getExtensions(function(exts) {
-		if (exts.get("cehomepage@mozillaonline.com").firstRun) {
-			var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
-		    if (autoSetHomepage){
-		      cehomepage_autoSetHomepage();
-		    }
+ 	//the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
+	var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
+	if (autoSetHomepage) {
+		if (Application.extensions && Application.extensions.get("cehomepage@mozillaonline.com").firstRun){
+  			cehomepage_autoSetHomepage();
+		} else if (Application.getExtensions) {
+			// Application.extensions is obsolete in Gecko 2.0
+			Application.getExtensions(function(exts) {
+				if (exts.get("cehomepage@mozillaonline.com").firstRun) {
+					cehomepage_autoSetHomepage();
+				}
+			});
 		}
-  	});
-  }
+	}
 }, false);
 window.addEventListener('unload', function(evt) {
     gBrowser.removeProgressListener(progListener);
