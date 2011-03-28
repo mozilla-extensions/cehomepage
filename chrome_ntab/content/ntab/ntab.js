@@ -414,7 +414,11 @@ var quickDial = (function() {
 			html.push('			<div>');
 			html.push('				<div class="div-table dial-bar">');
 			html.push('					<div>');
-			html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? 'default-favicon' : 'dial-def-favicon') + '" imagesrc="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') +  '"></div></div>');
+			if (nocache) {
+				html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? '' : 'dial-def-favicon') + '"><img src="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') + '"/></div></div>');			
+			} else {
+				html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? 'default-favicon' : 'dial-def-favicon') + '" imagesrc="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') +  '"></div></div>');			
+			}
 			html.push('						<div class="dial-title"><div class="text-ellipsis">' + escapeHTML(dial.title) + '</div></div>');
 			html.push('						<div class="dial-opt-box"><div class="btn-opt btn-opt-edit" onclick="quickDial.editDial(' + num + ')" _title="ntab.dial.label.edit"></div></div>');
 			html.push('						<div class="dial-opt-box"><div class="btn-opt btn-opt-del" onclick="quickDial.delDial(' + num + ')" _title="ntab.dial.label.del"></div></div>');
@@ -567,7 +571,7 @@ var quickDial = (function() {
 						'ondragover="quickDial.ondragover(event);" ondrop="quickDial.ondrop(event, ' + num + ');"' +
 						'ondragenter="quickDial.ondragenter(event, ' + num + ');"' +
 						'ondragleave="quickDial.ondragleave(event, ' + num + ');" >');
-					var itemHTML = generateHTMLForDial(num, dial);
+					var itemHTML = generateHTMLForDial(num, dial, false);
 					html.push(itemHTML);
 					html.push('	</div>');
 					html.push('</div>');
