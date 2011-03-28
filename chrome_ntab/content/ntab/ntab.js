@@ -414,7 +414,7 @@ var quickDial = (function() {
 			html.push('			<div>');
 			html.push('				<div class="div-table dial-bar">');
 			html.push('					<div>');
-			html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? '' : 'dial-def-favicon') + '"><img src="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') + '"/></div></div>');
+			html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? 'default-favicon' : 'dial-def-favicon') + '" imagesrc="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') +  '"></div></div>');
 			html.push('						<div class="dial-title"><div class="text-ellipsis">' + escapeHTML(dial.title) + '</div></div>');
 			html.push('						<div class="dial-opt-box"><div class="btn-opt btn-opt-edit" onclick="quickDial.editDial(' + num + ')" _title="ntab.dial.label.edit"></div></div>');
 			html.push('						<div class="dial-opt-box"><div class="btn-opt btn-opt-del" onclick="quickDial.delDial(' + num + ')" _title="ntab.dial.label.del"></div></div>');
@@ -435,7 +435,7 @@ var quickDial = (function() {
 			
 			// Check if url is under processing, if not, create it now.
 			if (!thumbnail && !hashModule.contains(dial.url)) {
-				_mainChromeWindow().MOA.NTab.Snapshot.createSnapshot(dial.url);
+				getChromeWindow().MOA.NTab.Snapshot.createSnapshot(dial.url);
 			}
 			
 			var backgournd = !thumbnail ? '' : 'background:url(' + thumbnail + ') no-repeat scroll center 0 transparent';
@@ -466,14 +466,6 @@ var quickDial = (function() {
 			html.push('		</div>');
 		}
 		return html.join('\n');
-	}
-	
-	function _mainChromeWindow() {
-		return QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-				.getInterface(Components.interfaces.nsIWebNavigation)
-				.QueryInterface(Components.interfaces.nsIDocShellTreeItem)
-				.rootTreeItem.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
-				.getInterface(Components.interfaces.nsIDOMWindow);
 	}
 	
 	var _dragenternum = null;
@@ -585,6 +577,18 @@ var quickDial = (function() {
 			}
 			$('quick_dial_box').innerHTML = html.join('');
 			
+			//insert image asynchronous
+			window.setTimeout(function() {
+				var faviconDIVArray = document.querySelectorAll('div.default-favicon');
+				for (var j = 0; j < faviconDIVArray.length; j++) {
+					var imageURL = faviconDIVArray[j].getAttribute('imagesrc');
+					var image = document.createElement('img');
+					image.setAttribute('src', imageURL);
+					faviconDIVArray[j].appendChild(image);
+				}					
+			}, 200);
+
+			
 			if (gPref.getBoolPref('moa.ntab.dial.showSearch')) {
 				// display search box
 				$('quickdial_search_banner').style.display = '';
@@ -623,7 +627,7 @@ var quickDial = (function() {
 			if (!dial)
 				return;
 			
-			var wnd = _mainChromeWindow();
+			var wnd = getChromeWindow();
 			wnd.MOA.NTab.Snapshot.refreshSnapshot(dial.url);
 			quickDialModule.refreshDialViewRelated(dial.url);
 		},
@@ -741,7 +745,7 @@ var quickDial = (function() {
 				// Check if url has been changed, if yes, then create snapshot for it.
 				if (refresh || !dial || url != dial.url) {
 					// get main chrome window
-					var wnd = _mainChromeWindow();
+					var wnd = getChromeWindow();
 					wnd.MOA.NTab.Snapshot.createSnapshot(url);
 				}
 				
