@@ -63,25 +63,19 @@ function check(val) {
 		el("search_img").src="chrome://ceerrorpage/content/google_web.png";
 		el("img_a").href="http://www.google.cn/";
 		el("taobao_zhidao_frame").style.display="none";
-		//alert(el("google_page_sign").value);
-		//alert(el("google_js_sign").value);
 		if((el("google_page_sign").value == "out")&&(el("google_js_sign").value == "out")) {
-		//document.getElementsByTagName('form').item(0).target="_top";
-		document.getElementsByTagName('form').item(0).action="http://i.g-fox.cn/se";
-		document.getElementsByName("wd")[0].style.display="none";
-		el("search_button").style.display="none";
-		el("google_frame").style.display="block";
-		}
-		else {
+			document.getElementsByTagName('form').item(0).action="http://i.g-fox.cn/se";
+			document.getElementsByName("wd")[0].style.display="none";
+			el("search_button").style.display="none";
+			el("google_frame").style.display="block";
+		} else {
 			document.getElementsByName("wd")[0].style.display="block";
 			el("search_button").value="谷歌搜索"
 			el("search_button").style.display="block";
 			el("google_frame").style.display="none";
 			document.getElementsByTagName('form').item(0).action="http://www.google.cn/search?"
-
 		}
-	}
-	if(val.value == "baidu_web") {
+	} else if(val.value == "baidu_web") {
 		var i;
 		el("search_img").src="chrome://ceerrorpage/content/baidu_web.png";
 		el("img_a").href="http://www.baidu.com/index.php?tn=monline_5_dg";
@@ -90,31 +84,32 @@ function check(val) {
 		el("search_button").style.display="inline";
 		el("search_button").value="百度搜索"
 		document.getElementsByName("wd")[0].style.display="inline";
-		document.getElementsByName("wd")[0].focus();
+		// Focus input only when the error page is shown on top window
+		// Or the main page will scroll to the iframe
+		if (window == window.top) {
+			document.getElementsByName("wd")[0].focus();
+		}
+		
 		if(el("baidu_taobao_sign").value == "out") {
 			document.getElementsByTagName('form').item(0).action="http://i.g-fox.cn/se";
-		}
-		else {
+		} else {
 			document.getElementsByTagName('form').item(0).action="http://www.baidu.com/baidu?";
 		}
-	}
-	if(val.value == "taobao") {
-		document.getElementsByName("wd")[0].focus();
+	} else if(val.value == "taobao") {
 		el("google_frame").style.display="none";
 		el("search_button").style.display="none";
 		document.getElementsByName("wd")[0].style.display="none";
-		document.getElementsByName("wd")[0].focus();
 		el("search_img").src="chrome://ceerrorpage/content/taobao.png";
 		el("img_a").href="http://adtaobao.allyes.cn/main/adfclick?db=adtaobao&bid=5566,2826,805&cid=32572,581,1&sid=67276&show=ignore&url=http://search8.taobao.com/browse/search_auction.htm?pid=mm_12811289_0_0&commend=all&search_type=auction&user_actionpsearch=1&sort=&spercent=0";
 		el("taobao_zhidao_frame").style.display="block";
 		if(el("baidu_taobao_sign").value == "out") {	
 		
-		}
-		else {
+		} else {
 			el("taobao_zhidao_frame").contentDocument.getElementsByTagName('form').item(0).setAttribute("action","http://search.taobao.com/search?");			
 		}
 	}
 }
+
 function checkspan(val)
 {
 	if(val.id == "span1")
