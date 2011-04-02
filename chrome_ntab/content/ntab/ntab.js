@@ -932,8 +932,10 @@ document.addEventListener('click', function(event) {
 
 window.addEventListener('DOMContentLoaded', function() {
 	// Prevent conflict with fastestfox
-	if (jQuery) {
-		jQuery.noConflict();	
+	if (typeof jQuery != 'undefined' && typeof jQuery.noConflict == 'function') {
+		try {
+			jQuery.noConflict();
+		} catch (e) { }
 	}
 	
 	gPref.addObserver('moa.ntab.', quickDial.prefObserver, true);
