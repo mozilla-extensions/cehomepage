@@ -931,6 +931,11 @@ document.addEventListener('click', function(event) {
 }, false);
 
 window.addEventListener('DOMContentLoaded', function() {
+	// Prevent conflict with fastestfox
+	if (jQuery) {
+		jQuery.noConflict();	
+	}
+	
 	gPref.addObserver('moa.ntab.', quickDial.prefObserver, true);
 	gPref.addObserver('moa.ntab.', ntab.prefObserver, true);
 	gPref.addObserver('moa.ntab.', default_browser.prefObserver, true);
