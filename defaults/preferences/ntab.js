@@ -23,3 +23,5 @@ pref("moa.ntab.backgroundimage", "");
 pref("moa.ntab.dial.showSearch", true);
 
 pref("moa.ntab.contextMenuItem.show", true);
+
+pref("moa.ntab.display.usehotkey", false);

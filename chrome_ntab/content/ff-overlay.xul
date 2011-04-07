@@ -79,6 +79,9 @@
 	  	<menuitem id="nt-clearbg" 
 	  		accesskey="&ntab.contextmenu.clearbg.accesskey;"
 	  		label="&ntab.contextmenu.clearbg;" />
+		<menuitem id="nt-configntab" 
+	  		accesskey="&ntab.contextmenu.configntab.accesskey;"
+	  		label="&ntab.contextmenu.configntab;" />
 	  	<!-- menuitem id="nt-preferences" label="&ntab.contextmenu.preferences;" / -->
 	  </menupopup>
   </window>

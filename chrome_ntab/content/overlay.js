@@ -154,6 +154,9 @@
 			case 'nt-clearbg':
 				content.wrappedJSObject.custom.clearBgImage();
 				break;
+			case 'nt-configntab':
+				window.showModalDialog('chrome://ntab/content/options.xul');
+				break;
 		}
 	};
 	
@@ -187,8 +190,61 @@
 	ns.onContextMenuGlobal = function() {
 		document.getElementById('context-ntab').hidden = !gPref.getBoolPref('moa.ntab.contextMenuItem.show');
 	};
+	
+	ns.openTabByHotKey = function(event) {
+		var useHotKey = gPref.getBoolPref('moa.ntab.display.usehotkey');
+		if(!useHotKey) {
+			return;
+		}
+		event.preventDefault();
+		event.stopPropagation();
+		var realKey;
+		switch (event.keyCode) {
+			case 48 :
+				realKey = "10";
+				break;
+			case 49 :
+				realKey = "1";
+				break;
+			case 50 :
+				realKey = "2";
+				break;
+			case 51 :
+				realKey = "3";
+				break;
+			case 52 :
+				realKey = "4";
+				break;
+			case 53 :
+				realKey = "5";
+				break;
+			case 54 :
+				realKey = "6";
+				break;
+			case 55 :
+				realKey = "7";
+				break;
+			case 57 :
+				realKey = "8";
+				break;
+			case 58 :
+				realKey = "9";
+				break;
+		}
+		var dial = quickDialModule.getDial(realKey);
+//		gBrowser.addTab(dial.url);		
+		if(dial) {
+			openUILinkIn(dial.url, 'tab');
+		}
+	};
 })();
 
 window.addEventListener("load", MOA.NTab.onLoad, false);
 gBrowser.addEventListener('load', MOA.NTab.onPageLoad, false);
 gBrowser.addEventListener('contextmenu', MOA.NTab.onContextMenuGlobal, false);
+window.addEventListener('keydown', function(event) {
+	if (!event.ctrlKey || event.keyCode < 47 || event.keyCode > 58) {
+		return;
+	}
+	MOA.NTab.openTabByHotKey(event);
+}, true );

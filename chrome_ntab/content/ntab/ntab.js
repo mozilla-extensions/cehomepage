@@ -135,7 +135,7 @@ var ntab = (function(){
 					break;
 				case 'quickdial':
 				default:
-					quickDial.initDialBox();
+					quickDial.initDialBox(false);
 					break;
 			}
 			
@@ -170,6 +170,11 @@ var ntab = (function(){
 		    		if (data == 'moa.ntab.view') {
 		    			ntab.updateView();
 		    		}
+					if(data == 'moa.ntab.dial.column' || data == 'moa.ntab.dial.row' || data == 'moa.ntab.dial.showSearch') {
+						var view = gPref.getCharPref('moa.ntab.view');
+						quickDial.initDialBox(true);
+						ntab.updateView();
+					}
 		    	}
 		    }
 		}
@@ -546,10 +551,16 @@ var quickDial = (function() {
 	}
 	
 	return {
-		initDialBox: function() {
-			if (isInitialized) {
-				ntab.showView('quick_dial');
-				return;
+		initDialBox: function(refreshWholePage) {
+			if(!refreshWholePage) {
+				if (isInitialized) {
+					ntab.showView('quick_dial');
+					return;
+				}
+			} else {
+				if (!isInitialized) {
+					return;
+				}
 			}
 			isInitialized = true;
 			
@@ -583,22 +594,35 @@ var quickDial = (function() {
 			}
 			$('quick_dial_box').innerHTML = html.join('');
 			
-			//insert favicon asynchronous
-			window.setTimeout(function() {
+			//insert favicon asynchronous  only asynchronous at first time
+			
+			if(!refreshWholePage) {
+				window.setTimeout(function() {
+					var faviconDIVArray = document.querySelectorAll('div.default-favicon');
+					for (var j = 0; j < faviconDIVArray.length; j++) {
+						var imageURL = faviconDIVArray[j].getAttribute('imagesrc');
+						var image = document.createElement('img');
+						image.setAttribute('src', imageURL);
+						faviconDIVArray[j].appendChild(image);
+					}					
+				}, 100);
+			} else {
 				var faviconDIVArray = document.querySelectorAll('div.default-favicon');
 				for (var j = 0; j < faviconDIVArray.length; j++) {
 					var imageURL = faviconDIVArray[j].getAttribute('imagesrc');
 					var image = document.createElement('img');
 					image.setAttribute('src', imageURL);
 					faviconDIVArray[j].appendChild(image);
-				}					
-			}, 100);
+				}								
+			}
 
 			
 			if (gPref.getBoolPref('moa.ntab.dial.showSearch')) {
 				// display search box
 				$('quickdial_search_banner').style.display = '';
 				$('quickdial_search').src = gPref.getCharPref('moa.ntab.dial.search.url');
+			} else {
+				$('quickdial_search_banner').style.display = 'none';
 			}
 			
 			new iframeLoader({
