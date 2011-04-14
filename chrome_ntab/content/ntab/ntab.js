@@ -705,6 +705,7 @@ var quickDial = (function() {
 					});
 					
 					var dial = quickDialModule.getDial(num);
+					
 					if (!dial) {
 						CSS.add(elem, 'prompt-add-dial');
 					}
@@ -757,12 +758,10 @@ var quickDial = (function() {
 					input.focus();
 					return false;
 				} 
-				
 				// append http:// as default prefix
 				input.value = completeURL(input.value);
-				
 				// TODO check if it is a url
-				if (!/^http(s)?:\/\/.+/.test(input.value)) {
+				if (!/^http(s)|ftp?:\/\/.+/.test(input.value)) {
 					alert('请输入一个正确的网址！');
 					input.focus();
 					return false;
