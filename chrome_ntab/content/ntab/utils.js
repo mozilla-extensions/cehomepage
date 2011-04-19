@@ -20,7 +20,7 @@ function completeURL(url) {
 	if (!url)
 		return url;
 		
-	if (url.indexOf('http://') != 0 && url.indexOf('https://') != 0) {
+	if (url.indexOf('http://') != 0 && url.indexOf('https://') != 0 && url.indexOf('ftp://')!=0) {
 		url = 'http://' + url;
 	}
 	
