@@ -11,21 +11,31 @@
 	Components.utils['import']('resource://ntab/hash.jsm');
 	
 	// Pre-defined snapshot
-	var snapshotMap = {
-		'http://www.huohu123.com/': 'chrome://ntab/skin/thumb/huohu123.png',
-		'http://www.huohu123.com/?src=qd': 'chrome://ntab/skin/thumb/huohu123.png',
-		'http://www.huohu123.com/?src=ntab': 'chrome://ntab/skin/thumb/huohu123.png',
-		'http://www.baidu.com/': 'chrome://ntab/skin/thumb/baidu.png',
-		'http://www.baidu.com/index.php?tn=monline_5_dg': 'chrome://ntab/skin/thumb/baidu.png',
-		'http://www.renren.com/': 'chrome://ntab/skin/thumb/renren.png',
-		'http://www.360buy.com/': 'chrome://ntab/skin/thumb/360.png',
-		'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/': 'chrome://ntab/skin/thumb/360.png',
-		'http://www.tmall.com/': 'chrome://ntab/skin/thumb/taobao.png',
-		'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/tmall.png',
-		'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/sina.png',
-		'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/joyo.png',
-		'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/joyo.png',
-	};
+	var snapshotMap = {};
+	try {
+		var defaultDataJSM = {};
+		var prefs = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).getBranch('moa.ntab.dial.');
+		var branch = prefs.getCharPref('branch');
+		Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
+		snapshotMap = defaultDataJSM.defaultQuickDial.snapshotMap;
+	} catch (e) {
+		snapshotMap = { 
+			'http://www.huohu123.com/': 'chrome://ntab/skin/thumb/master/huohu123.png',
+			'http://www.huohu123.com/?src=qd': 'chrome://ntab/skin/thumb/master/huohu123.png',
+			'http://www.huohu123.com/?src=ntab': 'chrome://ntab/skin/thumb/master/huohu123.png',
+			'http://www.baidu.com/': 'chrome://ntab/skin/thumb/master/baidu.png',
+			'http://www.baidu.com/index.php?tn=monline_5_dg': 'chrome://ntab/skin/thumb/master/baidu.png',
+			'http://www.renren.com/': 'chrome://ntab/skin/thumb/master/renren.png',
+			'http://www.360buy.com/': 'chrome://ntab/skin/thumb/master/360.png',
+			'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/': 'chrome://ntab/skin/thumb/master/360.png',
+			'http://www.tmall.com/': 'chrome://ntab/skin/thumb/master/taobao.png',
+			'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/master/tmall.png',
+			'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
+			'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
+			'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',
+		};
+	}
+
 	
 	/*** Implement methods in snapshot object. ***/
 	

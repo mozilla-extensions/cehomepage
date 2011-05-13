@@ -410,6 +410,13 @@ function queryHistoryByFreq(n) {
 	return result;
 }
 
+function _getFaviconForURL(url) {
+	var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
+	var faviconService = Cc['@mozilla.org/browser/favicon-service;1'].getService(Ci.nsIFaviconService);
+	var icon = faviconService.getFaviconImageForPage(ioService.newURI(url, null, null)).spec;
+	return icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? 'chrome://ntab/skin/icon/favicon.png' : icon;
+}
+
 var quickDial = (function() {
 	var isInitialized = false;
 	function generateHTMLForDial(num, dial, nocache, first_load) {
@@ -525,13 +532,6 @@ var quickDial = (function() {
 		return result;
 	}
 	
-	function _getFaviconForURL(url) {
-		var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-		var faviconService = Cc['@mozilla.org/browser/favicon-service;1'].getService(Ci.nsIFaviconService);
-		var icon = faviconService.getFaviconImageForPage(ioService.newURI(url, null, null)).spec;
-		return icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? 'chrome://ntab/skin/icon/favicon.png' : icon;
-	}
-	
 	function _filter(str) {
 		return !str ? str : str.replace(/'/g, '\\\'');
 	}
@@ -594,29 +594,23 @@ var quickDial = (function() {
 			}
 			$('quick_dial_box').innerHTML = html.join('');
 			
-			//insert favicon asynchronous  only asynchronous at first time
-			
-			if(!refreshWholePage) {
-				window.setTimeout(function() {
-					var faviconDIVArray = document.querySelectorAll('div.default-favicon');
-					for (var j = 0; j < faviconDIVArray.length; j++) {
-						var imageURL = faviconDIVArray[j].getAttribute('imagesrc');
-						var image = document.createElement('img');
-						image.setAttribute('src', imageURL);
-						faviconDIVArray[j].appendChild(image);
-					}					
-				}, 100);
-			} else {
+			function _setFavIcons() {
 				var faviconDIVArray = document.querySelectorAll('div.default-favicon');
 				for (var j = 0; j < faviconDIVArray.length; j++) {
 					var imageURL = faviconDIVArray[j].getAttribute('imagesrc');
 					var image = document.createElement('img');
 					image.setAttribute('src', imageURL);
 					faviconDIVArray[j].appendChild(image);
-				}								
+				}
+			}
+			
+			//insert favicon asynchronous  only asynchronous at first time
+			if(!refreshWholePage) {
+				window.setTimeout(_setFavIcons, 100);
+			} else {
+				_setFavIcons();
 			}
 
-			
 			if (gPref.getBoolPref('moa.ntab.dial.showSearch')) {
 				// display search box
 				$('quickdial_search_banner').style.display = '';
@@ -905,18 +899,38 @@ var quickDial = (function() {
 	}
 })(); 
 
-function _fillSites(sites, place) {
+function _fillSites(sites, place, showIcon) {
+	var divs = [];
 	for (var i = 0; i < sites.length; i++) {
 		var site = sites[i];
 		var div = document.createElement('DIV');
-		div.innerHTML = '<a class="text-ellipsis" href="' + completeURL(site.url) + '">' + escapeHTML(site.title) + '</a>';
+		if (showIcon) {
+			div.innerHTML = '<div><img src="chrome://ntab/skin/icon/favicon.png"></img></div><a class="text-ellipsis" href="' + completeURL(site.url) + '">' + escapeHTML(site.title) + '</a>';
+		} else {
+			div.innerHTML = '<a class="text-ellipsis" href="' + completeURL(site.url) + '">' + escapeHTML(site.title) + '</a>';
+		}
 		place.appendChild(div);
+		divs.push(div);
+	}
+	
+	// Optimize favicon loading perfomance, when ntab page is first-run.
+	if (showIcon) {
+		window.setTimeout(function() {
+			for (var i = 0; i < sites.length; i++) {
+				var site = sites[i];
+				var iconUrl = _getFaviconForURL(site.url);
+				if (!iconUrl || iconUrl == 'chrome://ntab/skin/icon/favicon.png') {
+					iconUrl = site.iconUrl ? site.iconUrl : iconUrl;
+				}
+				divs[i].childNodes[0].childNodes[0].src = iconUrl;
+			}
+		}, 100);
 	}
 }
 
 function fillHistory() {
 	quickDial.onShowHideHistory();
-	TAB.init($('history'));
+	
 	// set most visited sites.
 	_fillSites(queryHistoryByFreq(10), $('history').querySelectorAll('DIV.mostvisited-sites')[0]);
 	
@@ -924,21 +938,62 @@ function fillHistory() {
 	_fillSites(session.query(10), $('history').querySelectorAll('DIV.lastsession-sites')[0]);
 	
 	// set others
-	httpGet(gPref.getCharPref('moa.ntab.dial.sitesurl'), function(response) {
-		if (response.readyState == 4 && 200 == response.status) {
-			var sites = null;
-			try { 
-				sites = JSON.parse(response.responseText);
-			} catch (err) {
-				// alert(err);
-			}
-			
-			if (!sites) 
-				return;
-				
-			_fillSites(sites, $('history').querySelectorAll('DIV.nav-sites')[0]);
+	var branch = gPref.getCharPref('moa.ntab.dial.branch');
+	var sitesTabs = null;
+	try {
+		var defaultDataJSM = {};
+		Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
+		sitesTabs = defaultDataJSM.defaultQuickDial.sitesTabs;
+	} catch (e) { 
+		alert(e);
+		sitesTabs = [];
+	}
+	
+	sitesTabs.forEach(function(tabObj) {
+		var tabs = $('history').querySelectorAll('DIV.tabbox > DIV.tabs')[0];
+		var tabDiv = document.createElement('DIV');
+		tabDiv.textContent = _(tabObj.nameStr);
+		tabDiv.className = 'tab';
+		tabDiv.id = 'nav_sites';
+		// Insert tab node before hide-btn which is the last one.
+		tabs.insertBefore(tabDiv, tabs.childNodes[tabs.childNodes.length]);
+		
+		var tabPanelDiv = null;
+		if ($(tabObj.panelId)) {
+			tabPanelDiv = $(tabObj.panelId);
+		} else {
+			tabPanelDiv = document.createElement('DIV');
+			tabPanelDiv.className = 'tabpanel sites-list link-trace';
+			tabPanelDiv.id = tabObj.panelId;
+			$('history').querySelectorAll('DIV.tabbox > DIV.tabpanels')[0].appendChild(tabPanelDiv);
 		}
+		
+		httpGet(gPref.getCharPref(tabObj.urlPref), function(response) {
+			if (response.readyState == 4 && 200 == response.status) {
+				var sites = null;
+				try { 
+					sites = JSON.parse(response.responseText);
+				} catch (err) {
+					// alert(err);
+				}
+				
+				if (!sites) 
+					return;
+				
+				_fillSites(sites, tabPanelDiv, true);
+			}
+		});
 	});
+	
+	TAB.init($('history'), function(node) {
+		gPref.setCharPref('moa.ntab.quickdial.history.view', node.id);
+	});
+	
+	// switch to last view
+	var lastTabView = gPref.getCharPref('moa.ntab.quickdial.history.view');
+	if ($(lastTabView) && $(lastTabView).onclick) {
+		$(lastTabView).onclick();
+	}
 }
 
 document.addEventListener('contextmenu', getChromeWindow().MOA.NTab.onContextMenu, false);

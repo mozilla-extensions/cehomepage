@@ -79,6 +79,10 @@
 	  	<menuitem id="nt-clearbg" 
 	  		accesskey="&ntab.contextmenu.clearbg.accesskey;"
 	  		label="&ntab.contextmenu.clearbg;" />
+        <menuitem id="nt-feedback" 
+	  		accesskey="&ntab.contextmenu.feedback.accesskey;"
+	  		label="&ntab.contextmenu.feedback;"
+	  		class="menuitem-iconic" />
 		<menuitem id="nt-configntab" 
 	  		accesskey="&ntab.contextmenu.configntab.accesskey;"
 	  		label="&ntab.contextmenu.configntab;" />

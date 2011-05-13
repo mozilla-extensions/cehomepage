@@ -99,7 +99,7 @@ function getChromeWindow() {
 }
 
 var TAB = {
-	init: function(elem) {
+	init: function(elem, callback) {
 		// TODO using XBL
 		// Register tabbox
 		var tabboxs = elem.querySelectorAll('DIV.tabbox');
@@ -126,6 +126,10 @@ var TAB = {
 						
 						CSS.del(_tabs[k], 'selected')
 						_tabpanels[k].style.display = 'none';
+					}
+					
+					if (typeof callback == 'function') {
+						callback(this);
 					}
 				};
 			}

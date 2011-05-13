@@ -33,3 +33,5 @@
 <!ENTITY ntab.contextmenu.clearbg.accesskey "D">
 <!ENTITY ntab.contextmenu.configntab "Preference">
 <!ENTITY ntab.contextmenu.configntab.accesskey "P">
+<!ENTITY ntab.contextmenu.feedback "Feedback">
+<!ENTITY ntab.contextmenu.feedback.accesskey "F">

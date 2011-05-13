@@ -206,7 +206,7 @@ DIV#quick_dial > DIV:first-child {
 
 DIV.quick-dial-item {
 	width: 224px;
-	height: 190px;
+	height: 180px;
 	padding: 4px;
 	border: 1px solid transparent;
 }
@@ -259,7 +259,7 @@ DIV.quick-dial-item:hover DIV.btn-opt {
 
 /*height: 100% is not working under firefox3.5*/
 DIV.quick-dial-item > DIV > DIV {
-	height: 150px;
+	height: 140px;
 }
 
 DIV.quick-dial-item > DIV:first-child > DIV {
@@ -318,7 +318,7 @@ DIV.quick-dial-item .dial-bar .dial-favicon > DIV.dial-def-favicon > IMG{
 }
 
 DIV.quick-dial-item .quickdial-add {
-	background: url(chrome://ntab/skin/icon/add60x60.png) no-repeat scroll center 30px transparent;
+	background: url(chrome://ntab/skin/icon/add60x60.png) no-repeat scroll center 22px transparent;
 }
 
 DIV.quick-dial-item .quickdial-add SPAN {
@@ -326,7 +326,7 @@ DIV.quick-dial-item .quickdial-add SPAN {
 	font-size: 12px;
 	border: 1px solid #B3DDF5;
 	padding: 3px 5px 3px 23px;
-	margin-top: 110px;
+	margin-top: 96px;
 	background: url(chrome://ntab/skin/icon/add13x13.png) no-repeat scroll 6px center transparent;
 	-moz-border-radius: 8px;
 	
@@ -526,7 +526,7 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 #show_history > DIV.show-btn,
 #history > DIV.tabbox > DIV.tabs > DIV.hide-btn {
 	float: right;
-	padding: 16px 10px 0 0;
+	padding: 10px 10px 0 0;
 	color: #BBB;
 	cursor: pointer;
 	-moz-user-select: none;
@@ -539,12 +539,15 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 
 #history > DIV.tabbox > DIV.tabs > DIV.tab {
 	float: left;
-	margin: 10px;
+	margin: 5px 0 0;
+	padding: 5px 10px 0;
 	cursor: pointer;
 }
 
 #history > DIV.tabbox > DIV.tabs > DIV.selected {
-	font-weight: bold;
+	background: -moz-linear-gradient(center top , #D2E0EC, #E0ECF8) repeat scroll 0 0 transparent;
+	-moz-border-radius: 3px 3px 0 0;
+	text-shadow: 0 1px 1px white;
 }
 
 #history > DIV.tabbox > DIV.tabpanels {
@@ -585,6 +588,17 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 #history > DIV.tabbox > DIV.tabpanels > DIV.sites-list > DIV > A:hover {
 	text-decoration: underline;
 }
+
+#history > div.tabbox > div.tabpanels > div.nav-sites > div {
+	width: 112px;
+}
+
+#history > div.tabbox > div.tabpanels > div.nav-sites > div > div {
+	float: left; 
+	margin: 2px 5px 0 0;	
+	height: 16px;
+	width: 16px;
+}
 /* end */
 
 /* styles for background customization */
@@ -592,7 +606,8 @@ body.withbg #show_history > div.show-btn,
 body.withbg #history > div.tabbox > div.tabs > div.hide-btn,
 body.withbg DIV.dial-used,
 body.withbg DIV#history,
-body.withbg #quick_dial A {
+body.withbg #quick_dial A,
+body.withbg #history div.tabs div.selected {
 	color: white !important;
 	text-shadow: 0 1px 3px black !important;
 }
@@ -600,5 +615,9 @@ body.withbg #quick_dial A {
 body.withbg #nav IFRAME {
 	background-color: white !important;
 	padding: 0 10px;
+}
+
+body.withbg #history div.tabs div.selected {
+	background: none;
 }
 /* end */

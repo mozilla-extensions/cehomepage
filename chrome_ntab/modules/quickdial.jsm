@@ -45,49 +45,18 @@ if (!!str) {
 
 // If json file is empty, then use default value;
 if(!dialData) {
-	dialData = {
-		'1': {
-			title: decodeURIComponent('%E7%81%AB%E7%8B%90%E7%BD%91%E5%9D%80%E5%A4%A7%E5%85%A8'),
-			url: 'http://www.huohu123.com/?src=qd',
-			icon: 'chrome://ntab/skin/logo/mozilla.ico'
-		},
-		
-		'2': {
-			title: decodeURIComponent('%E7%99%BE%E5%BA%A6'),
-			url: 'http://www.baidu.com/index.php?tn=monline_5_dg',
-			icon: 'chrome://ntab/skin/logo/baidu.ico'
-		},
-		
-		'3': {
-			title: decodeURIComponent('%E6%96%B0%E6%B5%AA'),
-			url: 'http://www.sina.com.cn/',
-			icon: 'chrome://ntab/skin/logo/sina.ico'
-		},
-		
-		'4': {
-			title: decodeURIComponent('%E4%BA%BA%E4%BA%BA%E7%BD%91'),
-			url: 'http://www.renren.com/',
-			icon: 'chrome://ntab/skin/logo/renren.ico'
-		},
-		
-		'5': {
-			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E5%95%86%E5%9F%8E'),
-			url: 'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F',
-			icon: 'chrome://ntab/skin/logo/tmall.png'
-		},
-		
-		'6': {
-			title: decodeURIComponent('%E5%8D%93%E8%B6%8A%E7%BD%91'),
-			url: 'http://www.amazon.cn/?source=mozilla9-23',
-			icon: 'chrome://ntab/skin/logo/joyo.ico'
-		},
-		
-		'7': {
-			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
-			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/',
-			icon: 'chrome://ntab/skin/logo/360.ico'
-		}
-	};
+	var defaultDataJSM = {};
+	try {
+		var prefs = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).getBranch('moa.ntab.dial.');
+		var branch = prefs.getCharPref('branch');
+		Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
+	} catch (e) {
+		defaultDataJSM.defaultQuickDial = {
+			dialData: {}
+		};
+	}
+	
+	dialData = defaultDataJSM.defaultQuickDial.dialData;
 }
 
 function _notifyAllNewTab(num) {
