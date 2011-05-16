@@ -945,7 +945,6 @@ function fillHistory() {
 		Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
 		sitesTabs = defaultDataJSM.defaultQuickDial.sitesTabs;
 	} catch (e) { 
-		alert(e);
 		sitesTabs = [];
 	}
 	
