@@ -761,7 +761,7 @@ var quickDial = (function() {
 				// append http:// as default prefix
 				input.value = completeURL(input.value);
 				// TODO check if it is a url
-				if (!/^http(s)|ftp?:\/\/.+/.test(input.value)) {
+				if (!/^(http(s)?|ftp):\/\/.+/.test(input.value)) {
 					alert('请输入一个正确的网址！');
 					input.focus();
 					return false;
