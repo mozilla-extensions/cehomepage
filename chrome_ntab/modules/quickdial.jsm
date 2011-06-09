@@ -26,7 +26,6 @@ function completeURL(url) {
 var dialData = null;
 var str = utils.readStrFromProFile(['ntab', 'quickdial.json']);
 if (!!str) {
-	dump("!str is"+(!!str)+'\n');
 	dialData = JSON.parse(str);
 	
 	// Refresh favicon and complete url
