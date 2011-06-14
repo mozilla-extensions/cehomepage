@@ -21,3 +21,7 @@
 {
   -moz-image-region: rect(24px 40px 40px 24px);
 }
+
+#nt-feedback {
+	list-style-image: url("chrome://ntab/skin/icon/feedback.png");
+}

@@ -19,7 +19,6 @@
 					<div id="btn_browser" class="text-browser"  onclick="ntab.onclick_to_browser();" _title="ntab.dial.label.setdefault"><script type="text/javascript">_$('ntab.dial.label.setdefault');</script></div>
 					<div id="set_default_browser_msg" class="text-browser"><script type="text/javascript">_$('ntab.dial.label.setdefaultmsg');</script></div>
 					<div id="ntab-view-switchers-box">
-						<div class="feedback"><a href="http://17huohu.cn/event/13-new-tab-page-feedback/"><script type="text/javascript">_$('moa.ntab.feedback');</script></a></div>
 						<div id="btn_blank" class="button-switch" onclick="ntab.onclick_to_blank();"  _title="ntab.dial.label.switchtoblank"></div>
 						<div id="btn_search" class="button-switch" onclick="ntab.onclick_to_search();" _title="ntab.dial.label.switchtosearch"></div>
 						<div id="btn_quickdial" class="button-switch" onclick="ntab.onclick_to_dial();" _title="ntab.dial.label.switchtoquickdial"></div>
@@ -48,15 +47,14 @@
 									<div id="history" class="hide">
 										<div class="tabbox">
 											<div class="tabs">
-												<div class="tab selected"><script type="text/javascript">_$('ntab.dial.label.mostvisitedsites');</script></div>
-												<div class="tab"><script type="text/javascript">_$('ntab.dial.label.lastvisitedsites');</script></div>
-												<div class="tab"><script type="text/javascript">_$('ntab.dial.label.navsites');</script></div>
+												<div class="tab selected" id="most_visited_sites"><script type="text/javascript">_$('ntab.dial.label.mostvisitedsites');</script></div>
+												<div class="tab" id="last_visited_sites"><script type="text/javascript">_$('ntab.dial.label.lastvisitedsites');</script></div>
 												<div class="hide-btn" onclick="quickDial.hideHistory(true);"><script type="text/javascript">_$('ntab.dial.label.hide');</script></div>
 											</div>
 											<div class="tabpanels">
 												<div class="tabpanel sites-list mostvisited-sites"></div>
 												<div class="tabpanel sites-list lastsession-sites"></div>
-												<div class="tabpanel sites-list nav-sites link-trace"><div class="more"><a class="text-ellipsis" href="http://www.huohu123.com/?from=ntab_more">更多&gt;&gt;</a></div></div>
+												<div id="nav_sites_panel" class="tabpanel sites-list nav-sites link-trace"></div>
 											</div>
 										</div>
 									</div>

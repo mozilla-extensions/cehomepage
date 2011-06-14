@@ -157,6 +157,13 @@
 			case 'nt-configntab':
 				window.showModalDialog('chrome://ntab/content/options.xul');
 				break;
+			case 'nt-feedback':
+				if (gPref.getBoolPref('moa.ntab.openLinkInNewTab')) {
+					gBrowser.selectedTab = gBrowser.addTab('http://17huohu.cn/event/13-new-tab-page-feedback/');
+				} else {
+					content.wrappedJSObject.location = 'http://17huohu.cn/event/13-new-tab-page-feedback/';
+				}
+				break;
 		}
 	};
 	

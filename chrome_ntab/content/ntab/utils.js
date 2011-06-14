@@ -20,7 +20,7 @@ function completeURL(url) {
 	if (!url)
 		return url;
 		
-	if (url.indexOf('http://') != 0 && url.indexOf('https://') != 0) {
+	if (url.indexOf('http://') != 0 && url.indexOf('https://') != 0 && url.indexOf('ftp://')!=0) {
 		url = 'http://' + url;
 	}
 	
@@ -99,7 +99,7 @@ function getChromeWindow() {
 }
 
 var TAB = {
-	init: function(elem) {
+	init: function(elem, callback) {
 		// TODO using XBL
 		// Register tabbox
 		var tabboxs = elem.querySelectorAll('DIV.tabbox');
@@ -126,6 +126,10 @@ var TAB = {
 						
 						CSS.del(_tabs[k], 'selected')
 						_tabpanels[k].style.display = 'none';
+					}
+					
+					if (typeof callback == 'function') {
+						callback(this);
 					}
 				};
 			}
