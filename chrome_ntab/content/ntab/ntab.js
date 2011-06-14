@@ -979,7 +979,7 @@ function fillHistory() {
 				if (!sites) 
 					return;
 				
-				_fillSites(sites, tabPanelDiv, true);
+				_fillSites(sites, tabPanelDiv, tabObj.showIcon);
 			}
 		});
 	});

@@ -66,6 +66,7 @@ defaultQuickDial = {
 		nameStr: 'ntab.dial.label.navsites',
 		urlPref: 'moa.ntab.dial.sitesurl',
 		tabId:   'nav_sites',
+		showIcon: false,
 		panelId: 'nav_sites_panel'					// can be none
 	}]
 };

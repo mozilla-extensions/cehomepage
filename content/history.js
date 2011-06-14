@@ -93,7 +93,6 @@ window.addEventListener('load', function(evt) {
 	// Source: chrome://browser/content/tabbrowser.xml
 	// Line: 1840
     gBrowser.addProgressListener(progListener/*, Ci.nsIWebProgress.NOTIFY_LOCATION*/);
-
   //following 4 lines added for xunlei build, set the homepage in distribution to profile
   var homeSetToProfile = prefs.get("extensions.cehomepage.homeSetToProfile",false);
   if (!homeSetToProfile){
