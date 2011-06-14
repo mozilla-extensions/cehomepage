@@ -4,6 +4,11 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
+var DEBUG = true;
+function log() {
+		return (DEBUG ? Application.console.log.apply(Application.console, arguments):true);
+}
+
 if (!window.opener) {
     window.addEventListener('unload', function(evt) {
         if (evt.originalTarget == document) {
@@ -115,10 +120,6 @@ window.addEventListener('load', function(evt) {
 window.addEventListener('unload', function(evt) {
     gBrowser.removeProgressListener(progListener);
 }, false);
-
-function log() {
-    Application.console.log.apply(Application.console, arguments);
-}
 
 function inject(host, win) {
     var cwin = win.wrappedJSObject;
