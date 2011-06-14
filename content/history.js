@@ -4,7 +4,7 @@ const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
 
-var DEBUG = true;
+var DEBUG = false;
 function log() {
 		return (DEBUG ? Application.console.log.apply(Application.console, arguments):true);
 }
