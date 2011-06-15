@@ -9,6 +9,10 @@
 	Components.utils['import']('resource://ntab/quickdial.jsm');
     
 	function loadInExistingTabs() {
+		if (!gPref.getBoolPref('moa.ntab.openInNewTab')) {
+			return;
+		}
+		
 		var chromehidden = document.getElementById('main-window').getAttribute('chromehidden');
 		if (chromehidden.match(/menubar/))
 			return;
@@ -49,7 +53,12 @@
 	
 	ns.onLoad = function() {
 		// load ntab page in existing empty tabs.
-		loadInExistingTabs();
+		// Under Firefox5, this function will open "about:ntab" in the blank page in which
+		// the welcome page is opened.
+		// So set an timeout to run this function, make sure welcome page will be opened. 
+		setTimeout(function() {
+			loadInExistingTabs();
+		}, 1000);
 
 		// Catch new tab
 		if (window.TMP_BrowserOpenTab) {
