@@ -18,6 +18,7 @@ pref("moa.ntab.dial.sitesurl", "http://i.g-fox.cn/nav/ntab.json");
 pref("moa.ntab.dial.search.url", "http://i.g-fox.cn/newtab/newtab_search.html");
 
 pref("moa.ntab.openLinkInNewTab", false);
+pref("moa.ntab.loadInExistingTabs", false);
 
 pref("moa.ntab.backgroundimage", "");
 

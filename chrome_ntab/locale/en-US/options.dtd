@@ -5,6 +5,7 @@
 <!ENTITY ntab.config.displayntab "Automatic load in new blank tabs">
 <!ENTITY ntab.config.displaysearch "Display search bar on top of dial page">
 <!ENTITY ntab.config.addurl "Add 'Add to quick dial' to right click menu">
+<!ENTITY ntab.config.loadInExistingTabs "Load in blank tabs when Firefox startup">
 <!ENTITY ntab.config.usehotkey "Enable hotkey to open dial page (Ctrl+0~9)">
 <!ENTITY ntab.config.yes "yes">
 <!ENTITY ntab.config.no "no">

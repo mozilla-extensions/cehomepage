@@ -9,6 +9,10 @@
 	Components.utils['import']('resource://ntab/quickdial.jsm');
     
 	function loadInExistingTabs() {
+		if (!gPref.getBoolPref("moa.ntab.loadInExistingTabs")) {
+			return;
+		}
+		
 		if (!gPref.getBoolPref('moa.ntab.openInNewTab')) {
 			return;
 		}

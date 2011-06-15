@@ -6,10 +6,11 @@
 		<preferences>
 			<preference id="ntab-dial-column" name="moa.ntab.dial.column" type="int"/>
 			<preference id="ntab-dial-row" name="moa.ntab.dial.row" type="int"/>
- 		<preference id="ntab-display-about-ntab" name="moa.ntab.openInNewTab" type="bool"/>
+			<preference id="ntab-display-about-ntab" name="moa.ntab.openInNewTab" type="bool"/>
 			<preference id="ntab-display-search" name="moa.ntab.dial.showSearch" type="bool"/>
 			<preference id="ntab-display-usehotkey" name="moa.ntab.display.usehotkey" type="bool"/>
 			<preference id="ntab-display-addurl" name="moa.ntab.contextMenuItem.show" type="bool"/> 
+			<preference id="ntab-display-loadInExistingTabs" name="moa.ntab.loadInExistingTabs" type="bool" />
 		</preferences>
 
 		<vbox flex='1'>
@@ -72,6 +73,7 @@
 				</menupopup>
 			</menulist> -->
 			<checkbox label='&ntab.config.addurl;' preference="ntab-display-addurl"/>
+			<checkbox label="&ntab.config.loadInExistingTabs;" preference="ntab-display-loadInExistingTabs" />
 <!-- 		<label value="&ntab.config.usehotkey;" control="ntab-usehotkey"/>
 			<menulist id="ntab-usehotkey" preference="ntab-display-usehotkey">
 				<menupopup>
