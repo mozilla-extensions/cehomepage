@@ -83,10 +83,6 @@
 		}
 	};
 	
-	ns.onPageLoad = function(e) {
-		// MOA.debug('loaded.');
-	};
-	
 	ns.onMenuItemCommand = function(event) {
 		if (event.target.tagName != 'menuitem')
 			return;
@@ -259,12 +255,15 @@
 	};
 })();
 
-window.addEventListener("load", MOA.NTab.onLoad, false);
-gBrowser.addEventListener('load', MOA.NTab.onPageLoad, false);
-gBrowser.addEventListener('contextmenu', MOA.NTab.onContextMenuGlobal, false);
-window.addEventListener('keydown', function(event) {
-	if (!event.ctrlKey || event.keyCode < 47 || event.keyCode > 58) {
-		return;
-	}
-	MOA.NTab.openTabByHotKey(event);
-}, true );
+window.addEventListener("load", function() {
+	window.setTimeout(function() {
+		MOA.NTab.onLoad();
+		gBrowser.addEventListener("contextmenu", MOA.NTab.onContextMenuGlobal, false);	
+		window.addEventListener("keydown", function(event) {
+			if (!event.ctrlKey || event.keyCode < 47 || event.keyCode > 58) {
+				return;
+			}
+			MOA.NTab.openTabByHotKey(event);
+		}, true );
+	}, 1);
+}, false);
