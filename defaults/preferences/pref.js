@@ -6,6 +6,3 @@ pref("extensions.cehomepage.autostartup", true);
 //pref("browser.startup.homepage", "chrome://cehomepage/locale/cehomepage.properties");
 //pref("browser.startup.homepage_reset", "chrome://cehomepage/locale/cehomepage.properties");
 //pref("browser.startup.page", 1);
-pref("browser.warnOnQuit", true);
-pref("browser.warnOnRestart", true);
-pref("browser.tabs.warnOnClose", false);
