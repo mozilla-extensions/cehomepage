@@ -240,10 +240,10 @@
 			case 55 :
 				realKey = "7";
 				break;
-			case 57 :
+			case 56 :
 				realKey = "8";
 				break;
-			case 58 :
+			case 57 :
 				realKey = "9";
 				break;
 		}
