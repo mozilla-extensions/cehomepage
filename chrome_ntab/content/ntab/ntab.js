@@ -984,12 +984,13 @@ function fillHistory() {
 			if (response.readyState == 4 && 200 == response.status) {
 				var sites = null;
 				try { 
-					sites = JSON.parse(response.responseText);
+					//sites = JSON.parse(response.responseText);
+					sitesContent = response.responseText;
 				} catch (err) {
 					// alert(err);
 				}
 				
-				if (!sites) 
+				if (!sitesContent) 
 					return;
 				
 //				_fillSites(sites, tabPanelDiv, tabObj.showIcon);
