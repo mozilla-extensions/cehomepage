@@ -14,7 +14,7 @@ INPUT, DIV, SPAN {
 
 A {
 	font: 12px/1.3 Helvetica,Tahoma,Arial,"微软雅黑","宋体",sans-serif;
-	line-height: 20px;	
+	line-height: 20px;
 }
 
 A:visited {
@@ -84,7 +84,7 @@ DIV.hide {
 }
 
 #layout > DIV:first-child DIV.feedback A {
-	text-decoration: none;	
+	text-decoration: none;
 	margin: 0 10px;
 	padding-left: 23px;
 	background: url("chrome://ntab/skin/icon/feedback.png") no-repeat scroll 0 0 transparent;
@@ -131,7 +131,7 @@ DIV#set_default_browser_msg {
 }
 
 #ntab-view-switchers-box:hover {
-	opacity: 1;	
+	opacity: 1;
 }
 
 DIV#btn_blank {
@@ -254,7 +254,7 @@ div.quick-dial-item div.btn-opt-del:hover {
 }
 
 DIV.quick-dial-item:hover DIV.btn-opt {
-	visibility: visible;	
+	visibility: visible;
 }
 
 /*height: 100% is not working under firefox3.5*/
@@ -329,7 +329,7 @@ DIV.quick-dial-item .quickdial-add SPAN {
 	margin-top: 96px;
 	background: url(chrome://ntab/skin/icon/add13x13.png) no-repeat scroll 6px center transparent;
 	-moz-border-radius: 8px;
-	
+
 }
 /* end */
 
@@ -354,16 +354,16 @@ DIV.quick-dial-item .quickdial-add SPAN {
 /* styles for prompt */
 #prompt-dialog {
 	position: fixed;
-	top: 0; 
-	left: 0; 
-	height: 100%; 
-	width: 100%; 
+	top: 0;
+	left: 0;
+	height: 100%;
+	width: 100%;
 	z-index: 1000;
 	background-color: rgba(0,0,0,0.4);
 }
 
 #prompt-dialog > DIV > DIV {
-	vertical-align: middle; 
+	vertical-align: middle;
 	text-align: center;
 }
 
@@ -376,7 +376,7 @@ DIV.quick-dial-item .quickdial-add SPAN {
 	background-color: #FFF;
 }
 
-#prompt-container .prompt-close-btn {	
+#prompt-container .prompt-close-btn {
 	float: right;
 	cursor: pointer;
 }
@@ -398,7 +398,7 @@ DIV.confirm-msg {
 }
 
 DIV.prompt-add-dial > DIV:first-child INPUT[type=checkbox] {
-	display: none;	
+	display: none;
 }
 
 DIV.prompt-add-dial > DIV:first-child SPAN.refresh {
@@ -482,11 +482,11 @@ DIV.prompt-edit-dial DIV.sites-list {
 
 DIV.prompt-edit-dial DIV.sites-list A {
 	color: #4B649A;
-	text-decoration: none;	
+	text-decoration: none;
 }
 
 DIV.prompt-edit-dial DIV.sites-list A:hover {
-	text-decoration: underline;	
+	text-decoration: underline;
 }
 
 DIV.prompt-edit-dial DIV.sites-list > DIV > DIV {
@@ -506,11 +506,11 @@ DIV.prompt-edit-dial DIV.sites-list > DIV > DIV:last-child {
 }
 
 DIV#prompt-content-box DIV.pick-image {
-	margin-bottom: 10px;	
+	margin-bottom: 10px;
 }
 
 DIV#prompt-content-box DIV.pick-image > SPAN {
-	padding-right: 10px;	
+	padding-right: 10px;
 }
 /* end */
 
@@ -572,16 +572,15 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 	height: 20px;
 	float: left;
 	overflow: hidden;
-	padding: 0 10px;
 	margin-top: 3px;
 }
 
 #history > DIV.tabbox > DIV.tabpanels > DIV.sites-list > DIV.more {
 	float: right;
 }
-	
+
 #history > DIV.tabbox > DIV.tabpanels > DIV.sites-list > DIV > A {
-	font-size: 12px;	
+	font-size: 12px;
 	text-decoration: none;
 	color: #16428a;
 }
@@ -590,20 +589,31 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 	text-decoration: underline;
 }
 
+#history > DIV.tabbox > DIV.tabpanels > DIV.sites-list > DIV > A.second{
+	margin-left: 3px;
+	padding-left: 6px;
+	background: url("chrome://ntab/skin/icon/bg.png") no-repeat scroll -70px 6px transparent;
+}
+
+#history > div.tabbox > div.tabpanels > div.nav-sites {
+	height: 70px;
+	overflow: hidden;
+}
 #history > div.tabbox > div.tabpanels > div.nav-sites > div {
-	width: 90px;
+	width: 100px;
+	text-align: center;
 }
 
 #history > div.tabbox > div.tabpanels > div.nav-sites > div > div {
-	float: left; 
-	margin: 2px 5px 0 0;	
+	float: left;
+	margin: 2px 5px 0 0;
 	height: 16px;
 	width: 16px;
 }
 /* end */
 
 /* styles for background customization */
-body.withbg #show_history > div.show-btn, 
+body.withbg #show_history > div.show-btn,
 body.withbg #history > div.tabbox > div.tabs > div.hide-btn,
 body.withbg DIV.dial-used,
 body.withbg DIV#history,

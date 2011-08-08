@@ -3,6 +3,7 @@
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
+Components.utils['import']('resource://ntab/utils.jsm');
 
 var DEBUG = false;
 function log() {
@@ -305,32 +306,39 @@ var last = {
             remove: function(tab) { return me.remove(tab); }
         };
     },
-    query: function() {
-        if (!this.session) {
-            this.session = this.read();
-        }
-        var res = [];
-        for (var i in this.session.windows) {
-            var win = this.session.windows[i];
-            for (var j in win.tabs) {
-                var tab = win.tabs[j];
-                var e = tab.entries[tab.index - 1];
-                if (!e)
-                    continue;
-                if (e.url == 'about:blank')
-                    continue;
-                res.push({
-                    title: e.title,
-                    url: e.url,
-                    length: tab.entries.length,
-                    data: JSON.stringify(tab),
-                    window_idx: i,
-                    tab_idx: j
-                });
-            }
-        }
-        return res;
-    },
+	query: function() {
+		if (!this.session) {
+			this.session = this.read();
+		}
+		var res = [];
+		if (this.session.windows.length != 0) {
+			var wins = this.session.windows;
+		} else {
+			var wins = JSON.parse(utils.readStrFromProFile(['ntab', 'session.json'])).windows;
+		}
+		for (var i in wins) {
+			var win = wins[i];
+			for (var j in win.tabs) {
+				var tab = win.tabs[j];
+				var e = tab.entries[tab.index - 1];
+				if (!e) {
+					continue;
+				}
+				if (e.url == 'about:blank') {
+					continue;
+				}
+				res.push({
+					title: e.title,
+					url: e.url,
+					length: tab.entries.length,
+					data: JSON.stringify(tab),
+					window_idx: i,
+					tab_idx: j
+				});
+			}
+		}
+		return res;
+	},
     read: function() {
         var files = this.getSessionFiles();
         var session = null;

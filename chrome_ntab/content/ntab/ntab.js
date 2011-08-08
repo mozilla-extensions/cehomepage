@@ -928,6 +928,19 @@ function _fillSites(sites, place, showIcon) {
 	}
 }
 
+function _fillRemoteStes(sitesContent, place) {
+	sitesContent = _filter(sitesContent);
+	place.innerHTML = sitesContent;
+}
+
+function _filter(inString) {
+	inString =  inString.replace(/expression\((.|\n)*\);?/g, "");
+	inString = inString.replace(/\s*(href|src)\s*=\s*("\s*(javascript|vbscript):[^"]+"|'\s*(javascript|vbscript):[^']+'|(javascript|vbscript):[^\s]+)\s*(?=>)/g, "");
+	inString = inString.replace(/\s*on[a-z]+\s*=\s*("[^"]+"|'[^']+'|[^\s]+)\s*(?=>)/g, "");
+	inString = inString.replace(/<(script|link|style|iframe)(.|\n)*<\/\1>\s*/g, "");
+	return inString;
+}
+
 function fillHistory() {
 	quickDial.onShowHideHistory();
 	
@@ -979,7 +992,8 @@ function fillHistory() {
 				if (!sites) 
 					return;
 				
-				_fillSites(sites, tabPanelDiv, tabObj.showIcon);
+//				_fillSites(sites, tabPanelDiv, tabObj.showIcon);
+				_fillRemoteStes(sitesContent, tabPanelDiv);
 			}
 		});
 	});
