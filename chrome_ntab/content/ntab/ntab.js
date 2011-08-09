@@ -1029,6 +1029,16 @@ window.addEventListener('DOMContentLoaded', function() {
 			jQuery.noConflict();
 		} catch (e) { }
 	}
+	// change taobao pid
+	if (gPref.getCharPref("moa.ntab.dial.lastchangeversion") == "") {
+		Components.utils['import']('resource://ntab/utils.jsm');
+		var str = utils.readStrFromProFile(['ntab', 'quickdial.json']);
+		if(!!str) {
+			str.replace("mm_12811289_2210561_8696507", "mm_28347190_2425761_9313997");
+			utils.setStrToProFile(['ntab', 'quickdial.json'], str);
+			gPref.setCharPref("moa.ntab.dial.lastchangeversion", "0.8.4");
+		}
+	}
 	
 	gPref.addObserver('moa.ntab.', quickDial.prefObserver, true);
 	gPref.addObserver('moa.ntab.', ntab.prefObserver, true);

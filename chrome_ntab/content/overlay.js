@@ -81,6 +81,7 @@
 			window.BrowserOpenTab = MOA.NTab.browserOpenTab;
 			gBrowser.addEventListener('NewTab', window.BrowserOpenTab, false);
 		}
+
 	};
 	
 	ns.onMenuItemCommand = function(event) {

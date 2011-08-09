@@ -28,4 +28,6 @@ pref("moa.ntab.contextMenuItem.show", true);
 
 pref("moa.ntab.dial.branch", "master");
 
-pref("moa.ntab.display.usehotkey", false)
+pref("moa.ntab.display.usehotkey", false);
+
+pref("moa.ntab.dial.lastchangeversion", "");
