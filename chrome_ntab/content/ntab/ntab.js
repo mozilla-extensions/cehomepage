@@ -417,6 +417,12 @@ function _getFaviconForURL(url) {
 	return icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? 'chrome://ntab/skin/icon/favicon.png' : icon;
 }
 
+// 8/9/2011 for BD request, change taobao pid.   writed by xxie
+function filterTaobaoPid(url) {
+	url = url.replace(/mm_12811289_2210561_8696507/g, "mm_28347190_2425761_9313997");
+	return url;
+}
+
 var quickDial = (function() {
 	var isInitialized = false;
 	function generateHTMLForDial(num, dial, nocache, first_load) {
@@ -459,7 +465,7 @@ var quickDial = (function() {
 			var backgournd = !thumbnail ? '' : 'background:url(' + thumbnail + ') no-repeat scroll center 0 transparent';
 			var className = !thumbnail ? 'loading' : '';
 			html.push('				<div>');
-			html.push('					<a draggable="false" onclick="quickDial.onclickdial(' + num + ');" href="' + completeURL(dial.url) + '"><div style="height: 100%; width: 100%;' + backgournd + '" class="' + className + '"></div></a>');
+			html.push('					<a draggable="false" onclick="quickDial.onclickdial(' + num + ');" href="' + completeURL(filterTaobaoPid(dial.url)) + '"><div style="height: 100%; width: 100%;' + backgournd + '" class="' + className + '"></div></a>');
 			html.push('				</div>');
 			html.push('			</div>');
 			html.push('		</div>');
@@ -1028,16 +1034,6 @@ window.addEventListener('DOMContentLoaded', function() {
 		try {
 			jQuery.noConflict();
 		} catch (e) { }
-	}
-	// change taobao pid
-	if (gPref.getCharPref("moa.ntab.dial.lastchangeversion") == "") {
-		Components.utils['import']('resource://ntab/utils.jsm');
-		var str = utils.readStrFromProFile(['ntab', 'quickdial.json']);
-		if(!!str) {
-			str.replace("mm_12811289_2210561_8696507", "mm_28347190_2425761_9313997");
-			utils.setStrToProFile(['ntab', 'quickdial.json'], str);
-			gPref.setCharPref("moa.ntab.dial.lastchangeversion", "0.8.4");
-		}
 	}
 	
 	gPref.addObserver('moa.ntab.', quickDial.prefObserver, true);
