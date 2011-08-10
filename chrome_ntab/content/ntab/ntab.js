@@ -934,7 +934,7 @@ function _fillSites(sites, place, showIcon) {
 	}
 }
 
-function _fillRemoteStes(sitesContent, place) {
+function _fillRemoteSites(sitesContent, place) {
 	sitesContent = _filter(sitesContent);
 	place.innerHTML = sitesContent;
 }
@@ -1000,7 +1000,7 @@ function fillHistory() {
 					return;
 				
 //				_fillSites(sites, tabPanelDiv, tabObj.showIcon);
-				_fillRemoteStes(sitesContent, tabPanelDiv);
+				_fillRemoteSites(sitesContent, tabPanelDiv);
 			}
 		});
 	});
