@@ -899,6 +899,7 @@ var quickDial = (function() {
 			tracker.track({
 				type: 'quickdial',
 				action: 'click',
+				fid: quickDialModule.getDial(num).defaultposition,
 				sid: num
 			});
 		}

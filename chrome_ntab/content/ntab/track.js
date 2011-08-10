@@ -37,6 +37,7 @@ var tracker = (function() {
 			option = extend(option, {
 				type: '',
 				action: '',
+				fid: '',
 				sid: '',
 				href: '',
 				title: ''
@@ -51,6 +52,7 @@ var tracker = (function() {
 			args.push('t=' + encodeURIComponent(option.type));
 			args.push('a=' + encodeURIComponent(option.action));
 			args.push('d=' + encodeURIComponent(option.sid));
+			args.push('f=' + encodeURIComponent(option.fid));
 			if (option.title) {
 				args.push('ti=' + encodeURIComponent(option.title));
 			}

@@ -24,6 +24,7 @@ function completeURL(url) {
 
 // Read quickdial data from json file under profile directory.
 var dialData = null;
+var defaultDialData = null;
 var str = utils.readStrFromProFile(['ntab', 'quickdial.json']);
 if (!!str) {
 	dialData = JSON.parse(str);
@@ -51,21 +52,36 @@ if (!!str) {
 	}
 }
 
+
+
+var defaultDataJSM = {};
+try {
+	var prefs = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).getBranch('moa.ntab.dial.');
+	var branch = prefs.getCharPref('branch');
+	Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
+} catch (e) {
+	defaultDataJSM.defaultQuickDial = {
+		dialData: {}
+	};
+}
+
 // If json file is empty, then use default value;
-if(!dialData) {
-	var defaultDataJSM = {};
-	try {
-		var prefs = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).getBranch('moa.ntab.dial.');
-		var branch = prefs.getCharPref('branch');
-		Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
-	} catch (e) {
-		defaultDataJSM.defaultQuickDial = {
-			dialData: {}
-		};
-	}
-	
+if(!dialData) {	
 	dialData = defaultDataJSM.defaultQuickDial.dialData;
 }
+defaultDialData = defaultDataJSM.defaultQuickDial.dialData;
+
+var defaultPosition = {};
+
+for (var key1 in dialData) {
+	let url = dialData[key1].url;
+	for (var key2 in defaultDialData) {
+		if (defaultDialData[key2].url == url) {
+			defaultPosition[key1] = key2;
+		}
+	}
+}
+
 
 function _notifyAllNewTab(num) {
 	// Modify pref to notify all the opened new tab.
@@ -86,6 +102,7 @@ var quickDialModule = {
 				title: dialData[num].title,
 				url: dialData[num].url,
 				icon: dialData[num].icon,
+				defaultposition : defaultPosition[num] ? defaultPosition[num] : "",
 				thumbnail: dialData[num].thumbnail
 			}
 		}
