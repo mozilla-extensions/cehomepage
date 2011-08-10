@@ -597,7 +597,7 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 #history > DIV.tabbox > DIV.tabpanels > DIV.sites-list > DIV > A.second{
 	margin-left: 3px;
 	padding-left: 6px;
-	background: url("chrome://ntab/skin/icon/bg.png") no-repeat scroll -70px 6px transparent;
+	background: url("chrome://ntab/skin/icon/bg.png") no-repeat scroll 0px 5px transparent;
 }
 
 #history > div.tabbox > div.tabpanels > div.nav-sites {

@@ -56,7 +56,7 @@ defaultQuickDial = {
 		'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/': 'chrome://ntab/skin/thumb/master/360.png',
 		'http://www.tmall.com/': 'chrome://ntab/skin/thumb/master/taobao.png',
 		'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/master/tmall.png',
-		'http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_12811289_2210561_8696507&eventid=101334': 'chrome://ntab/skin/thumb/master/tmall.png',		'http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997&k=e02915d8b8ad9603' : 'chrome://ntab/skin/thumb/master/taobaohot.jpg',
+		'http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313997&eventid=101334': 'chrome://ntab/skin/thumb/master/tmall.png',		'http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997&k=e02915d8b8ad9603' : 'chrome://ntab/skin/thumb/master/taobaohot.jpg',
 		'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
 		'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
 		'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',

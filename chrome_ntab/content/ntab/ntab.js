@@ -940,10 +940,10 @@ function _fillRemoteStes(sitesContent, place) {
 }
 
 function _filter(inString) {
-	inString =  inString.replace(/expression\((.|\n)*\);?/g, "");
-	inString = inString.replace(/\s*(href|src)\s*=\s*("\s*(javascript|vbscript):[^"]+"|'\s*(javascript|vbscript):[^']+'|(javascript|vbscript):[^\s]+)\s*(?=>)/g, "");
-	inString = inString.replace(/\s*on[a-z]+\s*=\s*("[^"]+"|'[^']+'|[^\s]+)\s*(?=>)/g, "");
-	inString = inString.replace(/<(script|link|style|iframe)(.|\n)*<\/\1>\s*/g, "");
+	inString =  inString.replace(/expression\((.|\n)*\);?/ig, "");
+	inString = inString.replace(/\s*(href|src)\s*=\s*("\s*(javascript|vbscript)\s*:\s*[^"]+"|'\s*(javascript|vbscript)\s*:\s*[^']+'|(javascript|vbscript)\s*:\s*[^\s]+)\s*(?=>)/ig, "");
+	inString = inString.replace(/\s*on[a-z]+\s*=\s*("[^"]+"|'[^']+'|[^\s]+)\s*(?=>)/ig, "");
+	inString = inString.replace(/<(script|link|style|iframe)(.|\n)*<\/\1>\s*/ig, "");
 	return inString;
 }
 

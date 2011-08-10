@@ -28,10 +28,15 @@ var str = utils.readStrFromProFile(['ntab', 'quickdial.json']);
 if (!!str) {
 	dialData = JSON.parse(str);
 	
+	var _oldTaobao = false;
 	// Refresh favicon and complete url
 	for (index in dialData) {
 		var dial = dialData[index];
 		dial.url = completeURL(dial.url);
+		if (dial.url.indexOf("mm_12811289_2210561_8696507") != -1) {
+			dial.url = dial.url.replace(/mm_12811289_2210561_8696507/g, "mm_28347190_2425761_9313997");
+			_oldTaobao = true;
+		}
 		if (!dial.icon) {
 			try {
 				var icon = faviconService.getFaviconImageForPage(ioService.newURI(dial.url, null, null)).spec;
@@ -40,6 +45,9 @@ if (!!str) {
 				dump('\nError occurs when parsing quickdial.json: ' + e + '\n');
 			}
 		}
+	} if (_oldTaobao) {
+		str = str.replace(/mm_12811289_2210561_8696507/g, "mm_28347190_2425761_9313997");
+		utils.setStrToProFile(['ntab', 'quickdial.json'], str);
 	}
 }
 
