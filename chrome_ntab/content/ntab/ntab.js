@@ -690,7 +690,7 @@ var quickDial = (function() {
 					_fillSiteSelections(_getAllBookmarks(), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.bookmark-sites')[0])
 					
 					// set other sites
-					httpGet(gPref.getCharPref('moa.ntab.dial.sitesurl'), function(response) {
+					httpGet(gPref.getCharPref('moa.ntab.dial.sitesjson'), function(response) {
 						if (response.readyState == 4 && 200 == response.status) {
 							var sites = null;
 							try { 

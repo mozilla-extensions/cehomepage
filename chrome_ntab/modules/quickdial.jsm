@@ -78,6 +78,7 @@ for (var key1 in dialData) {
 	for (var key2 in defaultDialData) {
 		if (defaultDialData[key2].url == url) {
 			defaultPosition[key1] = key2;
+			break;
 		}
 	}
 }
@@ -194,6 +195,18 @@ var quickDialModule = {
 		} 
 		dialData[num].title = data.title;
 		dialData[num].url = completeURL(data.url);
+
+		var flag = false;
+		for (var key in defaultDialData) {
+			if (defaultDialData[key].url == dialData[num].url) {
+				defaultPosition[num] = key;
+				flag = true;
+				break;
+			}
+		}
+		if(!flag) {
+			defaultPosition[num]  = "";
+		}
 		
 		try {
 			var icon = faviconService.getFaviconImageForPage(ioService.newURI(data.url, null, null)).spec;
@@ -230,6 +243,7 @@ var quickDialModule = {
 			}
 		}
 		delete dialData[num];
+		delete defaultPosition[num];
 		_onDialModified(num);
 		
 		if (delCacheFile) {
@@ -240,21 +254,24 @@ var quickDialModule = {
 	exchangeDial: function(source, target) {
 		if (source == target)
 			return;
-			
+
 		var tmp = dialData[source];
+		var tmpdefaultPosition = defaultPosition[source];
 		// if target is empty, then delete source data.
 		if (!dialData[target]) {
 			delete dialData[source];
 		} else {
 			dialData[source] = dialData[target];
+			defaultPosition[source] = defaultPosition[target];
 		}
 		
 		if (!tmp) {
 			delete dialData[target];
 		} else {
 			dialData[target] = tmp;
+			defaultPosition[target] = tmpdefaultPosition;
 		}
-		
+	
 		_onDialModified(source);
 		_onDialModified(target);		
 	}

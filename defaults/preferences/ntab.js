@@ -15,6 +15,7 @@ pref("moa.ntab.quickdial.history.view", "nav_sites");
 pref("moa.ntab.view.search.url", "http://i.g-fox.cn/newtab/china-start/index.html");
 pref("moa.ntab.view.nav.url", "http://www.huohu123.com/?from=ntab");
 pref("moa.ntab.dial.sitesurl", "http://i.g-fox.cn/nav/ntab_h.html");
+pref("moa.ntab.dial.sitesjson", "http://i.g-fox.cn/nav/ntab.json");
 pref("moa.ntab.dial.search.url", "http://i.g-fox.cn/newtab/newtab_search.html");
 
 pref("moa.ntab.openLinkInNewTab", false);
