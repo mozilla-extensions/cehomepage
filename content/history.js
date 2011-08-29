@@ -95,16 +95,6 @@ function cehomepage_autoSetHomepage() {
 }
 
 window.addEventListener('load', function(evt) {
-	// do not use any mask which cause an "error" on Firefox5:
-	// Error: gBrowser.addProgressListener was called with a second argument, which is not supported. See bug 608628.
-	// Source: chrome://browser/content/tabbrowser.xml
-	// Line: 1840
-  //following 4 lines added for xunlei build, set the homepage in distribution to profile
-//  var homeSetToProfile = prefs.get("extensions.cehomepage.homeSetToProfile",false);
-//  if (!homeSetToProfile){
-//    cehomepage_setHomepageToProfile();
-//    prefs.set("extensions.cehomepage.homeSetToProfile",true);
-//  }
 	var latestVersion = prefs.get("extensions.cehomepage.latestVersion", "");
 	if(latestVersion != "0.8.5") {
 		cehomepage_setHomepageToProfile();

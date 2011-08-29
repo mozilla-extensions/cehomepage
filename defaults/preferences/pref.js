@@ -1,5 +1,4 @@
 pref("extensions.cehomepage.autoSetHomepage",false);
-pref("extensions.cehomepage.latestVersion","");
 pref("extensions.cehomepage.keepsessions", 10);
 pref("extensions.cehomepage.homepage", "about:cehome");
 pref("extensions.cehomepage.allowed_domains", ".g-fox.cn, .firefoxchina.cn, about:cehome");
