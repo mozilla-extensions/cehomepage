@@ -546,10 +546,11 @@ var quickDial = (function() {
 		var html = [];
 		for (var i = 0; i < sites.length; i++) {
 			var site = sites[i];
+			var filterURL = site.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");
 			html.push('<div>');
-			html.push('	<div><img src="' + _getFaviconForURL(site.url) + '" /></div>');
+			html.push('	<div><img src="' + _getFaviconForURL(filterURL) + '" /></div>');
 			html.push('	<div>');
-			html.push('	<a class="text-ellipsis" href="' + site.url + '" onclick="quickDial.quickSelect(\'' + _filter(site.url) + '\', \'' + _filter(site.title) + '\'); return false;">' + escapeHTML(site.title) + '</a>');
+			html.push('	<a class="text-ellipsis" href="' + filterURL + '" onclick="quickDial.quickSelect(\'' + _filter(filterURL) + '\', \'' + _filter(site.title) + '\'); return false;">' + escapeHTML(site.title) + '</a>');
 			html.push('	</div>');
 			html.push('</div>');
 		}
@@ -910,11 +911,12 @@ function _fillSites(sites, place, showIcon) {
 	var divs = [];
 	for (var i = 0; i < sites.length; i++) {
 		var site = sites[i];
+		var filterURL = site.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");
 		var div = document.createElement('DIV');
 		if (showIcon) {
-			div.innerHTML = '<div><img src="chrome://ntab/skin/icon/favicon.png"></img></div><a class="text-ellipsis" href="' + completeURL(site.url) + '">' + escapeHTML(site.title) + '</a>';
+			div.innerHTML = '<div><img src="chrome://ntab/skin/icon/favicon.png"></img></div><a class="text-ellipsis" href="' + completeURL(filterURL) + '">' + escapeHTML(site.title) + '</a>';
 		} else {
-			div.innerHTML = '<a class="text-ellipsis" href="' + completeURL(site.url) + '">' + escapeHTML(site.title) + '</a>';
+			div.innerHTML = '<a class="text-ellipsis" href="' + completeURL(filterURL) + '">' + escapeHTML(site.title) + '</a>';
 		}
 		place.appendChild(div);
 		divs.push(div);
@@ -925,7 +927,8 @@ function _fillSites(sites, place, showIcon) {
 		window.setTimeout(function() {
 			for (var i = 0; i < sites.length; i++) {
 				var site = sites[i];
-				var iconUrl = _getFaviconForURL(site.url);
+				var filterURL = site.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");
+				var iconUrl = _getFaviconForURL(filterURL);
 				if (!iconUrl || iconUrl == 'chrome://ntab/skin/icon/favicon.png') {
 					iconUrl = site.iconUrl ? site.iconUrl : iconUrl;
 				}

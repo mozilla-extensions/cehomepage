@@ -9,7 +9,12 @@ var DEBUG = false;
 function log() {
 		return (DEBUG ? Application.console.log.apply(Application.console, arguments):true);
 }
-
+function isFirefoxLowerThan4() {
+	return typeof Application.getExtensions == "undefined";
+}
+if(!isFirefoxLowerThan4()){
+	Components.utils.import("resource://gre/modules/AddonManager.jsm");
+}
 if (!window.opener) {
     window.addEventListener('unload', function(evt) {
         if (evt.originalTarget == document) {
@@ -29,59 +34,55 @@ if (!window.opener) {
     }, true);
 }
 
-if (String.prototype['trim'] == null) {
-    String.prototype['trim'] = function() {
-        var str = this;
-        var whitespace = ' \n\r\t\f\x0b\xa0\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u200b\u2028\u2029\u3000';
-        for (var i = 0; i < str.length; i++) {
-            if (whitespace.indexOf(str.charAt(i)) === -1) {
-                str = str.substring(i);
-                break;
-            }
-        }
-        for (i = str.length - 1; i >= 0; i--) {
-            if (whitespace.indexOf(str.charAt(i)) === -1) {
-                str = str.substring(0, i + 1);
-                break;
-            }
-        }
-        return whitespace.indexOf(str.charAt(0)) === -1 ? str : '';
-    };
-}
 
-if (!window['JSON']) {
-    var json = Cc['@mozilla.org/dom/json;1'].createInstance(Ci.nsIJSON);
-    window['JSON'] = {
-        parse: function(str) { return json.decode(str); },
-        stringify: function(obj) { return json.encode(obj); }
-    };
-}
-
-var progListener = {
-    QueryInterface: function(aIID) {
-        if (aIID.equals(Ci.nsIWebProgressListener) ||
-            aIID.equals(Ci.nsISupportsWeakReference) ||
-            aIID.equals(Ci.nsISupports))
-            return this;
-        throw Components.results.NS_NOINTERFACE;
-    },
-    onLocationChange: function(aWebProgress, aRequest, aURI) {
-    	try {
-        	log(['inject', aURI.host.toLowerCase()]);
-	        inject(aURI.host.toLowerCase(), aWebProgress.DOMWindow);
-    	} catch (e) {
-    		log('Error occurs when injecting.');
-    	}
-    },
-    onStateChange: function() {},
-    onProgressChange: function() {},
-    onStatusChange: function() {},
-    onSecurityChange: function() {}
+var addonlistener = {
+	onUninstalling: function (addon) {
+		cancelAboutProtocol(addon);
+	},
+	
+	onDisabling: function (addon) {
+		cancelAboutProtocol(addon);	
+	},
+	
+	onOperationCancelled: function() {
+		if(addon.id == "cehomepage@mozillaonline.com") {
+			var homepage = prefs.get("browser.startup.homepage","");
+			var urls = homepage.split("|");
+			var url;
+			for (var i = 0; i < urls.length; i++){
+				urls[i] = urls[i].trim().replace(/^(http:\/\/)?i\.firefoxchina\.cn\/?$/ig, "about:cehome");		
+			}
+			homepage = urls.join("|");
+			prefs.set("browser.startup.homepage",homepage);
+		}
+	}
 };
 
+function cancelAboutProtocol(addon) {
+	if(addon.id == "cehomepage@mozillaonline.com") {
+		var homepage = prefs.get("browser.startup.homepage","");
+		homepage = homepage.replace(/about:cehome/ig, "http://i.firefoxchina.cn/");
+		prefs.set("browser.startup.homepage",homepage);
+		for (let j = 0; j < gBrowser.tabs.length; j++) {
+			if (gBrowser.getBrowserAtIndex(j).contentWindow.document.location == "about:cehome") {
+				gBrowser.getBrowserAtIndex(j).contentWindow.document.location = "http://i.firefoxchina.cn/";
+			}
+		}			
+	}
+}
 function cehomepage_setHomepageToProfile() {
   try {
+	//in china edition, pref "browser.startup.homepage" is a locale string, has mimo type, 
+	//so must use  getLocale() other than get()
+	//see in distribution.ini
     var homepage = prefs.getLocale("browser.startup.homepage","");
+	var urls = homepage.split("|");
+	var url;
+	for (var i = 0; i < urls.length; i++){
+		urls[i] = urls[i].trim().replace(/^(http:\/\/)?i\.g-fox\.cn\/?$/ig, "about:cehome");	
+		urls[i]	= urls[i].replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");	
+	}
+	homepage = urls.join("|");
     prefs.set("browser.startup.homepage",homepage);
   } catch (e){
     //maybe pref is already set by user, do nothing
@@ -98,14 +99,18 @@ window.addEventListener('load', function(evt) {
 	// Error: gBrowser.addProgressListener was called with a second argument, which is not supported. See bug 608628.
 	// Source: chrome://browser/content/tabbrowser.xml
 	// Line: 1840
-    gBrowser.addProgressListener(progListener/*, Ci.nsIWebProgress.NOTIFY_LOCATION*/);
   //following 4 lines added for xunlei build, set the homepage in distribution to profile
-  var homeSetToProfile = prefs.get("extensions.cehomepage.homeSetToProfile",false);
-  if (!homeSetToProfile){
-    cehomepage_setHomepageToProfile();
-    prefs.set("extensions.cehomepage.homeSetToProfile",true);
-  }
-  
+//  var homeSetToProfile = prefs.get("extensions.cehomepage.homeSetToProfile",false);
+//  if (!homeSetToProfile){
+//    cehomepage_setHomepageToProfile();
+//    prefs.set("extensions.cehomepage.homeSetToProfile",true);
+//  }
+	var latestVersion = prefs.get("extensions.cehomepage.latestVersion", "");
+	if(latestVersion != "0.8.5") {
+		cehomepage_setHomepageToProfile();
+		prefs.set("extensions.cehomepage.latestVersion", "0.8.5");
+	}
+
  	//the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
 	var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
 	if (autoSetHomepage) {
@@ -120,9 +125,29 @@ window.addEventListener('load', function(evt) {
 			});
 		}
 	}
+	if(!isFirefoxLowerThan4()) {
+		AddonManager.addAddonListener(addonlistener);
+	}
+}, false);
+window.addEventListener("DOMContentLoaded", function(evt) {
+	if (!evt.originalTarget instanceof HTMLDocument) {
+		return;
+	}
+	try {
+		var view = evt.originalTarget.defaultView;
+		if (view.top == view || view.top == view.parent) {
+        	log(['inject', view.location.host.toLowerCase()]);
+	        inject(view.location.host.toLowerCase(), view);
+		}
+	} catch(e) {
+		log('Error occurs when injecting.');
+	}
 }, false);
 window.addEventListener('unload', function(evt) {
     gBrowser.removeProgressListener(progListener);
+	if(!isFirefoxLowerThan4()) {
+		AddonManager.removeAddonListener(addonlistener);
+	}
 }, false);
 
 function inject(host, win) {
@@ -132,7 +157,6 @@ function inject(host, win) {
         return;
     }
     var hosts = prefs.get('extensions.cehomepage.allowed_domains', '').split(',');
-    hosts.push('about:cehomepage');
     var length = host.length;
     while (true) {
         if (hosts.length == 0) {
@@ -225,7 +249,7 @@ var homepage = {
     homepage_changed: function() { return prefs.changed('browser.startup.homepage') && this.homepage() != this.cehomepage(); },
     page: function() { return prefs.get('browser.startup.page', 1); },
     page_changed: function() { return prefs.changed('browser.startup.page') && this.page() == 1; },
-    cehomepage: function() { return prefs.get('extensions.cehomepage.homepage', 'http://i.g-fox.cn'); },
+    cehomepage: function() { return prefs.get('extensions.cehomepage.homepage', 'http://i.firefoxchina.cn'); },
     autostart: function(flag) {
         var ori = prefs.get('extensions.cehomepage.autostartup', true);
         if (typeof flag != 'undefined') {
@@ -264,7 +288,7 @@ var frequent = {
             var stmt = conn.createStatement(this.sql);
             stmt.bindInt32Parameter(0, n);
             while (stmt.executeStep()) {
-                res.push({title: stmt.getString(0), uri: stmt.getString(1)});
+                res.push({title: stmt.getString(0), uri: stmt.getString(1).replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn")});
             }
         }
         finally {
@@ -280,7 +304,7 @@ var frequent = {
         root.containerOpen = true;
         for (var i = 0; i < root.childCount; i++) {
             var e = root.getChild(i);
-            res.push({uri: e.uri, title: e.title});
+            res.push({uri: e.uri.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn"), title: e.title});
         }
         root.containerOpen = false;
 
@@ -329,7 +353,7 @@ var last = {
 				}
 				res.push({
 					title: e.title,
-					url: e.url,
+					url: e.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn"),
 					length: tab.entries.length,
 					data: JSON.stringify(tab),
 					window_idx: i,

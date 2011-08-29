@@ -12,11 +12,13 @@ pref("moa.ntab.dial.row", 2);
 pref("moa.ntab.quickdial.hidehistory", false);
 pref("moa.ntab.quickdial.history.view", "nav_sites");
 
-pref("moa.ntab.view.search.url", "http://i.g-fox.cn/newtab/china-start/index.html");
+pref("moa.ntab.view.search.url", "http://i.firefoxchina.cn/newtab/china-start/index.html");
 pref("moa.ntab.view.nav.url", "http://www.huohu123.com/?from=ntab");
-pref("moa.ntab.dial.sitesurl", "http://i.g-fox.cn/nav/ntab_h.html");
-pref("moa.ntab.dial.sitesjson", "http://i.g-fox.cn/nav/ntab2.json");
-pref("moa.ntab.dial.search.url", "http://i.g-fox.cn/newtab/newtab_search.html");
+
+pref("moa.ntab.dial.sitesjson", "http://i.firefoxchina.cn/nav/ntab2.json");
+pref("moa.ntab.dial.sitesurl", "http://i.firefoxchina.cn/nav/ntab_h.html");
+pref("moa.ntab.dial.search.url", "http://i.firefoxchina.cn/newtab/newtab_search.html");
+
 
 pref("moa.ntab.openLinkInNewTab", false);
 pref("moa.ntab.loadInExistingTabs", false);
