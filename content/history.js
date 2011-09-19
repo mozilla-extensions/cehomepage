@@ -39,18 +39,18 @@ var addonlistener = {
 	onUninstalling: function (addon) {
 		cancelAboutProtocol(addon);
 	},
-	
+
 	onDisabling: function (addon) {
-		cancelAboutProtocol(addon);	
+		cancelAboutProtocol(addon);
 	},
-	
+
 	onOperationCancelled: function() {
 		if(addon.id == "cehomepage@mozillaonline.com") {
 			var homepage = prefs.get("browser.startup.homepage","");
 			var urls = homepage.split("|");
 			var url;
 			for (var i = 0; i < urls.length; i++){
-				urls[i] = urls[i].trim().replace(/^(http:\/\/)?i\.firefoxchina\.cn\/?$/ig, "about:cehome");		
+				urls[i] = urls[i].trim().replace(/^(http:\/\/)?i\.firefoxchina\.cn\/?$/ig, "about:cehome");
 			}
 			homepage = urls.join("|");
 			prefs.set("browser.startup.homepage",homepage);
@@ -67,20 +67,20 @@ function cancelAboutProtocol(addon) {
 			if (gBrowser.getBrowserAtIndex(j).contentWindow.document.location == "about:cehome") {
 				gBrowser.getBrowserAtIndex(j).contentWindow.document.location = "http://i.firefoxchina.cn/";
 			}
-		}			
+		}
 	}
 }
 function cehomepage_setHomepageToProfile() {
   try {
-	//in china edition, pref "browser.startup.homepage" is a locale string, has mimo type, 
+	//in china edition, pref "browser.startup.homepage" is a locale string, has mimo type,
 	//so must use  getLocale() other than get()
 	//see in distribution.ini
     var homepage = prefs.getLocale("browser.startup.homepage","");
 	var urls = homepage.split("|");
 	var url;
 	for (var i = 0; i < urls.length; i++){
-		urls[i] = urls[i].trim().replace(/^(http:\/\/)?i\.g-fox\.cn\/?$/ig, "about:cehome");	
-		urls[i]	= urls[i].replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");	
+		urls[i] = urls[i].trim().replace(/^(http:\/\/)?i\.g-fox\.cn\/?$/ig, "about:cehome");
+		urls[i]	= urls[i].replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");
 	}
 	homepage = urls.join("|");
     prefs.set("browser.startup.homepage",homepage);
@@ -94,15 +94,74 @@ function cehomepage_autoSetHomepage() {
   prefs.set("browser.startup.homepage",homepage);
 }
 
+function replaceBlankToCEHome() {
+	if(prefs.set("extensions.cehomepage.restoreHomepageFor360", false)) {
+		return;
+	}
+	var homepage = prefs.get("browser.startup.homepage","");
+	if (homepage != "about:blank") {
+		prefs.set("extensions.cehomepage.restoreHomepageFor360", true);
+		return;
+	} else {
+		var lastNotificationTime = prefs.get("extensions.cehomepage.lastNotificationTime", 0);
+		var today = Math.floor(new Date().getTime() / (86400 * 1000));
+		if((today - lastNotificationTime) >= 5) {
+			var strbundle = document.getElementById("CEHPHistoryStrings");
+			var buttons = [
+				{
+					label: strbundle.getString("cehomepage.notification.yes"),
+					accessKey: "Y",
+					popup: null,
+					callback: function(){
+						prefs.set("browser.startup.homepage", "about:cehome");
+						prefs.set("extensions.cehomepage.restoreHomepageFor360", true);
+						gBrowser.getNotificationBox().removeCurrentNotification();
+					}
+				},
+				{
+					label: strbundle.getString("cehomepage.notification.no"),
+					accessKey: "N",
+					popup: null,
+					callback: function(){
+						prefs.set("extensions.cehomepage.restoreHomepageFor360", true);
+						gBrowser.getNotificationBox().removeCurrentNotification();
+					}
+				},
+				{
+					label: strbundle.getString("cehomepage.notification.later"),
+					accessKey: "R",
+					popup: null,
+					callback: function(){
+						gBrowser.getNotificationBox().removeCurrentNotification();
+					}
+				}
+			];
+			var notificationBox = gBrowser.getNotificationBox();
+			var priority = notificationBox.PRIORITY_INFO_MEDIUM;
+			var newBar = notificationBox.appendNotification(strbundle.getString("cehomepage.notification.message"),
+															"cehp-upgrade-homepage", "chrome://ntab/skin/logo/logo32x32_cn.png", priority, buttons);
+			newBar.addEventListener("DOMNodeRemoved", function(){
+				prefs.set("extensions.cehomepage.lastNotificationTime", today);
+			}, true);
+			newBar.persistence+=3;
+		}
+	}
+}
+
 window.addEventListener('load', function(evt) {
 	var latestVersion = prefs.get("extensions.cehomepage.latestVersion", "");
-	if(latestVersion != "0.8.5") {
+	if(latestVersion == "0.8.5") {
+		prefs.set("extensions.cehomepage.restoreHomepageFor360", false);
+	}else if (latestVersion == "") {
 		cehomepage_setHomepageToProfile();
-		prefs.set("extensions.cehomepage.latestVersion", "0.8.5");
+	}
+	prefs.set("extensions.cehomepage.latestVersion", "0.8.6");
+	if(!prefs.set("extensions.cehomepage.restoreHomepageFor360", false)) {
+		window.setTimeout(replaceBlankToCEHome, 10000);
 	}
 
  	//the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
-	var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage",false);
+	var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage", false);
 	if (autoSetHomepage) {
 		if (Application.extensions && Application.extensions.get("cehomepage@mozillaonline.com").firstRun){
   			cehomepage_autoSetHomepage();
@@ -134,7 +193,6 @@ window.addEventListener("DOMContentLoaded", function(evt) {
 	}
 }, false);
 window.addEventListener('unload', function(evt) {
-    gBrowser.removeProgressListener(progListener);
 	if(!isFirefoxLowerThan4()) {
 		AddonManager.removeAddonListener(addonlistener);
 	}
@@ -175,7 +233,7 @@ function inject(host, win) {
     }
   } catch (e){
     //this means it's in a earlier version of firefox, do nothing;
-    
+
   }
 
 }

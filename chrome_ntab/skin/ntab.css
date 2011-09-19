@@ -551,6 +551,18 @@ DIV#prompt-content-box DIV.pick-image > SPAN {
 	text-shadow: 0 1px 1px white;
 }
 
+#history > DIV.tabbox > DIV.tabs > DIV.homepagetab {
+	float: left;
+	margin: 5px 0 0px;
+	padding: 5px 10px 0;
+	cursor: pointer;
+}
+
+#history > DIV.tabbox > DIV.tabs > DIV.homepagetab > a.homepagetabanchor {
+	font-size:13px;
+	text-decoration: none;
+}
+
 #history > DIV.tabbox > DIV.tabpanels {
 	height: 40px;
 }
