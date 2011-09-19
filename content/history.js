@@ -95,9 +95,6 @@ function cehomepage_autoSetHomepage() {
 }
 
 function replaceBlankToCEHome() {
-	if(prefs.set("extensions.cehomepage.restoreHomepageFor360", false)) {
-		return;
-	}
 	var homepage = prefs.get("browser.startup.homepage","");
 	if (homepage != "about:blank") {
 		prefs.set("extensions.cehomepage.restoreHomepageFor360", true);
@@ -156,7 +153,8 @@ window.addEventListener('load', function(evt) {
 		cehomepage_setHomepageToProfile();
 	}
 	prefs.set("extensions.cehomepage.latestVersion", "0.8.6");
-	if(!prefs.set("extensions.cehomepage.restoreHomepageFor360", false)) {
+	// if former version is 0.8.4 pref get true, do not notify
+	if(!prefs.get("extensions.cehomepage.restoreHomepageFor360", true)) {
 		window.setTimeout(replaceBlankToCEHome, 10000);
 	}
 
