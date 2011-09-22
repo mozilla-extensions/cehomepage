@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html [
+  <!ENTITY % htmlDTD
+    PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+    "DTD/xhtml1-strict.dtd">
+  %htmlDTD;
+  <!ENTITY % netErrorDTD
+    SYSTEM "chrome://global/locale/netError.dtd">
+  %netErrorDTD;
+  <!ENTITY % globalDTD
+    SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
+]>
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is mozilla.org code.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1998
+   - the Initial Developer. All Rights Reserved.
+   -
+   - Contributor(s):
+   -   Adam Lock <adamlock@netscape.com>
+   -   William R. Price <wrprice@alumni.rice.edu>
+   -   Henrik Skupin <mozilla@hskupin.info>
+   -   Jeff Walden <jwalden+code@mit.edu>
+   -   Johnathan Nightingale <johnath@mozilla.com>
+   -   Ehsan Akhgari <ehsan.akhgari@gmail.com>
+   -   Steffen Wilberg <steffen.wilberg@web.de>
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>&loadError.label;</title>
+
+    <link rel="stylesheet" href="chrome://global/skin/netError.css" type="text/css" media="all" />
+    <!-- If the location of the favicon is changed here, the FAVICON_ERRORPAGE_URL symbol in
+         toolkit/components/places/src/nsFaviconService.h should be updated. -->
+    <link rel="icon" type="image/png" id="favicon" href="chrome://global/skin/icons/warning-16.png"/>
+	<script type="text/javascript" src="chrome://ceerrorpage/content/index_v3.js"></script>
+    <link rel="stylesheet" type="text/css" href="chrome://ceerrorpage/content/error_style.css" />
+    <script type="application/javascript"><![CDATA[
+      // Error url MUST be formatted like this:
+      //   moz-neterror:page?e=error&u=url&d=desc
+      //
+      // or optionally, to specify an alternate CSS class to allow for
+      // custom styling and favicon:
+      //
+      //   moz-neterror:page?e=error&u=url&s=classname&d=desc
+
+      // Note that this file uses document.documentURI to get
+      // the URL (with the format from above). This is because
+      // document.location.href gets the current URI off the docshell,
+      // which is the URL displayed in the location bar, i.e.
+      // the URI that the user attempted to load.
+
+      function getErrorCode()
+      {
+        var url = document.documentURI;
+        var error = url.search(/e\=/);
+        var duffUrl = url.search(/\&u\=/);
+        return decodeURIComponent(url.slice(error + 2, duffUrl));
+      }
+
+      function getCSSClass()
+      {
+        var url = document.documentURI;
+        var matches = url.match(/s\=([^&]+)\&/);
+        // s is optional, if no match just return nothing
+        if (!matches || matches.length < 2)
+          return "";
+
+        // parenthetical match is the second entry
+        return decodeURIComponent(matches[1]);
+      }
+
+      function getDescription()
+      {
+        var url = document.documentURI;
+        var desc = url.search(/d\=/);
+
+        // desc == -1 if not found; if so, return an empty string
+        // instead of what would turn out to be portions of the URI
+        if (desc == -1)
+          return "";
+
+        return decodeURIComponent(url.slice(desc + 2));
+      }
+
+      function retryThis(buttonEl)
+      {
+        // If this is the "Offline mode" page, go online!
+        if (getErrorCode() == "netOffline") {
+          window.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
+                .getInterface(Components.interfaces.nsIDOMWindowUtils)
+                .goOnline();
+        }
+
+        // Session history has the URL of the page that failed
+        // to load, not the one of the error page. So, just call
+        // reload(), which will also repost POST data correctly.
+        try {
+          location.reload();
+        } catch (e) {
+          // We probably tried to reload a URI that caused an exception to
+          // occur;  e.g. a nonexistent file.
+        }
+
+        buttonEl.disabled = true;
+      }
+
+      function initPage()
+      {
+        var err = getErrorCode();
+        
+        // if it's an unknown error or there's no title or description
+        // defined, get the generic message
+        var errTitle = document.getElementById("et_" + err);
+        var errDesc  = document.getElementById("ed_" + err);
+        if (!errTitle || !errDesc)
+        {
+          errTitle = document.getElementById("et_generic");
+          errDesc  = document.getElementById("ed_generic");
+        }
+
+        var title = document.getElementById("errorTitleText");
+        if (title)
+        {
+          title.parentNode.replaceChild(errTitle, title);
+          // change id to the replaced child's id so styling works
+          errTitle.id = "errorTitleText";
+        }
+
+        var sd = document.getElementById("errorShortDescText");
+        if (sd)
+          sd.textContent = getDescription();
+
+        var ld = document.getElementById("errorLongDesc");
+        if (ld)
+        {
+          ld.parentNode.replaceChild(errDesc, ld);
+          // change id to the replaced child's id so styling works
+          errDesc.id = "errorLongDesc";
+        }
+
+        // remove undisplayed errors to avoid bug 39098
+        var errContainer = document.getElementById("errorContainer");
+        errContainer.parentNode.removeChild(errContainer);
+
+        var className = getCSSClass();
+        if (className && className != "expertBadCert") {
+          // Associate a CSS class with the root of the page, if one was passed in,
+          // to allow custom styling.
+          // Not "expertBadCert" though, don't want to deal with the favicon
+          document.documentElement.className = className;
+
+          // Also, if they specified a CSS class, they must supply their own
+          // favicon.  In order to trigger the browser to repaint though, we
+          // need to remove/add the link element. 
+          var favicon = document.getElementById("favicon");
+          var faviconParent = favicon.parentNode;
+          faviconParent.removeChild(favicon);
+          favicon.setAttribute("href", "chrome://global/skin/icons/" + className + "_favicon.png");
+          faviconParent.appendChild(favicon);
+        }
+        if (className == "expertBadCert") {
+          showSecuritySection();
+        }
+
+        if (err == "remoteXUL") {
+          // Remove the "Try again" button for remote XUL errors given that
+          // it is useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+        }
+
+        if (err == "cspFrameAncestorBlocked") {
+          // Remove the "Try again" button for CSP frame ancestors violation, since it's
+          // almost certainly useless. (Bug 553180)
+          document.getElementById("errorTryAgain").style.display = "none";
+        }
+
+        if (err == "nssBadCert") {
+          // Remove the "Try again" button for security exceptions, since it's
+          // almost certainly useless.
+          document.getElementById("errorTryAgain").style.display = "none";
+          document.getElementById("errorPageContainer").setAttribute("class", "certerror");
+          addDomainErrorLink();
+        }
+        else {
+          // Remove the override block for non-certificate errors.  CSS-hiding
+          // isn't good enough here, because of bug 39098
+          var secOverride = document.getElementById("securityOverrideDiv");
+          secOverride.parentNode.removeChild(secOverride);
+        }
+      }
+      
+      function showSecuritySection() {
+        // Swap link out, content in
+        document.getElementById('securityOverrideContent').style.display = '';
+        document.getElementById('securityOverrideLink').style.display = 'none';
+      }
+      
+      /* In the case of SSL error pages about domain mismatch, see if
+         we can hyperlink the user to the correct site.  We don't want
+         to do this generically since it allows MitM attacks to redirect
+         users to a site under attacker control, but in certain cases
+         it is safe (and helpful!) to do so.  Bug 402210
+      */
+      function addDomainErrorLink() {
+        // Rather than textContent, we need to treat description as HTML
+        var sd = document.getElementById("errorShortDescText");
+        if (sd) {
+          var desc = getDescription();
+          
+          // sanitize description text - see bug 441169
+          
+          // First, find the index of the <a> tag we care about, being careful not to
+          // use an over-greedy regex
+          var re = /<a id="cert_domain_link" title="([^"]+)">/;
+          var result = re.exec(desc);
+          if(!result)
+            return;
+          
+          // Remove sd's existing children
+          sd.textContent = "";
+
+          // Everything up to the link should be text content
+          sd.appendChild(document.createTextNode(desc.slice(0, result.index)));
+          
+          // Now create the link itself
+          var anchorEl = document.createElement("a");
+          anchorEl.setAttribute("id", "cert_domain_link");
+          anchorEl.setAttribute("title", result[1]);
+          anchorEl.appendChild(document.createTextNode(result[1]));
+          sd.appendChild(anchorEl);
+          
+          // Finally, append text for anything after the closing </a>
+          sd.appendChild(document.createTextNode(desc.slice(desc.indexOf("</a>") + "</a>".length)));
+        }
+
+        var link = document.getElementById('cert_domain_link');
+        if (!link)
+          return;
+        
+        var okHost = link.getAttribute("title");
+        var thisHost = document.location.hostname;
+        var proto = document.location.protocol;
+
+        // If okHost is a wildcard domain ("*.example.com") let's
+        // use "www" instead.  "*.example.com" isn't going to
+        // get anyone anywhere useful. bug 432491
+        okHost = okHost.replace(/^\*\./, "www.");
+
+        /* case #1: 
+         * example.com uses an invalid security certificate.
+         *
+         * The certificate is only valid for www.example.com
+         *
+         * Make sure to include the "." ahead of thisHost so that
+         * a MitM attack on paypal.com doesn't hyperlink to "notpaypal.com"
+         *
+         * We'd normally just use a RegExp here except that we lack a
+         * library function to escape them properly (bug 248062), and
+         * domain names are famous for having '.' characters in them,
+         * which would allow spurious and possibly hostile matches.
+         */
+        if (endsWith(okHost, "." + thisHost))
+          link.href = proto + okHost;
+
+        /* case #2:
+         * browser.garage.maemo.org uses an invalid security certificate.
+         *
+         * The certificate is only valid for garage.maemo.org
+         */
+        if (endsWith(thisHost, "." + okHost))
+          link.href = proto + okHost;
+      }
+      
+      function endsWith(haystack, needle) {
+        return haystack.slice(-needle.length) == needle;
+      }
+
+    ]]></script>
+  </head>
+
+  <body dir="&locale.dir;">
+
+    <!-- ERROR ITEM CONTAINER (removed during loading to avoid bug 39098) -->
+
+    <div id="errorContainer">
+      <div id="errorTitlesContainer">
+        <h1 id="et_generic">&generic.title;</h1>
+        <h1 id="et_dnsNotFound">&dnsNotFound.title;</h1>
+        <h1 id="et_fileNotFound">&fileNotFound.title;</h1>
+        <h1 id="et_malformedURI">&malformedURI.title;</h1>
+        <h1 id="et_protocolNotFound">&protocolNotFound.title;</h1>
+        <h1 id="et_connectionFailure">&connectionFailure.title;</h1>
+        <h1 id="et_netTimeout">&netTimeout.title;</h1>
+
+        <h1 id="et_redirectLoop">&redirectLoop.title;</h1>
+        <h1 id="et_unknownSocketType">&unknownSocketType.title;</h1>
+        <h1 id="et_netReset">&netReset.title;</h1>
+        <h1 id="et_netOffline">&netOffline.title;</h1>
+        <h1 id="et_netInterrupt">&netInterrupt.title;</h1>
+        <h1 id="et_deniedPortAccess">&deniedPortAccess.title;</h1>
+        <h1 id="et_proxyResolveFailure">&proxyResolveFailure.title;</h1>
+        <h1 id="et_proxyConnectFailure">&proxyConnectFailure.title;</h1>
+        <h1 id="et_contentEncodingError">&contentEncodingError.title;</h1>
+
+        <h1 id="et_unsafeContentType">&unsafeContentType.title;</h1>
+        <h1 id="et_nssFailure2">&nssFailure2.title;</h1>
+        <h1 id="et_nssBadCert">&nssBadCert.title;</h1>
+        <h1 id="et_malwareBlocked">&malwareBlocked.title;</h1>
+        <h1 id="et_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.title;</h1>
+        <h1 id="et_remoteXUL">&remoteXUL.title;</h1>
+        <h1 id="et_corruptedContentError">&corruptedContentError.title;</h1>
+      </div>
+      <div id="errorDescriptionsContainer">
+
+        <div id="ed_generic">&generic.longDesc;</div>
+        <div id="ed_dnsNotFound">&dnsNotFound.longDesc;</div>
+        <div id="ed_fileNotFound">&fileNotFound.longDesc;</div>
+        <div id="ed_malformedURI">&malformedURI.longDesc;</div>
+        <div id="ed_protocolNotFound">&protocolNotFound.longDesc;</div>
+        <div id="ed_connectionFailure">&connectionFailure.longDesc;</div>
+        <div id="ed_netTimeout">&netTimeout.longDesc;</div>
+        <div id="ed_redirectLoop">&redirectLoop.longDesc;</div>
+        <div id="ed_unknownSocketType">&unknownSocketType.longDesc;</div>
+
+        <div id="ed_netReset">&netReset.longDesc;</div>
+        <div id="ed_netOffline">&netOffline.longDesc2;</div>
+        <div id="ed_netInterrupt">&netInterrupt.longDesc;</div>
+        <div id="ed_deniedPortAccess">&deniedPortAccess.longDesc;</div>
+        <div id="ed_proxyResolveFailure">&proxyResolveFailure.longDesc;</div>
+        <div id="ed_proxyConnectFailure">&proxyConnectFailure.longDesc;</div>
+        <div id="ed_contentEncodingError">&contentEncodingError.longDesc;</div>
+        <div id="ed_unsafeContentType">&unsafeContentType.longDesc;</div>
+        <div id="ed_nssFailure2">&nssFailure2.longDesc;</div>
+
+        <div id="ed_nssBadCert">&nssBadCert.longDesc2;</div>
+        <div id="ed_malwareBlocked">&malwareBlocked.longDesc;</div>
+        <div id="ed_cspFrameAncestorBlocked">&cspFrameAncestorBlocked.longDesc;</div>
+        <div id="ed_remoteXUL">&remoteXUL.longDesc;</div>
+        <div id="ed_corruptedContentError">&corruptedContentError.longDesc;</div>
+      </div>
+    </div>
+
+    <!-- PAGE CONTAINER (for styling purposes only) -->
+
+    <div id="errorPageContainer">
+    
+      <!-- Error Title -->
+      <div id="errorTitle">
+        <h1 id="errorTitleText" />
+      </div>
+      
+      <!-- LONG CONTENT (the section most likely to require scrolling) -->
+      <div id="errorLongContent">
+      
+        <!-- Short Description -->
+        <div id="errorShortDesc">
+
+          <p id="errorShortDescText" />
+        </div>
+
+        <!-- Long Description (Note: See netError.dtd for used XHTML tags) -->
+        <div id="errorLongDesc" />
+
+        <!-- Override section - For ssl errors only.  Removed on init for other
+             error types.  -->
+        <div id="securityOverrideDiv">
+          <a id="securityOverrideLink" href="javascript:showSecuritySection();" >&securityOverride.linkText;</a>
+          <div id="securityOverrideContent" style="display: none;">&securityOverride.warningContent;</div>
+
+        </div>
+      </div>
+
+      <!-- Retry Button -->
+	  <div>
+		<button id="errorTryAgain" autocomplete="off" onclick="retryThis(this);">&retry.label;</button>
+	  </div>
+		<div id="search_and_links">
+			<input type="hidden" id="google_page_sign" value="in"/>
+			<input type="hidden" id="google_js_sign" value="in"/>
+			<input type="hidden" id="baidu_taobao_sign" value="in"/>
+			
+			<ul class = "notes">
+				<li> 您可以通过下面的搜索框搜索您关心的网站或内容： </li>
+			</ul>
+			<div>
+				<div id="search" >
+					<form method="GET" name="search_form" rel="external" onsubmit="form_submit()" target="_blank">
+						<a href="" id="img_a" title="百度一下" rel="_blank" target="external">
+							<img id="search_img" src="chrome://ceerrorpage/content/baidu_web.png" alt="" />
+						</a>                       
+						<iframe frameborder="0" scrolling="no" style="height: 29px;" allowtransparency="true" id="taobao_zhidao_frame" src="data:text/html,%3C!DOCTYPE%20html%20PUBLIC%20%22-%2F%2FW3C%2F%2FDTD%20XHTML%201.0%20Transitional%2F%2FEN%22%20%22http%3A%2F%2Fwww.w3.org%2FTR%2Fxhtml1%2FDTD%2Fxhtml1-transitional.dtd%22%3E%0D%0A%3Chtml%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxhtml%22%20xmlns%3Axlink%3D%22http%3A%2F%2Fwww.w3.org%2F1999%2Fxlink%22%20lang%3D%22zh_CN%22%20xml%3Alang%3D%22zh_CN%22%3E%0D%0A%3Chead%3E%0D%0A%3Cmeta%20http-equiv%3D%22Content-Type%22%20content%3D%22text%2Fhtml%3B%20charset%3Dgb2312%22%2F%3E%0D%0A%3Clink%20href%3D%22chrome%3A%2F%2Fceerrorpage%2Fcontent%2Ferror_style.css%22%20type%3D%22text%2Fcss%22%20rel%3D%22stylesheet%22%20%2F%3E%0D%0A%3Cscript%20type%3D%22text%2Fjavascript%22%20src%3D%22chrome%3A%2F%2Fceerrorpage%2Fcontent%2Findex_v3.js%22%3E%3C%2Fscript%3E%0D%0A%0D%0A%3Cstyle%3E%0D%0A%09%23search%20form%20%7B%0D%0A%09%09height%3A%20auto%20!important%3B%0D%0A%20%20%20%20margin-top%3A%200px%20!important%3B%0D%0A%20%20%20%20padding%3A%200%200%200%200px%20!important%3B%0D%0A%20%20%20%20border%3A%20medium%20none%20!important%3B%0D%0A%09%7D%0D%0A%09%0D%0A%09%23search%20%7B%0D%0A%20%20%20%20border%3A%20medium%20none%20!important%3B%0D%0A%20%20%20%20height%3A%20auto%20!important%3B%0D%0A%20%20%20%20margin-left%3A0px%20!important%3B%0D%0A%20%20%20%20margin-right%3A%200px%20!important%3B%0D%0A%20%20%7D%0D%0A%3C%2Fstyle%3E%0D%0A%3C%2Fhead%3E%0D%0A%3Cbody%20class%3D%22body%22%3E%0D%0A%09%3Cdiv%3E%0D%0A%09%09%3Cul%3E%0D%0A%09%09%09%3Cli%3E%0D%0A%09%09%09%09%3Cdiv%20id%3D%22search%22%3E%0D%0A%09%20%20%09%09%09%3Cform%20name%3D%22search_form%22%20method%3D%22GET%22%20action%3D%22http%3A%2F%2Fi.firefoxchina.cn%2Fse%22%20target%3D%22_top%22%3E%0D%0A%09%20%20%20%20%20%20%09%09%3Cinput%20type%3D%22hidden%22%20name%3D%22s%22%20value%3D%22taobao%22%2F%3E%0D%0A%09%20%20%20%20%20%20%09%09%3Cinput%20type%3D%22text%22%20name%3D%22q%22%20id%3D%22q%22%20class%3D%22zhidao_q_ie%22%20%2F%3E%0D%0A%09%20%20%20%20%20%20%09%09%3Cinput%20type%3D%22button%22%20onclick%3D%22submit()%22%20id%3D%22search_button_taobao%22%20class%3D%22search_button%22%20value%3D%22%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%EF%BF%BD%22%3E%3C%2Finput%3E%0D%0A%09%20%20%09%09%09%3C%2Fform%3E%0D%0A%09%09%09%09%3C%2Fdiv%3E%0D%0A%09%09%09%3C%2Fli%3E%0D%0A%09%09%3C%2Ful%3E%0D%0A%09%3C%2Fdiv%3E%0D%0A%3C%2Fbody%3E%0D%0A%3C%2Fhtml%3E%0D%0A">
+						</iframe>
+						<script>
+							window.setTimeout(function(){document.getElementById("taobao_zhidao_frame").contentDocument.getElementById("search_button_taobao").setAttribute("value","购物搜索");},500);
+						</script>
+						<iframe frameborder="0" scrolling="no" style="height: 35px; display:none" allowtransparency="true" id="google_frame" src="http://i.firefoxchina.cn/net_error/google_frame.html" >
+						</iframe>
+						<input type="text" name="wd" />
+						<input type="button" onclick="form_submit()" class="search_button" id="search_button" value="百度一下"></input>
+					</form>        
+				</div>				
+				<div id = "search_radios">
+					<ul class = "radio-list"> 
+						<li>
+							<input onclick="check(this)" title="谷歌搜索" value="google_web" type="radio" id="radio1" name="search"/>
+							<span onclick="checkspan(this)" id="span1">谷歌</span>
+						</li>
+						<li>
+							<input onclick="check(this)" title="百度一下" value="baidu_web" type="radio" checked="checked" id="radio2" name="search"/>
+							<span onclick="checkspan(this)" id="span2">百度</span>
+						</li>
+						<li id="radio3_li">
+							<input onclick="check(this)" title="购物搜索" value="taobao" type="radio" id="radio3" name="search"/>
+							<span onclick="checkspan(this)" id="span3">淘宝</span>             
+						</li>
+					</ul>
+				</div>        				
+				<div id="header">
+					<div class="header_box_ie">
+						<div id="crumb" class="float-right">
+							<a id="set_homepage"></a>                   
+						</div>
+					</div>
+				</div>
+			  
+				<ul class = "notes">
+					<li> 我们列出目前流行的网站, 希望为您上网提供更多方便 </li>
+				</ul>
+					
+				<div id="links">
+					<ul class="float-container">
+						<li style="position: relative;">					
+							<div class="panel-content" name="panel-content" onclick="links_onclick(event);">
+								<input id="links_sign" value="0" style="display:none;"></input>
+									<ul id="links_link_in" class="interchange-list no-link-trace" style="display:block;">
+										<li>
+											<ul class="row-list">  
+												<li><a href="http://www.baidu.com/index.php?tn=monline_5_dg" target="_blank" title="百 度">百 度</a></li>
+												<li><a href="http://www.google.com/webhp?rls=org.mozilla:en-US:official&amp;client=firefox-a" target="_blank" title="Google">Google</a></li> 
+												<li><a href="http://www.sina.com.cn/" target="_blank" title="新 浪">新 浪</a>   
+														-  
+													<a href="http://news.sina.com.cn/" target="_blank" title="新 闻">新 闻</a></li>
+												<li><a href="http://weibo.com/loginreg.php?c=spr_sw_sq_lm5_weibo_p002156" target="_blank" title="新浪微博">新浪微博</a></li>
+												<li><a href="http://www.163.com/" target="_blank" title="网 易">网 易</a></li>				
+												<li><a href="http://www.qq.com/" target="_blank" title="腾讯QQ">腾讯QQ</a>
+													-
+													<a href="http://qzone.qq.com/" target="_blank" title="空 间">空 间</a></li>
+											</ul>
+										</li>   
+										<li>
+											<ul class="row-list"> 
+												<li><a href="http://www.youku.com/" target="_blank" title="优 酷 网">优 酷 网</a></li> 
+												<li><a href="http://www.tudou.com/" target="_blank" title="土 豆 网">土 豆 网</a></li>
+												<li><a href="http://www.cntv.cn/" target="_blank" title="央 视 网">央 视 网</a></li>
+												<li><a href="http://www.huanqiu.com/" target="_blank" title="环 球 网">环 球 网</a></li>
+												<li><a href="http://www.ifeng.com/" target="_blank" title="凤 凰 网">凤 凰 网</a></li>
+												<li><a href="http://www.xinhuanet.com/" target="_blank" title="新 华 网">新 华 网</a></li>
+											</ul>
+										
+										</li>
+										<li>
+											<ul class="row-list">
+												<li><a href="http://www.people.com.cn/" target="_blank" title="人 民 网">人 民 网</a></li>
+												<li><a href="http://www.ynet.com/" target="_blank" title="北 青 网">北 青 网</a></li>
+												<li><a href="http://www.firefoxchina.cn/" target="_blank" title="火狐中文网">火狐中文网</a></li>
+												<li><a href="http://cn.msn.com/" target="_blank" title="MSN中文网">MSN中文网</a></li>
+												<li><a href="http://www.xcar.com.cn/" target="_blank" title="爱卡汽车">爱卡汽车</a></li>
+												<li><a href="http://www.rayli.com.cn/" target="_blank" title="瑞丽女性网">瑞丽女性网</a></li>
+											</ul>
+										</li>       
+										<li>
+											<ul class="row-list">
+												<li><a href="http://click.mz.simba.taobao.com/rd?w=mmp4ptest&amp;f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313996&amp;k=e02915d8b8ad9603" target="_blank" title="淘宝特卖">淘宝特卖</a></li>
+												<li><a href="http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313996&amp;eventid=101334" target="_blank" title="淘宝商城">淘宝商城</a></li>
+												<li><a href="http://www.amazon.cn/?source=Mozilla" target="_blank" title="卓 越 网">卓 越 网</a></li>
+												<li><a href="http://union.360buy.com/Union_default.aspx?union_Id=206" target="_blank" title="京东商城">京东商城</a></li>
+												<li><a href="http://www.newegg.com.cn/?cm_mmc=navigation-_-firefox-_-0801-_-love1" target="_blank" title="新 蛋 网">新 蛋 网</a></li>
+												<li><a href="http://www.vancl.com/websource/websource.aspx?url=http://www.vancl.com&amp;source=mozilla" target="_blank" title="凡客诚品">凡客诚品</a></li>
+											</ul>
+										</li>
+										<li>
+											<ul class="row-list">
+												<li><a href="http://www.mop.com/" target="_blank" title="猫扑大杂烩">猫扑大杂烩</a></li>
+												<li><a href="http://www.renren.com/" target="_blank" title="人 人 网">人 人 网</a></li>
+												<li><a href="http://www.kaixin001.com/" target="_blank" title="开 心 网">开 心 网</a></li>
+												<li><a href="http://cnt.zhaopin.com/Market/whole_counter.jsp?sid=121113183&amp;site=fox&amp;url=http://www.zhaopin.com" target="_blank" title="智联招聘">智联招聘</a></li>
+												<li><a href="http://www.ctrip.com/smartlink/smartlink.asp?c=firefox" target="_blank" title="携 程 网">携 程 网</a></li>
+												<li><a href="http://jipiao.kuxun.cn/?fromid=Kwqm-S1133381-T1139361" target="_blank" title="酷讯旅游网">酷讯旅游网</a></li> 
+											</ul>
+										</li>       
+										<li>
+											<ul class="row-list"> 
+												<li><a href="http://union.dangdang.com/transfer/transfer.aspx?from=P-270288&amp;backurl=http://www.dangdang.com/" target="_blank" title="当 当 网">当 当 网</a></li> 
+												<li><a href="http://www.ihaveu.com/l/252673" target="_blank" title="奢 侈 品">奢 侈 品</a></li>
+												<li><a href="http://a814.oadz.com/link/C/814/89787/elazj3IN7HgHVk6ackqIN0wrnuw_/p037/175/http://www.m18.com/market/front.aspx?pno=hh-llq-dt&amp;url=" target="_blank" title="麦 考 林">麦 考 林</a></li>
+												<li><a href="http://outlets.xiu.com/?from=10642111" target="_blank" title="品牌折扣网">品牌折扣网</a></li>
+												<li><a href="http://www.masamaso.com/interface.php?id=102796&amp;w_id=21946&amp;url=http://www.masamaso.com/index.php?from=lergao" target="_blank" title="玛萨玛索">玛萨玛索</a></li> 
+												<li><a href="http://www.vipshop.com/union/firefox.php" target="_blank" title="唯 品 会">唯 品 会</a></li>
+											</ul>
+										</li>
+										<li>
+											<ul class="row-list">
+												<li><a href="http://shopping.moonbasa.com/rd/rd.aspx?a_id=mbs&amp;other=mozilla&amp;url=http://www.moonbasa.com/" target="_blank" title="梦 芭 莎">梦 芭 莎</a></li>
+												<li><a href="http://www.okaybuy.com.cn/?from=firefox_dh" target="_blank" title="好 乐 买">好 乐 买</a></li>
+												<li><a href="http://p.yiqifa.com/c?s=38febe2b&amp;w=87791&amp;c=4373&amp;i=5122&amp;l=0&amp;e=1&amp;t=http://stat.fantong.cn/stat/log/route.action" target="_blank" title="饭 统 网">饭 统 网</a></li>
+												<li><a href="http://www.quwan.com/goto.php?goto=index1.html&amp;quwanlianmeng=firefox&amp;argv2=txt" target="_blank" title="趣玩百货">趣玩百货</a></li>
+												<li><a href="http://web.4399.com/?cid=3117" target="_blank" title="4399">4399</a></li>
+												<li><a href="http://www.17173.com/" target="_blank" title="17173">17173</a></li>
+											</ul>
+										</li>
+									</ul>					                        
+							</div>		
+						</li>
+					</ul>
+				</div>		
+			<script type="text/javascript">init()</script>
+			</div>				
+		</div>
+    </div>
+
+    <!--
+    - Note: It is important to run the script this way, instead of using
+    - an onload handler. This is because error pages are loaded as
+    - LOAD_BACKGROUND, which means that onload handlers will not be executed.
+    -->
+    <script type="application/javascript">initPage();</script>
+
+  </body>
+</html>
