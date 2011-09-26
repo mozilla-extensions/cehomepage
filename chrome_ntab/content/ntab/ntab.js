@@ -723,9 +723,10 @@ var quickDial = (function() {
 
 		refreshDial: function(num) {
 			var dial = quickDialModule.getDial(num);
-			if (!dial)
+			if (!dial) {
+				quickDialModule.removeDial();
 				return;
-
+			}
 			var wnd = getChromeWindow();
 			wnd.MOA.NTab.Snapshot.refreshSnapshot(dial.url);
 			quickDialModule.refreshDialViewRelated(dial.url);
@@ -1026,12 +1027,13 @@ function _filter(inString) {
 function fillHistory() {
 	quickDial.onShowHideHistory();
 
+	if (gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory')) {
+		// set most visited sites.
+		_fillSites(queryHistoryByFreq(10), $('history').querySelectorAll('DIV.mostvisited-sites')[0]);
 
-	// set most visited sites.
-	_fillSites(queryHistoryByFreq(10), $('history').querySelectorAll('DIV.mostvisited-sites')[0]);
-
-	// set last session sites
-	_fillSites(session.query(10), $('history').querySelectorAll('DIV.lastsession-sites')[0]);
+		// set last session sites
+		_fillSites(session.query(10), $('history').querySelectorAll('DIV.lastsession-sites')[0]);
+	}
 
 
 	// set others

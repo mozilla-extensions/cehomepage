@@ -21,9 +21,9 @@ var dialsync = (function() {
 			entry.QueryInterface(Components.interfaces.nsIFile);
 			array.push(entry);
 		}
-		for (var i = entries.length - 1; i >= 0; i--) {
-			if(entries[i].isFile()) {
-				entries[i].remove(false);
+		for (var i = array.length - 1; i >= 0; i--) {
+			if(array[i].isFile()) {
+				array[i].remove(false);
 			}
 		}
 	}
@@ -108,7 +108,7 @@ var dialsync = (function() {
 						_deleteCachedSnapshot();
 						alert(_('moa.ntab.jsonfile.imported'));
 						quickDialModule.refresh();
-						quickDial.refreshAll();
+						quickDial.initDialBox(true);
 //					}catch(e) {
 //						alert(_('moa.ntab.jsonfile.importerror'));
 //					}
