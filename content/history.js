@@ -134,7 +134,6 @@ window.addEventListener("DOMContentLoaded", function(evt) {
 	}
 }, false);
 window.addEventListener('unload', function(evt) {
-    gBrowser.removeProgressListener(progListener);
 	if(!isFirefoxLowerThan4()) {
 		AddonManager.removeAddonListener(addonlistener);
 	}

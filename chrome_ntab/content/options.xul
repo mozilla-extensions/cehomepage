@@ -9,8 +9,9 @@
 			<preference id="ntab-display-about-ntab" name="moa.ntab.openInNewTab" type="bool"/>
 			<preference id="ntab-display-search" name="moa.ntab.dial.showSearch" type="bool"/>
 			<preference id="ntab-display-usehotkey" name="moa.ntab.display.usehotkey" type="bool"/>
-			<preference id="ntab-display-addurl" name="moa.ntab.contextMenuItem.show" type="bool"/> 
+			<preference id="ntab-display-addurl" name="moa.ntab.contextMenuItem.show" type="bool"/>
 			<preference id="ntab-display-loadInExistingTabs" name="moa.ntab.loadInExistingTabs" type="bool" />
+			<preference id="ntab-display-showpersonalhistory" name="moa.ntab.quickdial.showpersonalhistory" type="bool" />
 		</preferences>
 
 		<vbox flex='1'>
@@ -48,40 +49,16 @@
 					</menupopup>
 				</menulist>
 			</hbox>
-<!-- 		<label value="&ntab.config.displayntab;" control="ntab-displayntab"/>
-			<menulist id="ntab-displayntab" preference="ntab-display-about-ntab">
-				<menupopup>
-					<menuitem value="false" label="&ntab.config.yes;"/>
-					<menuitem value="true" label="&ntab.config.no;"/>
-				</menupopup>
-			</menulist> -->
+
 			<checkbox label='&ntab.config.displayntab;' preference="ntab-display-about-ntab"/>
-			
-<!-- 		<label value="&ntab.config.displaysearch;" control="ntab-displaysearch"/>
-			<menulist id="ntab-displaysearch" preference="ntab-display-search">
-				<menupopup>
-					<menuitem value="false" label="&ntab.config.yes;"/>
-					<menuitem value="true" label="&ntab.config.no;"/>
-				</menupopup>
-			</menulist> -->
+
 			<checkbox label='&ntab.config.displaysearch;' preference="ntab-display-search"/>
-<!-- 			<label value="&ntab.config.addurl;" control="ntab-addurl" />
-			<menulist id="ntab-addurl" preference="ntab-display-addurl">
-				<menupopup>
-					<menuitem value="true" label="&ntab.config.yes;"/>
-					<menuitem value="false" label="&ntab.config.no;"/>
-				</menupopup>
-			</menulist> -->
+
 			<checkbox label='&ntab.config.addurl;' preference="ntab-display-addurl"/>
 			<checkbox label="&ntab.config.loadInExistingTabs;" preference="ntab-display-loadInExistingTabs" />
-<!-- 		<label value="&ntab.config.usehotkey;" control="ntab-usehotkey"/>
-			<menulist id="ntab-usehotkey" preference="ntab-display-usehotkey">
-				<menupopup>
-					<menuitem value="true" label="&ntab.config.yes;"/>
-					<menuitem value="false" label="&ntab.config.no;"/>
-				</menupopup>
-			</menulist> -->
+
 			<checkbox label='&ntab.config.usehotkey;' preference="ntab-display-usehotkey"/>
+			<checkbox label='&ntab.config.showpersonalhistory;' preference="ntab-display-showpersonalhistory"/>
 		</vbox>
   </prefpane>
 </prefwindow>

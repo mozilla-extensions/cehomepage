@@ -16,7 +16,7 @@ function getShellService() {
 	} catch (e) {dump("*** e = " + e + "\n");}
 	return shell;
 }
-		
+
 var ntab = (function(){
 	function _t(view) {
 		tracker.track({
@@ -25,7 +25,7 @@ var ntab = (function(){
 			sid: view
 		});
 	}
-	
+
 	return {
 		// TODO change pref: moa.ntab.view
 		onclick_to_browser: function() {
@@ -41,7 +41,7 @@ var ntab = (function(){
 								$('set_default_browser_msg').style.opacity = 0;
 								return;
 							}
-								
+
 							_opacity -= 0.1;
 							$('set_default_browser_msg').style.opacity = _opacity;
 							window.setTimeout(_setopacity, 50);
@@ -51,35 +51,33 @@ var ntab = (function(){
 				}
 			}, 110)
 		},
-		
-		onclick_to_blank: function() {
-			ntab.switch_to('blank');
-			_t('blank');
+
+		onclick_to_cehomepage: function() {
+			cehomepage.set_cehomepage();
+			window.setTimeout(function() {
+				if (gPref.getCharPref('browser.startup.homepage').indexOf("about:cehome") != -1) {
+					$('set_homepage_msg').style.display = 'block';
+					window.setTimeout(function() {
+						var _opacity = 1;
+						function _setopacity() {
+							if (_opacity <= 0) {
+								$('set_homepage_msg').style.display = 'none';
+								$('set_homepage_msg').style.opacity = 0;
+								return;
+							}
+
+							_opacity -= 0.1;
+							$('set_homepage_msg').style.opacity = _opacity;
+							window.setTimeout(_setopacity, 50);
+						}
+						_setopacity();
+					}, 2000)
+				}
+			}, 110)
 		},
-		
-		onclick_to_search: function() {
-			ntab.switch_to('search');
-			_t('search');
-		},
-		
-		onclick_to_dial: function() {
-			ntab.switch_to('quickdial');
-			_t('quickdial');
-		},
-		
-		onclick_to_nav: function() {
-			ntab.switch_to('nav');
-			_t('nav');
-		},
-		
-		switch_to: function(view_name) {
-			gPref.setCharPref('moa.ntab.view', view_name);
-			// Switch to view immidiately.
-			this.updateView(view_name);
-		},
-		
+
 		check_browser: function() {
-			var shell = getShellService();		
+			var shell = getShellService();
 			if (shell.isDefaultBrowser(true)) {
 				gPref.setBoolPref('moa.ntab.browser', true);
 			} else {
@@ -87,18 +85,48 @@ var ntab = (function(){
 				default_browser.set_default();
 				window.setTimeout(default_browser.update_default_view, 100);
 			}
-		},		
-		
+		},
+
+		onclick_to_blank: function() {
+			ntab.switch_to('blank');
+			_t('blank');
+		},
+
+		onclick_to_search: function() {
+			ntab.switch_to('search');
+			_t('search');
+		},
+
+		onclick_to_dial: function() {
+			ntab.switch_to('quickdial');
+			_t('quickdial');
+		},
+
+		onclick_to_nav: function() {
+			ntab.switch_to('nav');
+			_t('nav');
+		},
+
+		switch_to: function(view_name) {
+			gPref.setCharPref('moa.ntab.view', view_name);
+			// Switch to view immidiately.
+			this.updateView(view_name);
+		},
+
+
 		showView: function(view_id) {
-			var shell = getShellService();		
+			var shell = getShellService();
 			if(shell.isDefaultBrowser(true)) {
 				gPref.setBoolPref('moa.ntab.browser', true);
 			} else {
 				gPref.setBoolPref('moa.ntab.browser', false);
 			}
-			
+
 			window.setTimeout(default_browser.update_default_view, 100);
-			
+
+//			window.setTimeout(cehomepage.update_default_view, 100);
+
+
 			var children = $('main-content').childNodes;
 			for (i = 0; i < children.length; i++) {
 				var child = children[i];
@@ -119,7 +147,7 @@ var ntab = (function(){
 				}
 			}
 		},
-		
+
 		updateView: function() {
 			closeAllPromptDialog();
 			var view = gPref.getCharPref('moa.ntab.view');
@@ -138,7 +166,7 @@ var ntab = (function(){
 					quickDial.initDialBox(false);
 					break;
 			}
-			
+
 			var switchers = $('layout').querySelectorAll('DIV:first-child DIV.button-switch');
 			for (var i = 0; i < switchers.length; i++) {
 				var s = switchers[i];
@@ -148,23 +176,23 @@ var ntab = (function(){
 					CSS.del(s, 'selected');
 				}
 			}
-			
+
 			if (view == 'blank') {
 				CSS.add($('ntab-view-switchers-box'), 'blank');
 			} else {
 				CSS.del($('ntab-view-switchers-box'), 'blank');
 			}
 		},
-		
+
 		prefObserver: {
 			QueryInterface : function (aIID) {
-				if (aIID.equals(Components.interfaces.nsIObserver) || 
+				if (aIID.equals(Components.interfaces.nsIObserver) ||
 					aIID.equals(Components.interfaces.nsISupports) ||
 					aIID.equals(Components.interfaces.nsISupportsWeakReference))
 					return this;
 				throw Components.results.NS_NOINTERFACE;
 		    },
-		    
+
 		    observe: function(subject, topic, data) {
 		    	if (topic == 'nsPref:changed') {
 		    		if (data == 'moa.ntab.view') {
@@ -185,30 +213,62 @@ var default_browser = (function() {
 	var is_default = false;
 	return {
 		set_default: function() {
-			var shell = getShellService();		
+			var shell = getShellService();
 			if (!shell.isDefaultBrowser(true)) {
 				shell.setDefaultBrowser(true, false);
 				gPref.setBoolPref('moa.ntab.browser', true);
 			}
 		},
-		
+
 		update_default_view: function(){
 			$("btn_browser").style.display = gPref.getBoolPref('moa.ntab.browser') ? 'none' : 'block';
 		},
-		
+
 		prefObserver: {
 			QueryInterface : function (aIID) {
-				if (aIID.equals(Components.interfaces.nsIObserver) || 
+				if (aIID.equals(Components.interfaces.nsIObserver) ||
 					aIID.equals(Components.interfaces.nsISupports) ||
 					aIID.equals(Components.interfaces.nsISupportsWeakReference))
 					return this;
 				throw Components.results.NS_NOINTERFACE;
 		    },
-		    
+
 		    observe: function(subject, topic, data) {
 				if (topic == 'nsPref:changed') {
 		    		if (data == 'moa.ntab.browser') {
 		    			window.setTimeout(default_browser.update_default_view, 100);
+		    		}
+		    	}
+		    }
+		}
+	}
+})();
+
+var cehomepage = (function() {
+	var is_default = false;
+	return {
+		set_cehomepage: function() {
+			gPref.setCharPref('browser.startup.homepage', 'about:cehome');
+		},
+
+		update_default_view: function(){
+			$("btn_homepage").style.display = (gPref.getCharPref('browser.startup.homepage').indexOf('about:cehome') != -1)
+												? 'none' : 'block';
+		},
+
+		prefObserver: {
+			QueryInterface : function (aIID) {
+				if (aIID.equals(Components.interfaces.nsIObserver) ||
+					aIID.equals(Components.interfaces.nsISupports) ||
+					aIID.equals(Components.interfaces.nsISupportsWeakReference))
+					return this;
+				throw Components.results.NS_NOINTERFACE;
+		    },
+
+		    observe: function(subject, topic, data) {
+				if (topic == 'nsPref:changed') {
+		    		if (data == 'browser.startup.homepage') {
+		    			window.setTimeout(cehomepage.update_default_view, 100);
 		    		}
 		    	}
 		    }
@@ -227,42 +287,42 @@ iframeLoader.prototype = {
 			onIntervalBeforeLoaded: emptyFunction,
 			iframe: null
 		});
-		
+
 		if (!this.options.iframe)
 			return;
-		
+
 		this.monitor();
 	},
-	
+
 	monitor: function() {
 		var iframe = this.options.iframe;
 		var self = this;
 		function _onLoad(event) {
 			self.options.onDOMContentLoaded();
-			
+
 			window.clearInterval(_interval_before_loaded);
 			// remove listeners
 			iframe.contentDocument.removeEventListener('DOMContentLoaded', _onLoad, false);
 			iframe.removeEventListener('load', _onLoad, false);
-			
+
 			function changeLinkTarget(event) {
 				var element = event.target;
 				element = element.parentNode && element.parentNode instanceof HTMLAnchorElement ? element.parentNode : element;
-				if (element instanceof HTMLFormElement || 
+				if (element instanceof HTMLFormElement ||
 					element instanceof HTMLAnchorElement) {
 					element.target = gPref.getBoolPref('moa.ntab.openLinkInNewTab') ? '_blank' : '_top';
 				}
 			}
 			// Hack click event on HTMLAnchorElement, open link in _top window.
 			iframe.contentDocument.body.addEventListener('click', changeLinkTarget, true);
-			
+
 			// Hack form submit
 			iframe.contentDocument.body.addEventListener('submit', changeLinkTarget, true);
-			
+
 			// Hach context menu
 			iframe.contentDocument.addEventListener('contextmenu', getChromeWindow().MOA.NTab.onContextMenu, false);
 		}
-		
+
 		var _interval_before_loaded = null;
 		/**
 		 * Can not get the actual document object of iframe right now
@@ -281,11 +341,11 @@ iframeLoader.prototype = {
 				window.clearTimeout(_timeout);
 			}
 		}, 100);
-		
+
 		var _timeout = window.setTimeout(function() {
 			window.clearInterval(_interval);
 		}, 10000)
-		
+
 		iframe.addEventListener('load', _onLoad, false);
 	}
 };
@@ -301,13 +361,13 @@ webView.prototype = {
 			src: null,
 			target_frame_id: null
 		});
-		
+
 		if (!this.options.view_id || !this.options.src)
 			return;
-		
+
 		this.isInitialized = false;
 	},
-	
+
 	show: function() {
 		if (!this.isInitialized) {
 			var iframe = null;
@@ -317,14 +377,14 @@ webView.prototype = {
 			} else {
 				iframe = $(this.options.target_frame_id);
 			}
-			
+
 			iframe.src = this.options.src;
-			
+
 			function _sizeToContent(event) {
 				var height = iframe.contentDocument.documentElement.scrollHeight;
 				iframe.style.height = height + 'px';
 			}
-			
+
 			new iframeLoader({
 				onDOMContentLoaded: _sizeToContent,
 				onIntervalBeforeLoaded: _sizeToContent,
@@ -351,6 +411,8 @@ var search = new webView({
 
 function queryHistoryByFreq(n) {
 	var result = [];
+
+
 	try {
 		var conn = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService)
 				.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
@@ -406,7 +468,7 @@ function queryHistoryByFreq(n) {
 	} catch (e) {
 		// alert(e);
 	}
-	
+
 	return result;
 }
 
@@ -434,10 +496,10 @@ var quickDial = (function() {
 			html.push('					<div>');
 			// If it is first load, wait 100ms and load favicon, or it will cost too much time.
 			if (first_load) {
-				html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? 'default-favicon' : 'dial-def-favicon') + '" imagesrc="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') +  '"></div></div>');	
-		
+				html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? 'default-favicon' : 'dial-def-favicon') + '" imagesrc="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') +  '"></div></div>');
+
 			} else {
-				html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? '' : 'dial-def-favicon') + '"><img src="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') + '"/></div></div>');			
+				html.push('						<div class="dial-favicon"><div class="' + (dial.icon ? '' : 'dial-def-favicon') + '"><img src="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') + '"/></div></div>');
 			}
 			html.push('						<div class="dial-title"><div class="text-ellipsis">' + escapeHTML(dial.title) + '</div></div>');
 			html.push('						<div class="dial-opt-box"><div class="btn-opt btn-opt-edit" onclick="quickDial.editDial(' + num + ')" _title="ntab.dial.label.edit"></div></div>');
@@ -451,17 +513,17 @@ var quickDial = (function() {
 			// Get snapshot url for dial
 			var wnd = getChromeWindow();
 			var thumbnail = wnd.MOA.NTab.Snapshot.getSnapshotUrl(dial.url);
-			
+
 			// If thumbnail is null, and nocache is set 'True', then add some random code to make sure snapshot image is loaded with nocache.
 			if (nocache && thumbnail) {
 				thumbnail += '?r=' + Math.random();
 			}
-			
+
 			// Check if url is under processing, if not, create it now.
 			if (!thumbnail && !hashModule.contains(dial.url)) {
 				getChromeWindow().MOA.NTab.Snapshot.createSnapshot(dial.url);
 			}
-			
+
 			var backgournd = !thumbnail ? '' : 'background:url(' + thumbnail + ') no-repeat scroll center 0 transparent';
 			var className = !thumbnail ? 'loading' : '';
 			html.push('				<div>');
@@ -491,10 +553,10 @@ var quickDial = (function() {
 		}
 		return html.join('\n');
 	}
-	
+
 	var _dragenternum = null;
 	var _dragtimeout = null;
-	
+
 	function _ondragenter(num) {
 		window.clearTimeout(_dragtimeout);
 		_dragtimeout = window.setTimeout(function(n) {
@@ -505,7 +567,7 @@ var quickDial = (function() {
 			CSS.add($('item-' + n), 'quick-dial-item-drag-over')
 		}, 10, num);
 	}
-	
+
 	function _ondragleave(num) {
 		window.clearTimeout(_dragtimeout);
 		_dragtimeout = window.setTimeout(function(n) {
@@ -514,13 +576,16 @@ var quickDial = (function() {
 			}
 		}, 10, num);
 	}
-	
+
 	var COLUMNS = 4;
 	var ROWS = 2;
 	var MAX_COLUMN_ROW = 10;
-	
+
 	function _getAllBookmarks() {
 		var result = [];
+		if (!gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory'))
+			return result;
+
 		// var conn = Cc['@mozilla.org/browsernav-history-service;1'].getService(Ci.nsINavBookmarksService)
 		//		.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 		var conn = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService)
@@ -534,14 +599,14 @@ var quickDial = (function() {
 				url: statement.getString(1)
 			});
 		}
-		
+
 		return result;
 	}
-	
+
 	function _filter(str) {
 		return !str ? str : str.replace(/'/g, '\\\'');
 	}
-	
+
 	function _fillSiteSelections(sites, place) {
 		var html = [];
 		for (var i = 0; i < sites.length; i++) {
@@ -556,7 +621,7 @@ var quickDial = (function() {
 		}
 		place.innerHTML = html.join('\n');
 	}
-	
+
 	return {
 		initDialBox: function(refreshWholePage) {
 			if(!refreshWholePage) {
@@ -570,23 +635,23 @@ var quickDial = (function() {
 				}
 			}
 			isInitialized = true;
-			
+
 			var _cell = gPref.getIntPref('moa.ntab.dial.column');
 			_cell = _cell > 0 ? _cell < MAX_COLUMN_ROW ? _cell : MAX_COLUMN_ROW : COLUMNS;
 			var _row = gPref.getIntPref('moa.ntab.dial.row');
 			_row = _row > 0 ? _row < MAX_COLUMN_ROW ? _row : MAX_COLUMN_ROW : ROWS;
-			
+
 			var html = [];
 			for (var i = 0; i < _row; i++) {
 				html.push('<div>');
-				
+
 				for (var j = 0; j < _cell; j++) {
 					var num = i * _cell + j + 1;
 					var dial = quickDialModule.getDial(num);
 					var item_id = 'item-' + num;
-					
+
 					html.push('<div>');
-					html.push('	<div class="div-table quick-dial-item ' + (dial ? 'dial-used' : '') + '" id="' + item_id + '" draggable="true"' + 
+					html.push('	<div class="div-table quick-dial-item ' + (dial ? 'dial-used' : '') + '" id="' + item_id + '" draggable="true"' +
 						'ondragstart="quickDial.ondragstart(event, ' + num + ');" ' +
 						'ondragover="quickDial.ondragover(event);" ondrop="quickDial.ondrop(event, ' + num + ');"' +
 						'ondragenter="quickDial.ondragenter(event, ' + num + ');"' +
@@ -596,11 +661,11 @@ var quickDial = (function() {
 					html.push('	</div>');
 					html.push('</div>');
 				}
-				
+
 				html.push('</div>');
 			}
 			$('quick_dial_box').innerHTML = html.join('');
-			
+
 			function _setFavIcons() {
 				var faviconDIVArray = document.querySelectorAll('div.default-favicon');
 				for (var j = 0; j < faviconDIVArray.length; j++) {
@@ -610,7 +675,7 @@ var quickDial = (function() {
 					faviconDIVArray[j].appendChild(image);
 				}
 			}
-			
+
 			//insert favicon asynchronous  only asynchronous at first time
 			if(!refreshWholePage) {
 				window.setTimeout(_setFavIcons, 100);
@@ -625,7 +690,7 @@ var quickDial = (function() {
 			} else {
 				$('quickdial_search_banner').style.display = 'none';
 			}
-			
+
 			new iframeLoader({
 				onDOMContentLoaded: function() {
 					$('quickdial_search').style.visibility = 'visible';
@@ -633,84 +698,85 @@ var quickDial = (function() {
 				onTimeout: emptyFunction,
 				iframe: $('quickdial_search')
 			});
-			
+
 			ntab.showView('quick_dial');
 		},
-		
+
 		addDial: function(num) {
 			this.editDial(num);
 		},
-		
+
 		refreshAll: function(num) {
 			var _cell = gPref.getIntPref('moa.ntab.dial.column');
 			_cell = _cell > 0 ? _cell < MAX_COLUMN_ROW ? _cell : MAX_COLUMN_ROW : COLUMNS;
 			var _row = gPref.getIntPref('moa.ntab.dial.row');
 			_row = _row > 0 ? _row < MAX_COLUMN_ROW ? _row : MAX_COLUMN_ROW : ROWS;
-			
+
 			var total = _cell * _row;
 			for (var i = 0; i < total; i++) {
 				this.refreshDial(i + 1);
 			}
 		},
-		
+
 		refreshDial: function(num) {
 			var dial = quickDialModule.getDial(num);
 			if (!dial)
 				return;
-			
+
 			var wnd = getChromeWindow();
 			wnd.MOA.NTab.Snapshot.refreshSnapshot(dial.url);
 			quickDialModule.refreshDialViewRelated(dial.url);
 		},
-		
+
 		quickSelect: function(url, title) {
 			var inputs = $('prompt-content-box').querySelectorAll('DIV.prompt-edit-dial > DIV:first-child > INPUT[type=text].input-url');
 			if (inputs.length != 1)
 				return;
 			inputs[0].value = url;
-			
+
 			inputs = $('prompt-content-box').querySelectorAll('DIV.prompt-edit-dial > DIV:first-child > INPUT[type=text].input-title');
 			inputs[0].value = title;
 		},
-		
+
 		editDial: function(num) {
 			var elem = document.createElement('div');
 			elem.innerHTML = templates.dialEditingTemplate;
 			elem.className = 'prompt-edit-dial';
-			
+
 			var pd = new PromptDialog({
 				elem: elem,
 				beforeShow: function() {
 					// init tabbox
 					TAB.init(elem);
-					
+
+					if (gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory')) {
 					// most visted web sites.
-					_fillSiteSelections(queryHistoryByFreq(20), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.mostvisited-sites')[0]);
-			
+						_fillSiteSelections(queryHistoryByFreq(20), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.mostvisited-sites')[0]);
+
 					// Show bookmarks
-					_fillSiteSelections(_getAllBookmarks(), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.bookmark-sites')[0])
-					
+						_fillSiteSelections(_getAllBookmarks(), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.bookmark-sites')[0])
+					}
 					// set other sites
 					httpGet(gPref.getCharPref('moa.ntab.dial.sitesjson'), function(response) {
 						if (response.readyState == 4 && 200 == response.status) {
 							var sites = null;
-							try { 
+							try {
 								sites = JSON.parse(response.responseText);
 							} catch (err) { }
-							
-							if (!sites) 
+
+							if (!sites)
 								return;
-							
+
 							_fillSiteSelections(sites, elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.nav-sites')[0]);
 						}
 					});
-					
+
 					var dial = quickDialModule.getDial(num);
-					
+
 					if (!dial) {
 						CSS.add(elem, 'prompt-add-dial');
 					}
-					
+
 					var urlinput = elem.querySelectorAll('DIV:first-child > INPUT[type=text].input-url')[0];
 					var titleinput = elem.querySelectorAll('DIV:first-child > INPUT[type=text].input-title')[0];
 					if (dial) {
@@ -720,7 +786,7 @@ var quickDial = (function() {
 						urlinput.value = 'http://';
 						titleinput.value = _('ntab.dial.editdialog.titleinput');
 					}
-					
+
 					// response for ENTER key
 					var inputs = elem.querySelectorAll('DIV:first-child > INPUT[type=text]');
 					for (var i = 0; i < inputs.length; i++) {
@@ -732,7 +798,7 @@ var quickDial = (function() {
 										pd.destroy();
 									}
 									break;
-							} 
+							}
 						}
 					}
 				},
@@ -751,14 +817,14 @@ var quickDial = (function() {
 					pd.destroy();
 				}
 			});
-			
+
 			function _onok() {
 				var input = elem.querySelectorAll('DIV:first-child > INPUT.input-url')[0];
 				input.value = input.value.trim();
 				if ('' == input.value) {
 					input.focus();
 					return false;
-				} 
+				}
 				// append http:// as default prefix
 				input.value = completeURL(input.value);
 				// TODO check if it is a url
@@ -766,11 +832,11 @@ var quickDial = (function() {
 					alert('请输入一个正确的网址！');
 					input.focus();
 					return false;
-				} 
-				
+				}
+
 				var url = input.value;
 				var dial = quickDialModule.getDial(num);
-				
+
 				var refresh = elem.querySelectorAll('DIV:first-child > INPUT.checkbox-refresh')[0].checked;
 				// Check if url has been changed, if yes, then create snapshot for it.
 				if (refresh || !dial || url != dial.url) {
@@ -778,7 +844,7 @@ var quickDial = (function() {
 					var wnd = getChromeWindow();
 					wnd.MOA.NTab.Snapshot.createSnapshot(url);
 				}
-				
+
 				var title = elem.querySelectorAll('DIV:first-child > INPUT.input-title')[0].value.trim();
 				// Update dial
 				quickDialModule.updateDial(num, {
@@ -787,7 +853,7 @@ var quickDial = (function() {
 				}, refresh);
 			}
 		},
-		
+
 		delDial: function(num) {
 			var element = document.createElement('DIV');
 			element.className = 'confirm-msg';
@@ -800,7 +866,7 @@ var quickDial = (function() {
 				}
 			});
 		},
-		
+
 		updateDialView: function(num) {
 			var item_id = 'item-' + num;
 			if (!$(item_id))
@@ -809,16 +875,16 @@ var quickDial = (function() {
 			var dial = quickDialModule.getDial(num);
 			$(item_id).innerHTML = generateHTMLForDial(num, dial, true, false);
 		},
-		
+
 		prefObserver: {
 			QueryInterface : function (aIID) {
-				if (aIID.equals(Components.interfaces.nsIObserver) || 
+				if (aIID.equals(Components.interfaces.nsIObserver) ||
 					aIID.equals(Components.interfaces.nsISupports) ||
 					aIID.equals(Components.interfaces.nsISupportsWeakReference))
 					return this;
 				throw Components.results.NS_NOINTERFACE;
 		    },
-		    
+
 		    observe: function(subject, topic, data) {
 		    	if (topic == 'nsPref:changed') {
 		    		if (data == 'moa.ntab.quickdial.hidehistory') {
@@ -831,13 +897,13 @@ var quickDial = (function() {
 		    	}
 		    }
 		},
-		
+
 		ondragstart: function(event, num) {
 			event.dataTransfer.setData('text/ntab-dial', num);
 			event.dataTransfer.effectAllowed = 'move';
 			event.dataTransfer.dropEffect ='move';
 		},
-		
+
 		ondrop: function(event, num) {
 			event.preventDefault();
 			var source = event.dataTransfer.getData('text/ntab-dial');
@@ -851,7 +917,7 @@ var quickDial = (function() {
                              .parseFragment(event.dataTransfer.getData("text/html"), false, null, document.createElement('DIV'))
 					title = fragment.textContent;
 				}
-				
+
 				quickDialModule.updateDial(num, {
 					url: event.dataTransfer.getData("text/uri-list"),
 					title: title
@@ -861,30 +927,30 @@ var quickDial = (function() {
 			event.stopPropagation();
 			_ondragleave(num);
 		},
-		
+
 		ondragover: function(event) {
-			if (event.dataTransfer.getData('text/ntab-dial') || 
+			if (event.dataTransfer.getData('text/ntab-dial') ||
 				event.dataTransfer.getData("text/uri-list")) {
-				event.preventDefault();	
+				event.preventDefault();
 			}
 		},
-		
+
 		ondragenter: function(event, num) {
-			if (event.dataTransfer.getData('text/ntab-dial') || 
+			if (event.dataTransfer.getData('text/ntab-dial') ||
 				event.dataTransfer.getData("text/uri-list")) {
 				event.preventDefault();
 				_ondragenter(num);
 			}
 		},
-		
+
 		ondragleave: function(event, num) {
 			_ondragleave(num);
 		},
-		
+
 		hideHistory: function(hide) {
 			gPref.setBoolPref('moa.ntab.quickdial.hidehistory', hide);
 		},
-		
+
 		onShowHideHistory: function() {
 			var hide = gPref.getBoolPref('moa.ntab.quickdial.hidehistory');
 			if (true === hide) {
@@ -895,7 +961,7 @@ var quickDial = (function() {
 				CSS.del($('history'), 'hide');
 			}
 		},
-		
+
 		onclickdial: function(num) {
 			tracker.track({
 				type: 'quickdial',
@@ -905,9 +971,10 @@ var quickDial = (function() {
 			});
 		}
 	}
-})(); 
+})();
 
 function _fillSites(sites, place, showIcon) {
+
 	var divs = [];
 	for (var i = 0; i < sites.length; i++) {
 		var site = sites[i];
@@ -921,7 +988,7 @@ function _fillSites(sites, place, showIcon) {
 		place.appendChild(div);
 		divs.push(div);
 	}
-	
+
 	// Optimize favicon loading perfomance, when ntab page is first-run.
 	if (showIcon) {
 		window.setTimeout(function() {
@@ -953,13 +1020,13 @@ function _filter(inString) {
 
 function fillHistory() {
 	quickDial.onShowHideHistory();
-	
+	if (gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory')) {
 	// set most visited sites.
-	_fillSites(queryHistoryByFreq(10), $('history').querySelectorAll('DIV.mostvisited-sites')[0]);
-	
+		_fillSites(queryHistoryByFreq(10), $('history').querySelectorAll('DIV.mostvisited-sites')[0]);
+
 	// set last session sites
-	_fillSites(session.query(10), $('history').querySelectorAll('DIV.lastsession-sites')[0]);
-	
+		_fillSites(session.query(10), $('history').querySelectorAll('DIV.lastsession-sites')[0]);
+	}
 	// set others
 	var branch = gPref.getCharPref('moa.ntab.dial.branch');
 	var sitesTabs = null;
@@ -967,10 +1034,10 @@ function fillHistory() {
 		var defaultDataJSM = {};
 		Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
 		sitesTabs = defaultDataJSM.defaultQuickDial.sitesTabs;
-	} catch (e) { 
+	} catch (e) {
 		sitesTabs = [];
 	}
-	
+
 	sitesTabs.forEach(function(tabObj) {
 		var tabs = $('history').querySelectorAll('DIV.tabbox > DIV.tabs')[0];
 		var tabDiv = document.createElement('DIV');
@@ -979,7 +1046,7 @@ function fillHistory() {
 		tabDiv.id = 'nav_sites';
 		// Insert tab node before hide-btn which is the last one.
 		tabs.insertBefore(tabDiv, tabs.childNodes[tabs.childNodes.length]);
-		
+
 		var tabPanelDiv = null;
 		if ($(tabObj.panelId)) {
 			tabPanelDiv = $(tabObj.panelId);
@@ -989,30 +1056,30 @@ function fillHistory() {
 			tabPanelDiv.id = tabObj.panelId;
 			$('history').querySelectorAll('DIV.tabbox > DIV.tabpanels')[0].appendChild(tabPanelDiv);
 		}
-		
+
 		httpGet(gPref.getCharPref(tabObj.urlPref), function(response) {
 			if (response.readyState == 4 && 200 == response.status) {
 				var sites = null;
-				try { 
+				try {
 					//sites = JSON.parse(response.responseText);
 					sitesContent = response.responseText;
 				} catch (err) {
 					// alert(err);
 				}
-				
-				if (!sitesContent) 
+
+				if (!sitesContent)
 					return;
-				
+
 //				_fillSites(sites, tabPanelDiv, tabObj.showIcon);
 				_fillRemoteSites(sitesContent, tabPanelDiv);
 			}
 		});
 	});
-	
+
 	TAB.init($('history'), function(node) {
 		gPref.setCharPref('moa.ntab.quickdial.history.view', node.id);
 	});
-	
+
 	// switch to last view
 	var lastTabView = gPref.getCharPref('moa.ntab.quickdial.history.view');
 	if ($(lastTabView) && $(lastTabView).onclick) {
@@ -1025,10 +1092,10 @@ document.addEventListener('click', function(event) {
 	var element = event.target.parentNode instanceof HTMLAnchorElement ? event.target.parentNode : event.target;
 	if (!element instanceof HTMLAnchorElement)
 		return;
-	
+
 	if (!element.href || !isValidUrl(element.href))
 		return;
-	
+
 	element.target = gPref.getBoolPref('moa.ntab.openLinkInNewTab') ? '_blank' : '_top';
 }, false);
 
@@ -1039,15 +1106,16 @@ window.addEventListener('DOMContentLoaded', function() {
 			jQuery.noConflict();
 		} catch (e) { }
 	}
-	
+
 	gPref.addObserver('moa.ntab.', quickDial.prefObserver, true);
 	gPref.addObserver('moa.ntab.', ntab.prefObserver, true);
+//	gPref.addObserver('browser.startup.homepage', cehomepage.prefObserver, true);
 	gPref.addObserver('moa.ntab.', default_browser.prefObserver, true);
 	gPref.addObserver('moa.ntab.backgroundimage', custom.prefObserver, true);
 	fillHistory();
 	ntab.updateView();
 	custom.showBgImage();
-	
+
 	tracker.track({
 		type: 'view',
 		action: 'load',
@@ -1058,6 +1126,7 @@ window.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('unload', function() {
 	gPref.removeObserver('moa.ntab.', quickDial.prefObserver, true);
 	gPref.removeObserver('moa.ntab.', ntab.prefObserver, true);
+//	gPref.removeObserver('browser.startup.homepage', cehomepage.prefObserver, true);
 	gPref.removeObserver('moa.ntab.', default_browser.prefObserver, true);
 	gPref.removeObserver('moa.ntab.backgroundimage', custom.prefObserver, true);
 }, true);

@@ -30,6 +30,10 @@
 <!ENTITY ntab.contextmenu.changebg "Change background">
 <!ENTITY ntab.contextmenu.changebg.accesskey "c">
 <!ENTITY ntab.contextmenu.clearbg "Clear background">
+<!ENTITY ntab.contextmenu.export.accesskey "X">
+<!ENTITY ntab.contextmenu.export "Export">
+<!ENTITY ntab.contextmenu.import.accesskey "I">
+<!ENTITY ntab.contextmenu.import "Import">
 <!ENTITY ntab.contextmenu.clearbg.accesskey "D">
 <!ENTITY ntab.contextmenu.configntab "Preference">
 <!ENTITY ntab.contextmenu.configntab.accesskey "P">
