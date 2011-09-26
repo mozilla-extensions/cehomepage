@@ -7,6 +7,7 @@
 <!ENTITY ntab.config.addurl "Add 'Add to quick dial' to right click menu">
 <!ENTITY ntab.config.loadInExistingTabs "Load new tab page in blank tabs when Firefox startup">
 <!ENTITY ntab.config.usehotkey "Enable hotkey to open dial page (Ctrl+0~9)">
+<!ENTITY ntab.config.showpersonalhistory "Dial page display user history record">
 <!ENTITY ntab.config.yes "yes">
 <!ENTITY ntab.config.no "no">
 <!ENTITY ntab.config.tip1 "add 'add to quickdial' to right click menu">

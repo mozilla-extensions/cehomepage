@@ -8,6 +8,7 @@
 		<script type="text/javascript" src="chrome://ntab/content/ntab/locale.js"></script>
 		<script type="text/javascript" src="chrome://ntab/content/ntab/templates.js"></script>
 		<script type="text/javascript" src="chrome://ntab/content/ntab/customize.js"></script>
+		<script type="text/javascript" src="chrome://ntab/content/ntab/dialsync.js"></script>
 		<script type="text/javascript" src="chrome://ntab/content/ntab/track.js"></script>
 		<script type="text/javascript" src="chrome://ntab/content/ntab/ntab.js"></script>
 		<script type="text/javascript">document.getElementsByTagName('title')[0].innerHTML = _('ntab.title');</script>
@@ -18,6 +19,9 @@
 				<div>
 					<div id="btn_browser" class="text-browser"  onclick="ntab.onclick_to_browser();" _title="ntab.dial.label.setdefault"><script type="text/javascript">_$('ntab.dial.label.setdefault');</script></div>
 					<div id="set_default_browser_msg" class="text-browser"><script type="text/javascript">_$('ntab.dial.label.setdefaultmsg');</script></div>
+					<!--about:cehome button, if want to have uncommit-->
+					<!--<div id="btn_homepage" class="text-browser"  onclick="ntab.onclick_to_cehomepage();" _title="ntab.dial.label.sethomepage"><script type="text/javascript">_$('ntab.dial.label.sethomepage');</script></div>-->
+					<!--<div id="set_homepage_msg" class="text-browser"><script type="text/javascript">_$('ntab.dial.label.sethomepagemsg');</script></div>-->
 					<div id="ntab-view-switchers-box">
 						<div id="btn_blank" class="button-switch" onclick="ntab.onclick_to_blank();"  _title="ntab.dial.label.switchtoblank"></div>
 						<div id="btn_search" class="button-switch" onclick="ntab.onclick_to_search();" _title="ntab.dial.label.switchtosearch"></div>
@@ -78,7 +82,7 @@
 				</div>
 			</div>
 		</div>
-		
+
 		<!-- Prompt dialog -->
 		<div id="prompt-dialog" class="div-table" style="display: none;">
 			<div>

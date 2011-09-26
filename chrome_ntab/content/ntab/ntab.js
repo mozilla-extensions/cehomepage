@@ -52,6 +52,31 @@ var ntab = (function(){
 			}, 110)
 		},
 
+		onclick_to_cehomepage: function() {
+			cehomepage.set_cehomepage();
+			window.setTimeout(function() {
+				if (gPref.getCharPref('browser.startup.homepage').indexOf("about:cehome") != -1) {
+					$('set_homepage_msg').style.display = 'block';
+					window.setTimeout(function() {
+						var _opacity = 1;
+						function _setopacity() {
+							if (_opacity <= 0) {
+								$('set_homepage_msg').style.display = 'none';
+								$('set_homepage_msg').style.opacity = 0;
+								return;
+							}
+
+							_opacity -= 0.1;
+							$('set_homepage_msg').style.opacity = _opacity;
+							window.setTimeout(_setopacity, 50);
+						}
+						_setopacity();
+					}, 2000)
+				}
+			}, 110)
+		},
+
+
 		onclick_to_blank: function() {
 			ntab.switch_to('blank');
 			_t('blank');
@@ -89,6 +114,7 @@ var ntab = (function(){
 			}
 		},
 
+
 		showView: function(view_id) {
 			var shell = getShellService();
 			if(shell.isDefaultBrowser(true)) {
@@ -98,6 +124,11 @@ var ntab = (function(){
 			}
 
 			window.setTimeout(default_browser.update_default_view, 100);
+
+
+//			window.setTimeout(cehomepage.update_default_view, 100);
+
+
 
 			var children = $('main-content').childNodes;
 			for (i = 0; i < children.length; i++) {
@@ -209,6 +240,38 @@ var default_browser = (function() {
 				if (topic == 'nsPref:changed') {
 		    		if (data == 'moa.ntab.browser') {
 		    			window.setTimeout(default_browser.update_default_view, 100);
+		    		}
+		    	}
+		    }
+		}
+	}
+})();
+
+var cehomepage = (function() {
+	var is_default = false;
+	return {
+		set_cehomepage: function() {
+			gPref.setCharPref('browser.startup.homepage', 'about:cehome');
+		},
+
+		update_default_view: function(){
+			$("btn_homepage").style.display = (gPref.getCharPref('browser.startup.homepage').indexOf('about:cehome') != -1)
+												? 'none' : 'block';
+		},
+
+		prefObserver: {
+			QueryInterface : function (aIID) {
+				if (aIID.equals(Components.interfaces.nsIObserver) ||
+					aIID.equals(Components.interfaces.nsISupports) ||
+					aIID.equals(Components.interfaces.nsISupportsWeakReference))
+					return this;
+				throw Components.results.NS_NOINTERFACE;
+		    },
+
+		    observe: function(subject, topic, data) {
+				if (topic == 'nsPref:changed') {
+		    		if (data == 'browser.startup.homepage') {
+		    			window.setTimeout(cehomepage.update_default_view, 100);
 		    		}
 		    	}
 		    }
@@ -351,6 +414,8 @@ var search = new webView({
 
 function queryHistoryByFreq(n) {
 	var result = [];
+
+
 	try {
 		var conn = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService)
 				.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
@@ -521,6 +586,9 @@ var quickDial = (function() {
 
 	function _getAllBookmarks() {
 		var result = [];
+		if (!gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory'))
+			return result;
+
 		// var conn = Cc['@mozilla.org/browsernav-history-service;1'].getService(Ci.nsINavBookmarksService)
 		//		.QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
 		var conn = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService)
@@ -684,11 +752,14 @@ var quickDial = (function() {
 					// init tabbox
 					TAB.init(elem);
 
+
+					if (gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory')) {
 					// most visted web sites.
-					_fillSiteSelections(queryHistoryByFreq(20), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.mostvisited-sites')[0]);
+						_fillSiteSelections(queryHistoryByFreq(20), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.mostvisited-sites')[0]);
 
 					// Show bookmarks
-					_fillSiteSelections(_getAllBookmarks(), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.bookmark-sites')[0])
+						_fillSiteSelections(_getAllBookmarks(), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.bookmark-sites')[0])
+					}
 
 					// set other sites
 					httpGet(gPref.getCharPref('moa.ntab.dial.sitesjson'), function(response) {
@@ -908,6 +979,7 @@ var quickDial = (function() {
 })();
 
 function _fillSites(sites, place, showIcon) {
+
 	var divs = [];
 	for (var i = 0; i < sites.length; i++) {
 		var site = sites[i];
@@ -954,11 +1026,13 @@ function _filter(inString) {
 function fillHistory() {
 	quickDial.onShowHideHistory();
 
+
 	// set most visited sites.
 	_fillSites(queryHistoryByFreq(10), $('history').querySelectorAll('DIV.mostvisited-sites')[0]);
 
 	// set last session sites
 	_fillSites(session.query(10), $('history').querySelectorAll('DIV.lastsession-sites')[0]);
+
 
 	// set others
 	var branch = gPref.getCharPref('moa.ntab.dial.branch');
@@ -978,7 +1052,9 @@ function fillHistory() {
 		tabDiv.className = 'tab';
 		tabDiv.id = 'nav_sites';
 		// Insert tab node before hide-btn which is the last one.
+
 		tabs.insertBefore(tabDiv, tabs.childNodes[tabs.childNodes.length - 1]);
+
 
 		var tabPanelDiv = null;
 		if ($(tabObj.panelId)) {
@@ -1009,6 +1085,7 @@ function fillHistory() {
 		});
 	});
 
+
 	var tabs = $('history').querySelectorAll('DIV.tabbox > DIV.tabs')[0];
 	var anchor = document.createElement('a');
 	anchor.textContent = _('ntab.dial.label.firefoxchina');
@@ -1018,6 +1095,7 @@ function fillHistory() {
 	anchorDiv.className = 'homepagetab';
 	anchorDiv.appendChild(anchor);
 	tabs.insertBefore(anchorDiv, tabs.childNodes[tabs.childNodes.length - 1]);
+
 
 	TAB.init($('history'), function(node) {
 		gPref.setCharPref('moa.ntab.quickdial.history.view', node.id);
@@ -1052,6 +1130,7 @@ window.addEventListener('DOMContentLoaded', function() {
 
 	gPref.addObserver('moa.ntab.', quickDial.prefObserver, true);
 	gPref.addObserver('moa.ntab.', ntab.prefObserver, true);
+//	gPref.addObserver('browser.startup.homepage', cehomepage.prefObserver, true);
 	gPref.addObserver('moa.ntab.', default_browser.prefObserver, true);
 	gPref.addObserver('moa.ntab.backgroundimage', custom.prefObserver, true);
 	fillHistory();
@@ -1068,6 +1147,7 @@ window.addEventListener('DOMContentLoaded', function() {
 window.addEventListener('unload', function() {
 	gPref.removeObserver('moa.ntab.', quickDial.prefObserver, true);
 	gPref.removeObserver('moa.ntab.', ntab.prefObserver, true);
+//	gPref.removeObserver('browser.startup.homepage', cehomepage.prefObserver, true);
 	gPref.removeObserver('moa.ntab.', default_browser.prefObserver, true);
 	gPref.removeObserver('moa.ntab.backgroundimage', custom.prefObserver, true);
 }, true);

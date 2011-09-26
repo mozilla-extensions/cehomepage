@@ -36,7 +36,6 @@ if (!window['MOA']) {
 			try {
 				isDebug = _prefs.getBoolPref('debug');
 			} catch (err) {}
-			
 			if (isDebug) {
 				this.log(message);
 			}

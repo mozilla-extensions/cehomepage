@@ -117,6 +117,11 @@ DIV#set_default_browser_msg {
 	cursor: default !important;
 }
 
+DIV#set_homepage_msg: {
+	display: none;
+	cursor: default !important;
+}
+
 #layout > DIV:first-child DIV.selected {
 	cursor: auto;
 }
@@ -505,11 +510,11 @@ DIV.prompt-edit-dial DIV.sites-list > DIV > DIV:last-child {
 	padding-right: 10px;
 }
 
-DIV#prompt-content-box DIV.pick-image {
+DIV#prompt-content-box DIV.pick-file {
 	margin-bottom: 10px;
 }
 
-DIV#prompt-content-box DIV.pick-image > SPAN {
+DIV#prompt-content-box DIV.pick-file > SPAN {
 	padding-right: 10px;
 }
 /* end */

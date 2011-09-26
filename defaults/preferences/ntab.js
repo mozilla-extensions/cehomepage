@@ -10,6 +10,7 @@ pref("moa.ntab.openInNewTab", true);
 pref("moa.ntab.dial.column", 4);
 pref("moa.ntab.dial.row", 2);
 pref("moa.ntab.quickdial.hidehistory", false);
+pref("moa.ntab.quickdial.showpersonalhistory", true);
 pref("moa.ntab.quickdial.history.view", "nav_sites");
 
 pref("moa.ntab.view.search.url", "http://i.firefoxchina.cn/newtab/china-start/index.html");
