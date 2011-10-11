@@ -33,6 +33,11 @@
 			'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
 			'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
 			'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',
+			'http://www.google.com/': 'chrome://ntab/skin/thumb/master/google.jpg',
+			'http://www.google.com.hk/': 'chrome://ntab/skin/thumb/master/google.jpg',
+            'http://www.youdao.com/': 'chrome://ntab/skin/thumb/master/youdao.jpg',
+            'http://cn.bing.com/': 'chrome://ntab/skin/thumb/master/bing.jpg',
+            'http://www.bing.com/': 'chrome://ntab/skin/thumb/master/bing.jpg',
 		};
 	}
 
@@ -250,7 +255,7 @@
 					if(this.height <= canvas.height) {
 						context.drawImage(this, Math.floor(0.5 * (canvas.width - this.width)), Math.floor(0.5 * (canvas.height - this.height)));
 					} else {
-					// image is square 
+					// image is square
 						context.drawImage(this, Math.floor(0.5 * (canvas.width - canvas.height)), 0, canvas.height, canvas.height);
 					}
 					var data = canvas.toDataURL('image/png');
