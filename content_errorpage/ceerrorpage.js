@@ -14,7 +14,7 @@ function addURLLink(event) {
 		}, false);
 		var timer = 0;
 		var interval = setInterval(function(){
-			if(timer < 150) {
+			if(timer < 150 && iframe.contentDocument) {
 				if(iframe.contentDocument.readyState == 'complete' || iframe.contentDocument.readyState == 'interactive') {
 					iframe.height = '330px';
 					timer = 0;
