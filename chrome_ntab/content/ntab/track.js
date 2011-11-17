@@ -1,5 +1,5 @@
 var tracker = (function() {
-	var _trackurl = 'http://www.g-fox.cn/livemargins/ntab.gif';
+	var _trackurl = 'http://addons.g-fox.cn/ntab.gif';
 	
 	function _trace_link(link) {
 		if (!link.href || (link.href.indexOf('http://') != 0 && link.href.indexOf('https://') != 0))
@@ -60,6 +60,7 @@ var tracker = (function() {
 				args.push('hr=' + encodeURIComponent(option.href));
 			}
 			args.push('r=' + Math.random());
+			args.push('cid=' + Application.prefs.getValue("app.chinaedition.channel","www.firefox.com.cn"));
 			image.src = _trackurl + '?' + args.join('&');
 		},
 		
