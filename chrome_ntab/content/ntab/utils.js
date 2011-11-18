@@ -159,6 +159,9 @@ function isValidUrl(aUrl) {
   return true;
 }
 
+function isFirefoxLowerThan4() {
+	return typeof Application.getExtensions == "undefined";
+}
 
 function closeAllPromptDialog() {
 	var evt = document.createEvent('HTMLEvents');
