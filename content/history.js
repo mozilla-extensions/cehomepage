@@ -155,6 +155,9 @@
                 autostart: function(flag) {
                     return me.autostart(flag);
                 },
+                channelid: function() {
+                    return me.channelid();
+                },
                 setHome: function(url) {
                     if (url != null && url != "" && url.indexOf("http://") == 0) {
                         prefs.set('browser.startup.homepage', url);
@@ -191,6 +194,9 @@
                 prefs.set('extensions.cehomepage.autostartup', flag);
             }
             return ori;
+        },
+        channelid: function() {
+            return prefs.get("app.chinaedition.channel","www.firefox.com.cn");
         }
     };
 
