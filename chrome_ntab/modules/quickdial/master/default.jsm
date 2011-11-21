@@ -5,43 +5,43 @@ defaultQuickDial = {
 		'1': {
 			title: decodeURIComponent('%E7%81%AB%E7%8B%90%E7%BD%91%E5%9D%80%E5%A4%A7%E5%85%A8'),
 			url: 'http://www.huohu123.com/?src=qd',
-			icon: 'chrome://ntab/skin/logo/master/mozilla.ico'
+			icon: 'chrome://ntab/skin/logo/mozilla.ico'
 		},
 
 		'2': {
 			title: decodeURIComponent('%E7%99%BE%E5%BA%A6'),
 			url: 'http://www.baidu.com/index.php?tn=monline_5_dg',
-			icon: 'chrome://ntab/skin/logo/master/baidu.ico'
+			icon: 'chrome://ntab/skin/logo/baidu.ico'
 		},
 
 		'3': {
 			title: decodeURIComponent('%E6%96%B0%E6%B5%AA'),
 			url: 'http://www.sina.com.cn/',
-			icon: 'chrome://ntab/skin/logo/master/sina.ico'
+			icon: 'chrome://ntab/skin/logo/sina.ico'
 		},
 
 		'4': {
 			title: decodeURIComponent('%E4%BA%BA%E4%BA%BA%E7%BD%91'),
 			url: 'http://www.renren.com/',
-			icon: 'chrome://ntab/skin/logo/master/renren.ico'
+			icon: 'chrome://ntab/skin/logo/renren.ico'
 		},
 
 		'5': {
 			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E7%89%B9%E5%8D%96'),
 			url: 'http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997&k=e02915d8b8ad9603',
-			icon: 'chrome://ntab/skin/logo/master/taobao.ico'
+			icon: 'chrome://ntab/skin/logo/taobao.ico'
 		},
 
 		'6': {
 			title: decodeURIComponent('%E5%8D%93%E8%B6%8A%E7%BD%91'),
 			url: 'http://www.amazon.cn/?source=mozilla9-23',
-			icon: 'chrome://ntab/skin/logo/master/joyo.ico'
+			icon: 'chrome://ntab/skin/logo/joyo.ico'
 		},
 
 		'7': {
 			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
 			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/',
-			icon: 'chrome://ntab/skin/logo/master/360.ico'
+			icon: 'chrome://ntab/skin/logo/360.ico'
 		}
 	},
 
