@@ -522,22 +522,24 @@
                     }
                 }, false);
             }
+        }, 10);
+        
+        // Can not put the logic below in the timeout function.
+        // Or the home page can not get the injected object in the very beginning, e.g. the very first run after profile is created.
+        document.getElementById('appcontent').addEventListener("DOMContentLoaded", function(evt) {
+            if (!evt.originalTarget instanceof HTMLDocument) {
+                return;
+            }
             
-            document.getElementById('appcontent').addEventListener("DOMContentLoaded", function(evt) {
-                if (!evt.originalTarget instanceof HTMLDocument) {
-                    return;
+            try {
+                var view = evt.originalTarget.defaultView;
+                if (view.top == view || view.top == view.parent) {
+                    log(['inject', view.location.host.toLowerCase()]);
+                    inject(view.location.host.toLowerCase(), view);
                 }
-                
-                try {
-                    var view = evt.originalTarget.defaultView;
-                    if (view.top == view || view.top == view.parent) {
-                        log(['inject', view.location.host.toLowerCase()]);
-                        inject(view.location.host.toLowerCase(), view);
-                    }
-                } catch (e) {
-                    log('Error occurs when injecting.');
-                }
-            }, false);
-        }, 1000);
+            } catch (e) {
+                log('Error occurs when injecting.');
+            }
+        }, false);
     }, false);
 }());
