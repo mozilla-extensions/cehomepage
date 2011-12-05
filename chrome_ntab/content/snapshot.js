@@ -315,7 +315,7 @@
 							canvas.height / height);
 				context.save();
 				context.drawWindow(wnd, 0, 0, width, height, 'rgb(255,255,255)');
-				if(!isDominantByOneColor(context, width, height)) {
+				if(!isDominantByOneColor(context, canvas.width, canvas.height)) {
 					var data = canvas.toDataURL('image/png');
 					var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
 					var uri = ioService.newURI(data, 'UTF8', null);
