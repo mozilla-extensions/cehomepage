@@ -106,6 +106,11 @@ var ntab = (function() {
 
         check_browser: function() {
             var shell = getShellService();
+            
+            if (!shell) {
+                return;
+            }
+            
             if (shell.isDefaultBrowser(true)) {
                 gPref.setBoolPref('moa.ntab.browser', true);
             } else {
@@ -117,16 +122,6 @@ var ntab = (function() {
 
 
         showView: function(view_id) {
-            var shell = getShellService();
-            if (shell.isDefaultBrowser(true)) {
-                gPref.setBoolPref('moa.ntab.browser', true);
-            } else {
-                gPref.setBoolPref('moa.ntab.browser', false);
-            }
-
-            window.setTimeout(default_browser.update_default_view, 100);
-
-
             //            window.setTimeout(cehomepage.update_default_view, 100);
             var children = $('main-content').childNodes;
             for (i = 0; i < children.length; i++) {
@@ -147,6 +142,19 @@ var ntab = (function() {
                     child.style.left = '-100000px';
                 }
             }
+            
+            var shell = getShellService();
+            if (!shell) {
+                return;
+            }
+            
+            if (shell.isDefaultBrowser(true)) {
+                gPref.setBoolPref('moa.ntab.browser', true);
+            } else {
+                gPref.setBoolPref('moa.ntab.browser', false);
+            }
+
+            window.setTimeout(default_browser.update_default_view, 100);
         },
 
         updateView: function() {
@@ -212,6 +220,10 @@ var default_browser = (function() {
     return {
         set_default: function() {
             var shell = getShellService();
+            if (!shell) {
+                return;
+            }
+            
             if (!shell.isDefaultBrowser(true)) {
                 shell.setDefaultBrowser(true, false);
                 gPref.setBoolPref('moa.ntab.browser', true);
