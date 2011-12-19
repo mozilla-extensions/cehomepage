@@ -12,7 +12,7 @@
   	try {
   		src = Components.classes["@mozilla.org/preferences-service;1"]
   						.getService(Components.interfaces.nsIPrefBranch2)
-  						.getCharPref("extensions.cehomepage.abouturl");
+  						.getComplexValue("extensions.cehomepage.abouturl", Ci.nsIPrefLocalizedString).data;
   		src = src.trim();
   	} catch (e) { }
   	src = "" == src ? "http://i.firefoxchina.cn/" : src;

@@ -1,8 +1,10 @@
-content	cehomepage	content/	contentaccessible=yes
+content	cehomepage         chrome/content/	contentaccessible=yes
+locale  cehomepage  en-US  chrome/locale/en-US/
+locale  cehomepage  zh-CN  chrome/locale/zh-CN/
 overlay	chrome://browser/content/browser.xul chrome://cehomepage/content/overlay.xul
 
-content ceerrorpage content_errorpage/ contentaccessible=yes
-content ceerrorpage content_errorpage/
+content ceerrorpage chrome_errorpage/content/ contentaccessible=yes
+content ceerrorpage chrome_errorpage/content/
 
 overlay chrome://browser/content/browser.xul chrome://ceerrorpage/content/browserOverlay.xul
 

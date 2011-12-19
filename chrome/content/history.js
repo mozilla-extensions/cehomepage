@@ -57,7 +57,7 @@
     }
 
     function cehomepage_autoSetHomepage() {
-        var homepage = prefs.get("extensions.cehomepage.homepage", "about:cehome");
+        var homepage = prefs.getLocale("extensions.cehomepage.homepage", "about:cehome");
         prefs.set("browser.startup.homepage", homepage);
     }
 
@@ -466,7 +466,7 @@
         onOperationCancelled: function(addon) {
             if(addon.id == "cehomepage@mozillaonline.com") {
                 var homepage = prefs.getLocale("browser.startup.homepage", "");
-                var abouturl = prefs.get("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/");
+                var abouturl = prefs.getLocale("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/");
                 var urls = homepage.split("|");
                 for (var i = 0; i < urls.length; i++){
                     urls[i] = urls[i].trim() == abouturl ? "about:cehome" : urls[i].trim();
@@ -480,7 +480,7 @@
     function cancelAboutProtocol(addon) {
         if(addon.id == "cehomepage@mozillaonline.com") {
             var homepage = prefs.getLocale("browser.startup.homepage", "");
-            var abouturl = prefs.get("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/");
+            var abouturl = prefs.getLocale("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/");
             homepage = homepage.replace(/about:cehome/ig, abouturl);
             prefs.set("browser.startup.homepage", homepage);
             for (var j = 0; j < gBrowser.tabs.length; j++) {
