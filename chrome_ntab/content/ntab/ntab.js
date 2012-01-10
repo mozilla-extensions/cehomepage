@@ -288,6 +288,7 @@ iframeLoader.prototype = {
         this.options = extend(options, {
             onDOMContentLoaded: emptyFunction,
             onIntervalBeforeLoaded: emptyFunction,
+            onIntervalAfterLoaded: emptyFunction,
             iframe: null
         });
 
@@ -299,6 +300,8 @@ iframeLoader.prototype = {
     monitor: function() {
         var iframe = this.options.iframe;
         var self = this;
+
+        var _interval_after_loaded = null;
 
         function _onLoad(event) {
             self.options.onDOMContentLoaded();
@@ -323,6 +326,11 @@ iframeLoader.prototype = {
 
             // Hach context menu
             iframe.contentDocument.addEventListener('contextmenu', getChromeWindow().MOA.NTab.onContextMenu, false);
+
+            // Set an interval to invoke onIntervalAfterLoaded
+            _interval_after_loaded = window.setInterval(function() {
+                self.options.onIntervalAfterLoaded();
+            }, 2000);
         }
 
         var _interval_before_loaded = null;
@@ -390,6 +398,7 @@ webView.prototype = {
                 onDOMContentLoaded: _sizeToContent,
                 onIntervalBeforeLoaded: _sizeToContent,
                 onTimeout: _sizeToContent,
+                onIntervalAfterLoaded: _sizeToContent,      // Content height might be changed, set an interval to check.
                 iframe: iframe
             });
         }

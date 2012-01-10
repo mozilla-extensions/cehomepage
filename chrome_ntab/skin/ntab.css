@@ -349,8 +349,8 @@ DIV.quick-dial-item .quickdial-add SPAN {
 #nav IFRAME,
 #search IFRAME {
 	height: 100%;
-	/* set a fixed value to width, and set height dynamically in js*/
-	width: 950px;
+	/* set height dynamically in js*/
+	width: 100%;
 	overflow: hidden;
 }
 /* end */
@@ -643,11 +643,6 @@ body.withbg #quick_dial A,
 body.withbg #history div.tabs div.selected {
 	color: white !important;
 	text-shadow: 0 1px 3px black !important;
-}
-
-body.withbg #nav IFRAME {
-	background-color: white !important;
-	padding: 0 10px;
 }
 
 body.withbg #history div.tabs div.selected {
