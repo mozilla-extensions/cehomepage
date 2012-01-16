@@ -33,7 +33,7 @@ defaultQuickDial = {
 		},
 
 		'6': {
-			title: decodeURIComponent('%E5%8D%93%E8%B6%8A%E7%BD%91'),
+			title: '\u4E9A\u9A6C\u900A',
 			url: 'http://www.amazon.cn/?source=mozilla9-23',
 			icon: 'chrome://ntab/skin/logo/joyo.ico'
 		},
@@ -59,8 +59,8 @@ defaultQuickDial = {
 		'http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313997&eventid=101334': 'chrome://ntab/skin/thumb/master/tmall.png',
 		'http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997&k=e02915d8b8ad9603' : 'chrome://ntab/skin/thumb/master/taobaohot.jpg',
 		'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
-		'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
-		'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',
+		'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/amazon.jpg',
+		'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/amazon.jpg',
         'http://www.google.com/': 'chrome://ntab/skin/thumb/master/google.jpg',
         'http://www.google.com.hk/': 'chrome://ntab/skin/thumb/master/google.jpg',
         'http://www.youdao.com/': 'chrome://ntab/skin/thumb/master/youdao.jpg',
