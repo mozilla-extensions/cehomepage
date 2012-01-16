@@ -33,7 +33,7 @@ defaultQuickDial = {
 		},
 
 		'6': {
-			title: decodeURIComponent('%E5%8D%93%E8%B6%8A%E7%BD%91'),
+			title: '\u4E9A\u9A6C\u900A',
 			url: 'http://www.amazon.cn/?source=mozilla9-23',
 			icon: 'chrome://ntab/skin/logo/joyo.ico'
 		},
