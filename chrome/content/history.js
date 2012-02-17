@@ -84,6 +84,7 @@
         homepage.init(cwin.cehomepage);
         frequent.init(cwin.cehomepage);
         last.init(cwin.cehomepage);
+        sessionStore.init(cwin.cehomepage);
         if (cwin['do_history']) {
             cwin.do_history.call(cwin);
         }
@@ -197,6 +198,33 @@
         },
         channelid: function() {
             return prefs.get("app.chinaedition.channel","www.firefox.com.cn");
+        }
+    };
+
+    var sessionStore = {
+        init: function(cehp) {
+            var self = this;
+            cehp['sessionStore'] = {
+                get canRestoreLastSession() {
+                    return self.canRestoreLastSession();
+                },
+
+                restoreLastSession: function() {
+                    return self.restoreLastSession();
+                }
+            };
+        },
+
+        canRestoreLastSession: function() {
+            let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+            return ss.canRestoreLastSession;
+        },
+
+        restoreLastSession: function() {
+            let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
+            if (ss.canRestoreLastSession) {
+                ss.restoreLastSession();
+            }
         }
     };
 
