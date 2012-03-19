@@ -103,6 +103,7 @@ DIV.hide {
 	color: #6C90A5;
 	border: 1px solid #7796B3;
 	-moz-border-radius: 3px;
+	border-radius: 3px;
 	background: -moz-linear-gradient(center top , #FFFFFF, #F2EFE9) repeat scroll 0 0 transparent;
 	font-size: 12px;
 }
@@ -219,7 +220,9 @@ DIV.quick-dial-item {
 DIV.quick-dial-item:hover {
 	border: 1px solid rgb(179, 221, 245);
 	-moz-border-radius: 4px;
+	border-radius: 4px;
 	-moz-box-shadow: 1px 1px 10px #A9A9A9;
+	box-shadow: 1px 1px 10px #A9A9A9;
 }
 
 DIV.quick-dial-item DIV.loading {
@@ -230,7 +233,9 @@ DIV.quick-dial-item-drag-over {
 	border: 1px solid rgb(210, 149, 17);
 	opacity: 0.6;
 	-moz-border-radius: 4px;
+	border-radius: 4px;
 	-moz-box-shadow: 1px 1px 10px #A9A9A9;
+	box-shadow: 1px 1px 10px #A9A9A9;
 }
 
 DIV.quick-dial-item DIV.btn-opt {
@@ -273,6 +278,7 @@ DIV.quick-dial-item > DIV:first-child > DIV {
 
 DIV.quick-dial-item > DIV:last-child > DIV > DIV {
 	-moz-border-radius: 4px;
+	border-radius: 4px;
 	border: 4px solid #C6E7F6;
 	background-color: rgb(243, 251, 254);
 	overflow: hidden;
@@ -280,10 +286,12 @@ DIV.quick-dial-item > DIV:last-child > DIV > DIV {
 	text-align: center;
 	cursor: pointer;
 	-moz-box-shadow: 0 1px 11px #CCC;
+	box-shadow: 0 1px 11px #CCC;
 }
 
 DIV.quick-dial-item:hover > DIV:last-child > DIV > DIV {
 	-moz-box-shadow: none;
+	box-shadow: none;
 }
 
 DIV.quick-dial-item .dial-bar {
@@ -334,6 +342,7 @@ DIV.quick-dial-item .quickdial-add SPAN {
 	margin-top: 96px;
 	background: url(chrome://ntab/skin/icon/add13x13.png) no-repeat scroll 6px center transparent;
 	-moz-border-radius: 8px;
+	border-radius: 8px;
 
 }
 /* end */
@@ -377,6 +386,7 @@ DIV.quick-dial-item .quickdial-add SPAN {
 	width: 372px;
 	border: 1px solid rgb(225, 225, 225);
 	-moz-border-radius: 5px;
+	border-radius: 5px;
 	padding: 5px 15px 14px;
 	background-color: #FFF;
 }
@@ -392,6 +402,7 @@ DIV.quick-dial-item .quickdial-add SPAN {
 	padding: 2px 10px;
 	margin-right: 10px;
 	-moz-border-radius: 2px;
+	border-radius: 2px;
 	background: -moz-linear-gradient(center top , #FDFDFD, #EDEDED);
 	color: #000;
 	text-decoration: none;
@@ -429,6 +440,7 @@ DIV.prompt-edit-dial > DIV:first-child > LABEL {
 DIV.prompt-edit-dial > DIV:first-child > INPUT[type=text] {
 	border: 1px solid #D9D9D9;
 	-moz-border-radius: 5px;
+	border-radius: 5px;
 	padding: 2px 5px;
 	width: 198px;
 	margin-top: 5px;
@@ -441,6 +453,7 @@ DIV.prompt-edit-dial > DIV:first-child > INPUT[type=text]:first-child {
 DIV.prompt-edit-dial DIV.tabbox {
 	border: 1px solid #DDD;
 	-moz-border-radius: 5px;
+	border-radius: 5px;
 	margin: 10px 0;
 }
 
@@ -460,6 +473,7 @@ DIV.prompt-edit-dial DIV.tabs > DIV.tab {
 DIV.prompt-edit-dial DIV.tabs > DIV.selected {
 	background-color: #F0F0F0;
 	-moz-border-radius: 3px 3px 0 0;
+	border-radius: 3px 3px 0 0;
 }
 
 DIV.prompt-edit-dial DIV.tabpanels {
@@ -553,6 +567,7 @@ DIV#prompt-content-box DIV.pick-file > SPAN {
 #history > DIV.tabbox > DIV.tabs > DIV.selected {
 	background: -moz-linear-gradient(center top , #D2E0EC, #E0ECF8) repeat scroll 0 0 transparent;
 	-moz-border-radius: 3px 3px 0 0;
+	border-radius: 3px 3px 0 0;
 	text-shadow: 0 1px 1px white;
 }
 
