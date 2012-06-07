@@ -67,9 +67,10 @@
 		// Catch new tab
 		if (window.TMP_BrowserOpenTab) {
 			gBrowser.removeEventListener('NewTab', window.TMP_BrowserOpenTab, true);
+			gBrowser.removeEventListener('NewTab', window.BrowserOpenTab, true);
 			window.originalBrowserOpenTab = window.TMP_BrowserOpenTab;
-			window.TMP_BrowserOpenTab = MOA.NTab.browserOpenTab;
-			gBrowser.addEventListener('NewTab', window.TMP_BrowserOpenTab, true);
+			window.BrowserOpenTab = window.TMP_BrowserOpenTab = MOA.NTab.browserOpenTab;
+			gBrowser.addEventListener('NewTab', window.BrowserOpenTab, true);
 		} else if (window.TBP_BrowserOpenTab) {
 			gBrowser.removeEventListener('NewTab', window.TBP_BrowserOpenTab, true);
 			window.originalBrowserOpenTab = window.TBP_BrowserOpenTab;
