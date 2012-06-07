@@ -1,6 +1,4 @@
-pref("extensions.cntab.boolpref", false);
-pref("extensions.cntab.intpref", 0);
-pref("extensions.cntab.stringpref", "A string");
+pref("browser.newtab.url", "about:ntab");
 
 // https://developer.mozilla.org/en/Localizing_extension_descriptions
 pref("extensions.ntab@mozillaonline.com.description", "chrome://ntab/locale/overlay.properties");
