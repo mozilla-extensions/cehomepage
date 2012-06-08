@@ -106,11 +106,11 @@ var ntab = (function() {
 
         check_browser: function() {
             var shell = getShellService();
-            
+
             if (!shell) {
                 return;
             }
-            
+
             if (shell.isDefaultBrowser(true)) {
                 gPref.setBoolPref('moa.ntab.browser', true);
             } else {
@@ -142,12 +142,12 @@ var ntab = (function() {
                     child.style.left = '-100000px';
                 }
             }
-            
+
             var shell = getShellService();
             if (!shell) {
                 return;
             }
-            
+
             if (shell.isDefaultBrowser(true)) {
                 gPref.setBoolPref('moa.ntab.browser', true);
             } else {
@@ -223,7 +223,7 @@ var default_browser = (function() {
             if (!shell) {
                 return;
             }
-            
+
             if (!shell.isDefaultBrowser(true)) {
                 shell.setDefaultBrowser(true, false);
                 gPref.setBoolPref('moa.ntab.browser', true);
@@ -488,13 +488,6 @@ function _getFaviconForURL(url) {
     return icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? 'chrome://ntab/skin/icon/favicon.png' : icon;
 }
 
-// 8/9/2011 for BD request, change taobao pid.   writed by xxie
-
-function filterTaobaoPid(url) {
-    url = url.replace(/mm_12811289_2210561_8696507/g, "mm_28347190_2425761_9313997");
-    return url;
-}
-
 var quickDial = (function() {
     var isInitialized = false;
 
@@ -538,7 +531,7 @@ var quickDial = (function() {
             var backgournd = !thumbnail ? '' : 'background:url(' + thumbnail + ') no-repeat scroll center 0 transparent';
             var className = !thumbnail ? 'loading' : '';
             html.push('                <div>');
-            html.push('                    <a draggable="false" onclick="quickDial.onclickdial(' + num + ');" href="' + completeURL(filterTaobaoPid(dial.url)) + '"><div style="height: 100%; width: 100%;' + backgournd + '" class="' + className + '"></div></a>');
+            html.push('                    <a draggable="false" onclick="quickDial.onclickdial(' + num + ');" href="' + completeURL(dial.url) + '"><div style="height: 100%; width: 100%;' + backgournd + '" class="' + className + '"></div></a>');
             html.push('                </div>');
             html.push('            </div>');
             html.push('        </div>');
