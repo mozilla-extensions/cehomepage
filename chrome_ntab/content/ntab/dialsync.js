@@ -76,7 +76,7 @@ var dialsync = (function() {
 						var dialContent = userDataJSON.dialContent;
 						for (var index in dialContent) {
 							if(/^\d+$/.test(index)) {
-								if(!dialContent[index].title || !dialContent[index].url ) {
+								if((!dialContent[index].title && dialContent[index].title !== '') || !dialContent[index].url ) {
 									alert(_('moa.ntab.jsonfile.importerror'));
 									return;
 								}

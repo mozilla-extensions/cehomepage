@@ -3,31 +3,31 @@ var EXPORTED_SYMBOLS = ['defaultQuickDial'];
 defaultQuickDial = {
 	dialData: {
 		'1': {
-			title: decodeURIComponent('%E7%81%AB%E7%8B%90%E7%BD%91%E5%9D%80%E5%A4%A7%E5%85%A8'),
+			title: '\u706B\u72D0\u7F51\u5740\u5927\u5168',
 			url: 'http://www.huohu123.com/?src=qd',
 			icon: 'chrome://ntab/skin/logo/mozilla.ico'
 		},
 
 		'2': {
-			title: decodeURIComponent('%E7%99%BE%E5%BA%A6'),
+			title: '\u767E\u5EA6',
 			url: 'http://www.baidu.com/index.php?tn=monline_5_dg',
 			icon: 'chrome://ntab/skin/logo/baidu.ico'
 		},
 
 		'3': {
-			title: decodeURIComponent('%E6%96%B0%E6%B5%AA'),
+			title: '\u65B0\u6D6A',
 			url: 'http://www.sina.com.cn/',
 			icon: 'chrome://ntab/skin/logo/sina.ico'
 		},
 
 		'4': {
-			title: decodeURIComponent('%E4%BA%BA%E4%BA%BA%E7%BD%91'),
+			title: '\u4EBA\u4EBA\u7F51',
 			url: 'http://www.renren.com/',
 			icon: 'chrome://ntab/skin/logo/renren.ico'
 		},
 
 		'5': {
-			title: decodeURIComponent('%E6%B7%98%E5%AE%9D%E7%89%B9%E5%8D%96'),
+			title: '\u6DD8\u5B9D\u7279\u5356',
 			url: 'http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997&k=e02915d8b8ad9603',
 			icon: 'chrome://ntab/skin/logo/taobao.ico'
 		},
@@ -39,8 +39,8 @@ defaultQuickDial = {
 		},
 
 		'7': {
-			title: decodeURIComponent('%E4%BA%AC%E4%B8%9C%E5%95%86%E5%9F%8E'),
-			url: 'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/',
+			title: '\u4EAC\u4E1C\u5546\u57CE',
+			url: 'http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com',
 			icon: 'chrome://ntab/skin/logo/360.ico'
 		}
 	},
@@ -53,7 +53,7 @@ defaultQuickDial = {
 		'http://www.baidu.com/index.php?tn=monline_5_dg': 'chrome://ntab/skin/thumb/master/baidu.png',
 		'http://www.renren.com/': 'chrome://ntab/skin/thumb/master/renren.png',
 		'http://www.360buy.com/': 'chrome://ntab/skin/thumb/master/360.png',
-		'http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/': 'chrome://ntab/skin/thumb/master/360.png',
+		'http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com': 'chrome://ntab/skin/thumb/master/360.png',
 		'http://www.tmall.com/': 'chrome://ntab/skin/thumb/master/taobao.png',
 		'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/master/tmall.png',
 		'http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313997&eventid=101334': 'chrome://ntab/skin/thumb/master/tmall.png',

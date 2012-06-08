@@ -30,6 +30,7 @@ if (!!str) {
 	dialData = JSON.parse(str);
 
 	var _oldTaobao = false;
+	var _oldJingdong = false;
 	// Refresh favicon and complete url
 	for (index in dialData) {
 		var dial = dialData[index];
@@ -37,6 +38,10 @@ if (!!str) {
 		if (dial.url.indexOf("mm_12811289_2210561_8696507") != -1) {
 			dial.url = dial.url.replace(/mm_12811289_2210561_8696507/g, "mm_28347190_2425761_9313997");
 			_oldTaobao = true;
+		}
+		if (dial.url.indexOf("click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/") != -1) {
+			dial.url = 'http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com';
+			_oldJingdong = true;
 		}
 		if (!dial.icon) {
 			try {
@@ -47,9 +52,8 @@ if (!!str) {
 			}
 		}
 	}
-	if (_oldTaobao) {
-		str = str.replace(/mm_12811289_2210561_8696507/g, "mm_28347190_2425761_9313997");
-		utils.setStrToProFile(['ntab', 'quickdial.json'], str);
+	if (_oldTaobao || _oldJingdong) {
+		utils.setStrToProFile(['ntab', 'quickdial.json'], JSON.stringify(dialData));
 	}
 }
 
