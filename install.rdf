@@ -3,7 +3,7 @@
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
     <Description about="urn:mozilla:install-manifest">
         <em:id>cehomepage@mozillaonline.com</em:id>
-        <em:version>0.8.18</em:version>
+        <em:version>0.8.19</em:version>
         <em:name>Firefox Home Page</em:name>
         <em:description>Customizied Home Page for Firefox</em:description>
         <em:creator>Mozilla Online Limited</em:creator>
