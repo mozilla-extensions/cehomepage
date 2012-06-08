@@ -79,7 +79,8 @@ defaultDialData = defaultDataJSM.defaultQuickDial.dialData;
 var defaultPosition = {};
 
 for (var key1 in defaultDialData) {
-	defaultPosition[defaultDialData[key1].url] = key1;
+	var val = defaultDialData[key1];
+	defaultPosition[val.url] = val.rev ? [key1, 'r', val.rev].join('') : key1;
 }
 
 

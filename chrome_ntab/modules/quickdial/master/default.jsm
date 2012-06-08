@@ -41,7 +41,8 @@ defaultQuickDial = {
 		'7': {
 			title: '\u4EAC\u4E1C\u5546\u57CE',
 			url: 'http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com',
-			icon: 'chrome://ntab/skin/logo/360.ico'
+			icon: 'chrome://ntab/skin/logo/360.ico',
+			rev: '2'
 		}
 	},
 
