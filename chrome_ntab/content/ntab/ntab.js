@@ -1103,6 +1103,33 @@ document.addEventListener('click', function(event) {
     element.target = gPref.getBoolPref('moa.ntab.openLinkInNewTab') ? '_blank' : '_top';
 }, false);
 
+var partnerBookmark = {
+    _urlpairs: [
+        ['http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com'],
+        ['http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com']
+    ],
+    get bmsvc() {
+        delete this.bmsvc;
+        return this.bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
+                                .getService(Ci.nsINavBookmarksService);
+    },
+    get ios() {
+        delete this.ios;
+        return this.ios = Cc["@mozilla.org/network/io-service;1"]
+                            .getService(Ci.nsIIOService);
+    },
+    update: function() {
+        for (var i = 0, l = this._urlpairs.length; i < l; i++) {
+            var origUri = this.ios.newURI(this._urlpairs[i][0], null, null);
+            var newUri = this.ios.newURI(this._urlpairs[i][1], null, null);
+            var bookmarksArray = this.bmsvc.getBookmarkIdsForURI(origUri, {});
+            for (var j = 0, k = bookmarksArray.length; j < k; j++) {
+                this.bmsvc.changeBookmarkURI(bookmarksArray[j], newUri);
+            }
+        }
+    }
+};
+
 window.addEventListener('DOMContentLoaded', function() {
     // Prevent conflict with fastestfox
     if (typeof jQuery != 'undefined' && typeof jQuery.noConflict == 'function') {
@@ -1119,6 +1146,7 @@ window.addEventListener('DOMContentLoaded', function() {
     fillHistory();
     ntab.updateView();
     custom.showBgImage();
+    partnerBookmark.update();
 
     tracker.track({
         type: 'view',
