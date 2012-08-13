@@ -1,4 +1,9 @@
 (function() {
+	var track = function(aAction) {
+		var img = new Image();
+		img.src = 'http://addons.g-fox.cn/ntab.gif?c=ntab&t=thumb&a=' + aAction + '&d=&f=&r=' + Math.random();
+	}
+
 	// Initial global object
 	// This object can be access by: MOA.NTab.Snapshot
 	var snapshot = MOA.ns('NTab.Snapshot');
@@ -265,6 +270,7 @@
 						MOA.debug('Snapshot image has been saved: ' + self.url);
 						_snapshotDone(self);
 						self.destroy();
+						track('icon');
 					});
 				}
 			}
@@ -323,6 +329,7 @@
 						MOA.debug('Snapshot image has been saved: ' + self.url);
 						_snapshotDone(self);
 						self.destroy();
+						track('snap');
 					});
 				} else {
 					width = browserSize.small.width;
@@ -342,6 +349,7 @@
 						MOA.debug('Snapshot image has been saved: ' + self.url);
 						_snapshotDone(self);
 						self.destroy();
+						track('snap');
 					});
 				}
 			}
