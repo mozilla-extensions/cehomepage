@@ -38,8 +38,9 @@ if (!!str) {
 			dial.url = dial.url.replace(/mm_12811289_2210561_8696507/g, "mm_28347190_2425761_9313997");
 			_needsUpdate = true;
 		}
-		if (["http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/", "http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com"].indexOf(dial.url) > -1) {
-			dial.url = "http://click.union.360buy.com/JdClick/?unionId=20&siteId=433588__&to=http://www.360buy.com";
+		if (["http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/", "http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com", "http://click.union.360buy.com/JdClick/?unionId=20&siteId=433588__&to=http://www.360buy.com"].indexOf(dial.url) > -1) {
+			dial.url = "http://www.yihaodian.com/?tracker_u=10977119545";
+			dial.title = "1号店";
 			_needsUpdate = true;
 		}
 		if (!dial.icon) {

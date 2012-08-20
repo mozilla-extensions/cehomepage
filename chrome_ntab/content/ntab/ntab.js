@@ -1105,8 +1105,9 @@ document.addEventListener('click', function(event) {
 
 var partnerBookmark = {
     _urlpairs: [
-        ['http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com'],
-        ['http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com']
+        ['http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/', ''],
+        ['http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com', ''],
+        ['http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com', '']
     ],
     get bmsvc() {
         delete this.bmsvc;
@@ -1121,10 +1122,17 @@ var partnerBookmark = {
     update: function() {
         for (var i = 0, l = this._urlpairs.length; i < l; i++) {
             var origUri = this.ios.newURI(this._urlpairs[i][0], null, null);
-            var newUri = this.ios.newURI(this._urlpairs[i][1], null, null);
+            var newUri = null;
+            if (this._urlpairs[i][1]) {
+                newUri = this.ios.newURI(this._urlpairs[i][1], null, null);
+            }
             var bookmarksArray = this.bmsvc.getBookmarkIdsForURI(origUri, {});
             for (var j = 0, k = bookmarksArray.length; j < k; j++) {
-                this.bmsvc.changeBookmarkURI(bookmarksArray[j], newUri);
+                if (newUri) {
+                    this.bmsvc.changeBookmarkURI(bookmarksArray[j], newUri);
+                } else {
+                    this.bmsvc.removeItem(bookmarksArray[j]);
+                }
             }
         }
     }
