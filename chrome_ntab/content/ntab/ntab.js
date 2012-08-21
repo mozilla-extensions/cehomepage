@@ -1,1185 +1,869 @@
-var Ci = Components.interfaces;
-var Cc = Components.classes;
-var gPref = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).QueryInterface(Components.interfaces.nsIPrefBranch2);
+let Cc = Components.classes;
+let Ci = Components.interfaces;
+let Cr = Components.results;
+let Cu = Components.utils;
 
-Components.utils['import']('resource://ntab/quickdial.jsm');
-Components.utils['import']('resource://ntab/hash.jsm');
-Components.utils['import']('resource://ntab/session.jsm');
+Cu.import('resource://ntab/FrameStorage.jsm');
+Cu.import('resource://ntab/PageThumbs.jsm');
+Cu.import('resource://ntab/quickdial.jsm');
+Cu.import('resource://ntab/session.jsm');
 
-function getShellService() {
-    var shell = null;
+/* RemoteTabViewer from about:sync-tabs */
+let RelatedTabViewer = {
+  _tabsList: null,
+
+  init: function RelatedTabViewer_init() {
+    this._tabsList = document.querySelector("#related-tabs > dl");
+
+    this.buildList();
+  },
+
+  buildList: function RelatedTabViewer_buildList() {
+    let sessiontabs = session.query(10);
+    let list = this._tabsList;
+
+    let count = list.childElementCount;
+    if (count > 0) {
+      for (let i = count - 1; i >= 0; i--)
+        list.removeChild(list.lastElementChild);
+    }
+
+    let section = this.createItem({
+      type: 'section',
+      class: '',
+      sectionName: _('ntab.dial.label.lastvisitedsites')
+    });
+    list.appendChild(section);
+    sessiontabs.forEach(function({title, url}) {
+      let attrs = {
+        type:  "tab",
+        title: title || url,
+        url:   url
+      }
+      let tab = this.createItem(attrs);
+      list.appendChild(tab);
+    }, this);
+  },
+
+  createItem: function RelatedTabViewer_createItem(attrs) {
+    let item = null;
+    if (attrs["type"] == "tab") {
+      item = document.createElement("dd");
+      let checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.setAttribute("data-url", attrs.url);
+      item.appendChild(checkbox);
+      let anchor = document.createElement("a");
+      anchor.href = attrs.url;
+      anchor.textContent = attrs.title;
+      anchor.title = attrs.url;
+      anchor.setAttribute("target", "_blank");
+      item.appendChild(anchor);
+    } else {
+      item = document.createElement("dt");
+      item.className = attrs.class;
+      item.textContent = attrs.sectionName;
+    }
+
+    return item;
+  }
+}
+
+let Utils = {
+  get prefs() {
+    delete this.prefs;
+    return this.prefs = Cc["@mozilla.org/preferences-service;1"].
+      getService(Ci.nsIPrefService).
+      QueryInterface(Ci.nsIPrefBranch2);
+  },
+  get chromeWindow() {
+    delete this.chromeWindow;
+    return this.chromeWindow = getChromeWindow();
+  },
+  get ioService() {
+    delete this.ioService;
+    return this.ioService = Cc['@mozilla.org/network/io-service;1'].
+      getService(Ci.nsIIOService);
+  },
+  get shellService() {
+    let ss = null;
     try {
-        shell = Components.classes["@mozilla.org/browser/shell-service;1"].getService(Components.interfaces.nsIShellService);
-    } catch (e) {
-        dump("*** e = " + e + "\n");
-    }
-    return shell;
-}
-
-var ntab = (function() {
-    function _t(view) {
-        tracker.track({
-            type: 'view',
-            action: 'switch',
-            sid: view
-        });
-    }
-
-    return {
-        // TODO change pref: moa.ntab.view
-        onclick_to_browser: function() {
-            ntab.check_browser();
-            window.setTimeout(function() {
-                if (gPref.getBoolPref('moa.ntab.browser')) {
-                    $('set_default_browser_msg').style.display = 'block';
-                    window.setTimeout(function() {
-                        var _opacity = 1;
-
-                        function _setopacity() {
-                            if (_opacity <= 0) {
-                                $('set_default_browser_msg').style.display = 'none';
-                                $('set_default_browser_msg').style.opacity = 0;
-                                return;
-                            }
-
-                            _opacity -= 0.1;
-                            $('set_default_browser_msg').style.opacity = _opacity;
-                            window.setTimeout(_setopacity, 50);
-                        }
-                        _setopacity();
-                    }, 2000)
-                }
-            }, 110)
-        },
-
-        onclick_to_cehomepage: function() {
-            cehomepage.set_cehomepage();
-            window.setTimeout(function() {
-                if (gPref.getCharPref('browser.startup.homepage').indexOf("about:cehome") != -1) {
-                    $('set_homepage_msg').style.display = 'block';
-                    window.setTimeout(function() {
-                        var _opacity = 1;
-
-                        function _setopacity() {
-                            if (_opacity <= 0) {
-                                $('set_homepage_msg').style.display = 'none';
-                                $('set_homepage_msg').style.opacity = 0;
-                                return;
-                            }
-
-                            _opacity -= 0.1;
-                            $('set_homepage_msg').style.opacity = _opacity;
-                            window.setTimeout(_setopacity, 50);
-                        }
-                        _setopacity();
-                    }, 2000)
-                }
-            }, 110)
-        },
-
-
-        onclick_to_blank: function() {
-            ntab.switch_to('blank');
-            _t('blank');
-        },
-
-        onclick_to_search: function() {
-            ntab.switch_to('search');
-            _t('search');
-        },
-
-        onclick_to_dial: function() {
-            ntab.switch_to('quickdial');
-            _t('quickdial');
-        },
-
-        onclick_to_nav: function() {
-            ntab.switch_to('nav');
-            _t('nav');
-        },
-
-        switch_to: function(view_name) {
-            gPref.setCharPref('moa.ntab.view', view_name);
-            // Switch to view immidiately.
-            this.updateView(view_name);
-        },
-
-        check_browser: function() {
-            var shell = getShellService();
-
-            if (!shell) {
-                return;
-            }
-
-            if (shell.isDefaultBrowser(true)) {
-                gPref.setBoolPref('moa.ntab.browser', true);
-            } else {
-                gPref.setBoolPref('moa.ntab.browser', false);
-                default_browser.set_default();
-                window.setTimeout(default_browser.update_default_view, 100);
-            }
-        },
-
-
-        showView: function(view_id) {
-            //            window.setTimeout(cehomepage.update_default_view, 100);
-            var children = $('main-content').childNodes;
-            for (i = 0; i < children.length; i++) {
-                var child = children[i];
-                if (view_id == child.id) {
-                    child.style.display = '';
-                    child.style.position = 'relative';
-                    child.style.top = '0';
-                    child.style.left = '0';
-                } else if (child.tagName) {
-                    /**
-                     * Set position to absolute to get element out of view
-                     * Do not set display to none here, because we need to calculate the content size of iframes.
-                     * @see nav.init
-                     **/
-                    child.style.position = 'absolute';
-                    child.style.top = '-100000px';
-                    child.style.left = '-100000px';
-                }
-            }
-
-            var shell = getShellService();
-            if (!shell) {
-                return;
-            }
-
-            if (shell.isDefaultBrowser(true)) {
-                gPref.setBoolPref('moa.ntab.browser', true);
-            } else {
-                gPref.setBoolPref('moa.ntab.browser', false);
-            }
-
-            window.setTimeout(default_browser.update_default_view, 100);
-        },
-
-        updateView: function() {
-            closeAllPromptDialog();
-            var view = gPref.getCharPref('moa.ntab.view');
-            switch (view) {
-            case 'nav':
-                nav.show();
-                break;
-            case 'search':
-                search.show();
-                break;
-            case 'blank':
-                ntab.showView(-1);
-                break;
-            case 'quickdial':
-            default:
-                quickDial.initDialBox(false);
-                break;
-            }
-
-            var switchers = $('layout').querySelectorAll('DIV:first-child DIV.button-switch');
-            for (var i = 0; i < switchers.length; i++) {
-                var s = switchers[i];
-                if (s.id == 'btn_' + view) {
-                    CSS.add(s, 'selected');
-                } else {
-                    CSS.del(s, 'selected');
-                }
-            }
-
-            if (view == 'blank') {
-                CSS.add($('ntab-view-switchers-box'), 'blank');
-            } else {
-                CSS.del($('ntab-view-switchers-box'), 'blank');
-            }
-        },
-
-        prefObserver: {
-            QueryInterface: function(aIID) {
-                if (aIID.equals(Components.interfaces.nsIObserver) || aIID.equals(Components.interfaces.nsISupports) || aIID.equals(Components.interfaces.nsISupportsWeakReference)) return this;
-                throw Components.results.NS_NOINTERFACE;
-            },
-
-            observe: function(subject, topic, data) {
-                if (topic == 'nsPref:changed') {
-                    if (data == 'moa.ntab.view') {
-                        ntab.updateView();
-                    }
-                    if (data == 'moa.ntab.dial.column' || data == 'moa.ntab.dial.row' || data == 'moa.ntab.dial.showSearch') {
-                        var view = gPref.getCharPref('moa.ntab.view');
-                        quickDial.initDialBox(true);
-                        ntab.updateView();
-                    }
-                }
-            }
-        }
-    }
-})();
-
-var default_browser = (function() {
-    var is_default = false;
-    return {
-        set_default: function() {
-            var shell = getShellService();
-            if (!shell) {
-                return;
-            }
-
-            if (!shell.isDefaultBrowser(true)) {
-                shell.setDefaultBrowser(true, false);
-                gPref.setBoolPref('moa.ntab.browser', true);
-            }
-        },
-
-        update_default_view: function() {
-            $("btn_browser").style.display = gPref.getBoolPref('moa.ntab.browser') ? 'none' : 'block';
-        },
-
-        prefObserver: {
-            QueryInterface: function(aIID) {
-                if (aIID.equals(Components.interfaces.nsIObserver) || aIID.equals(Components.interfaces.nsISupports) || aIID.equals(Components.interfaces.nsISupportsWeakReference)) return this;
-                throw Components.results.NS_NOINTERFACE;
-            },
-
-            observe: function(subject, topic, data) {
-                if (topic == 'nsPref:changed') {
-                    if (data == 'moa.ntab.browser') {
-                        window.setTimeout(default_browser.update_default_view, 100);
-                    }
-                }
-            }
-        }
-    }
-})();
-
-var cehomepage = (function() {
-    var is_default = false;
-    return {
-        set_cehomepage: function() {
-            gPref.setCharPref('browser.startup.homepage', 'about:cehome');
-        },
-
-        update_default_view: function() {
-            $("btn_homepage").style.display = (gPref.getCharPref('browser.startup.homepage').indexOf('about:cehome') != -1) ? 'none' : 'block';
-        },
-
-        prefObserver: {
-            QueryInterface: function(aIID) {
-                if (aIID.equals(Components.interfaces.nsIObserver) || aIID.equals(Components.interfaces.nsISupports) || aIID.equals(Components.interfaces.nsISupportsWeakReference)) return this;
-                throw Components.results.NS_NOINTERFACE;
-            },
-
-            observe: function(subject, topic, data) {
-                if (topic == 'nsPref:changed') {
-                    if (data == 'browser.startup.homepage') {
-                        window.setTimeout(cehomepage.update_default_view, 100);
-                    }
-                }
-            }
-        }
-    }
-})();
-
-function iframeLoader(options) {
-    this.initialize(options);
-}
-
-iframeLoader.prototype = {
-    initialize: function(options) {
-        this.options = extend(options, {
-            onDOMContentLoaded: emptyFunction,
-            onIntervalBeforeLoaded: emptyFunction,
-            onIntervalAfterLoaded: emptyFunction,
-            iframe: null
-        });
-
-        if (!this.options.iframe) return;
-
-        this.monitor();
-    },
-
-    monitor: function() {
-        var iframe = this.options.iframe;
-        var self = this;
-
-        var _interval_after_loaded = null;
-
-        function _onLoad(event) {
-            self.options.onDOMContentLoaded();
-
-            window.clearInterval(_interval_before_loaded);
-            // remove listeners
-            iframe.contentDocument.removeEventListener('DOMContentLoaded', _onLoad, false);
-            iframe.removeEventListener('load', _onLoad, false);
-
-            function changeLinkTarget(event) {
-                var element = event.target;
-                element = element.parentNode && element.parentNode instanceof HTMLAnchorElement ? element.parentNode : element;
-                if (element instanceof HTMLFormElement || element instanceof HTMLAnchorElement) {
-                    element.target = gPref.getBoolPref('moa.ntab.openLinkInNewTab') ? '_blank' : '_top';
-                }
-            }
-            // Hack click event on HTMLAnchorElement, open link in _top window.
-            iframe.contentDocument.body.addEventListener('click', changeLinkTarget, true);
-
-            // Hack form submit
-            iframe.contentDocument.body.addEventListener('submit', changeLinkTarget, true);
-
-            // Hach context menu
-            iframe.contentDocument.addEventListener('contextmenu', getChromeWindow().MOA.NTab.onContextMenu, false);
-
-            // Set an interval to invoke onIntervalAfterLoaded
-            _interval_after_loaded = window.setInterval(function() {
-                self.options.onIntervalAfterLoaded();
-            }, 2000);
-        }
-
-        var _interval_before_loaded = null;
-        /**
-         * Can not get the actual document object of iframe right now
-         * Set an interval to check readyState of the contentDocument
-         * When readyState is changed to something rather than uninitialized (loading | interactive | loaded | complete),
-         * add event listener to DOMContentLoaded
-         **/
-        var _interval = window.setInterval(function() {
-            var readyState = iframe.contentDocument.readyState;
-            if (readyState && readyState != 'uninitialized') {
-                iframe.contentDocument.addEventListener('DOMContentLoaded', _onLoad, false);
-                _interval_before_loaded = window.setInterval(function() {
-                    self.options.onIntervalBeforeLoaded();
-                }, 200);
-                window.clearInterval(_interval);
-                window.clearTimeout(_timeout);
-            }
-        }, 100);
-
-        var _timeout = window.setTimeout(function() {
-            window.clearInterval(_interval);
-        }, 10000)
-
-        iframe.addEventListener('load', _onLoad, false);
-    }
+      ss = Cc["@mozilla.org/browser/shell-service;1"].
+        getService(Ci.nsIShellService);
+    } catch(e) {}
+    delete this.shellService;
+    return this.shellService = ss;
+  }
 };
 
-function webView(options) {
-    this.initialize(options);
-}
-
-webView.prototype = {
-    initialize: function(options) {
-        this.options = extend(options, {
-            view_id: null,
-            src: null,
-            target_frame_id: null
-        });
-
-        if (!this.options.view_id || !this.options.src) return;
-
-        this.isInitialized = false;
-    },
-
-    show: function() {
-        if (!this.isInitialized) {
-            var iframe = null;
-            if (!this.options.target_frame_id) {
-                iframe = document.createElement('IFRAME');
-                $(this.options.view_id).appendChild(iframe);
-            } else {
-                iframe = $(this.options.target_frame_id);
-            }
-
-            iframe.src = this.options.src;
-
-            function _sizeToContent(event) {
-                var height = iframe.contentDocument.documentElement.scrollHeight;
-                iframe.style.height = height + 'px';
-            }
-
-            new iframeLoader({
-                onDOMContentLoaded: _sizeToContent,
-                onIntervalBeforeLoaded: _sizeToContent,
-                onTimeout: _sizeToContent,
-                onIntervalAfterLoaded: _sizeToContent,      // Content height might be changed, set an interval to check.
-                iframe: iframe
-            });
-        }
-        this.isInitialized = true;
-        ntab.showView(this.options.view_id);
+let DefaultBrowser = {
+  get isDefaultBrowser() {
+    return Utils.shellService ?
+      Utils.shellService.isDefaultBrowser(true) :
+      true;
+  },
+  get setDefault() {
+    delete this.setDefault;
+    return this.setDefault = document.querySelector('#setdefault');
+  },
+  init: function DefaultBrowser_init() {
+    if (this.isDefaultBrowser) {
+      this.setDefault.setAttribute('hidden', 'true');
+    } else {
+      let self = this;
+      this.setDefault.addEventListener('click', function() {
+        self.setAsDefault()
+      }, false);
     }
+  },
+  setAsDefault: function DefaultBrowser_setAsDefault() {
+    if (Utils.shellService) {
+      Utils.shellService.setDefaultBrowser(true, false);
+      this.setDefault.setAttribute('hidden', 'true');
+    }
+  },
 };
 
-var nav = new webView({
-    view_id: 'nav',
-    src: gPref.getCharPref('moa.ntab.view.nav.url'),
-    target_frame_id: 'nav_iframe'
-});
-
-var search = new webView({
-    view_id: 'search',
-    src: gPref.getCharPref('moa.ntab.view.search.url'),
-    target_frame_id: 'search_iframe'
-});
-
-function queryHistoryByFreq(n) {
-    var result = [];
-
-
+let Grid = {
+  get thumbSize() {
+    let thumbSize = '';
     try {
-        var conn = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService).QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-        var sql = [];
-        sql.push('SELECT (');
-        sql.push('    SELECT url FROM');
-        sql.push('    moz_favicons');
-        sql.push('    WHERE ');
-        sql.push('            id = s.favicon_id');
-        sql.push('    LIMIT 1');
-        sql.push('        ) AS _favicon, (');
-        sql.push('    SELECT title ');
-        sql.push('    FROM moz_places ');
-        sql.push('    WHERE ');
-        sql.push('        favicon_id = s.favicon_id ');
-        sql.push('        AND ');
-        sql.push('        visit_count > 0 ');
-        sql.push('        AND ');
-        sql.push('        hidden = 0 ');
-        sql.push('    ORDER BY ');
-        sql.push('        frecency DESC LIMIT 1');
-        sql.push('    ) AS _title, (');
-        sql.push('    SELECT url ');
-        sql.push('    FROM moz_places ');
-        sql.push('    WHERE ');
-        sql.push('        favicon_id = s.favicon_id ');
-        sql.push('        AND ');
-        sql.push('        visit_count > 0 ');
-        sql.push('        AND ');
-        sql.push('        hidden = 0 ');
-        sql.push('    ORDER BY frecency DESC LIMIT 1) AS _url ');
-        sql.push('FROM moz_places s ');
-        sql.push('WHERE ');
-        sql.push('    favicon_id IS NOT NULL ');
-        sql.push('    AND ');
-        sql.push('    frecency != 0 ');
-        sql.push('    AND');
-        sql.push('    visit_count > 0 ');
-        sql.push('    AND ');
-        sql.push('    hidden = 0 ');
-        sql.push('GROUP BY favicon_id ');
-        sql.push('ORDER BY MAX(frecency) DESC LIMIT ?');
-
-        var statement = conn.createStatement(sql.join('\n'));
-        statement.bindInt32Parameter(0, n);
-        while (statement.executeStep()) {
-            result.push({
-                favicon: statement.getString(0),
-                title: statement.getString(1),
-                url: statement.getString(2)
-            });
-        }
-    } catch (e) {
-        // alert(e);
+      thumbSize = Utils.prefs.getCharPref('moa.ntab.dial.thumbsize')
+    } catch(e) {}
+    if (['', 's', 'm', 'l'].indexOf(thumbSize) == -1) {
+      thumbSize = '';
     }
-
-    return result;
-}
-
-function _getFaviconForURL(url) {
-    var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-    var faviconService = Cc['@mozilla.org/browser/favicon-service;1'].getService(Ci.nsIFaviconService);
-    var icon = faviconService.getFaviconImageForPage(ioService.newURI(url, null, null)).spec;
-    return icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? 'chrome://ntab/skin/icon/favicon.png' : icon;
-}
-
-var quickDial = (function() {
-    var isInitialized = false;
-
-    function generateHTMLForDial(num, dial, nocache, first_load) {
-        var html = [];
-        if ( !! dial) {
-            html.push('        <div>');
-            html.push('            <div>');
-            html.push('                <div class="div-table dial-bar">');
-            html.push('                    <div>');
-            // If it is first load, wait 100ms and load favicon, or it will cost too much time.
-            if (first_load) {
-                html.push('                        <div class="dial-favicon"><div class="' + (dial.icon ? 'default-favicon' : 'dial-def-favicon') + '" imagesrc="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') + '"></div></div>');
-
-            } else {
-                html.push('                        <div class="dial-favicon"><div class="' + (dial.icon ? '' : 'dial-def-favicon') + '"><img src="' + (dial.icon ? dial.icon : 'chrome://ntab/skin/icon/favicon.png') + '"/></div></div>');
-            }
-            html.push('                        <div class="dial-title"><div class="text-ellipsis">' + escapeHTML(dial.title) + '</div></div>');
-            html.push('                        <div class="dial-opt-box"><div class="btn-opt btn-opt-edit" onclick="quickDial.editDial(' + num + ')" _title="ntab.dial.label.edit"></div></div>');
-            html.push('                        <div class="dial-opt-box"><div class="btn-opt btn-opt-del" onclick="quickDial.delDial(' + num + ')" _title="ntab.dial.label.del"></div></div>');
-            html.push('                    </div>');
-            html.push('                </div>');
-            html.push('            </div>');
-            html.push('        </div>');
-            html.push('        <div>');
-            html.push('            <div>');
-            // Get snapshot url for dial
-            var wnd = getChromeWindow();
-            var thumbnail = wnd.MOA.NTab.Snapshot.getSnapshotUrl(dial.url);
-
-            // If thumbnail is null, and nocache is set 'True', then add some random code to make sure snapshot image is loaded with nocache.
-            if (nocache && thumbnail) {
-                thumbnail += '?r=' + Math.random();
-            }
-
-            // Check if url is under processing, if not, create it now.
-            if (!thumbnail && !hashModule.contains(dial.url)) {
-                getChromeWindow().MOA.NTab.Snapshot.createSnapshot(dial.url);
-            }
-
-            var backgournd = !thumbnail ? '' : 'background:url(' + thumbnail + ') no-repeat scroll center 0 transparent';
-            var className = !thumbnail ? 'loading' : '';
-            html.push('                <div>');
-            html.push('                    <a draggable="false" onclick="quickDial.onclickdial(' + num + ');" href="' + completeURL(dial.url) + '"><div style="height: 100%; width: 100%;' + backgournd + '" class="' + className + '"></div></a>');
-            html.push('                </div>');
-            html.push('            </div>');
-            html.push('        </div>');
-        } else {
-            html.push('        <div>');
-            html.push('            <div>');
-            html.push('                <div class="div-table dial-bar">');
-            html.push('                    <div>');
-            html.push('                        <div class="dial-favicon"><div class="dial-def-favicon"><img src="chrome://ntab/skin/icon/favicon.png" /></div></div>');
-            html.push('                        <div class="dial-title"><div></div></div>');
-            html.push('                        <div class="dial-opt-box"><div class="btn-opt btn-opt-edit" onclick="quickDial.editDial(' + num + ')" _title="ntab.dial.label.edit"></div></div>');
-            html.push('                    </div>');
-            html.push('                </div>');
-            html.push('            </div>');
-            html.push('        </div>');
-            html.push('        <div>');
-            html.push('            <div>');
-            html.push('                <div class="quickdial-add" style="height: 100%; text-align: center; cursor: pointer;" onclick="quickDial.addDial(' + num + ');">');
-            html.push('                    <span>' + _('ntab.dial.label.clicktoadddial') + '</span>');
-            html.push('                </div>');
-            html.push('            </div>');
-            html.push('        </div>');
-        }
-        return html.join('\n');
+    return thumbSize;
+  },
+  set thumbSize(aSize) {
+    if (aSize == '') {
+      this.gridSize = { col: 4, row: 2 };
     }
-
-    var _dragenternum = null;
-    var _dragtimeout = null;
-
-    function _ondragenter(num) {
-        window.clearTimeout(_dragtimeout);
-        _dragtimeout = window.setTimeout(function(n) {
-            if (_dragenternum) {
-                CSS.del($('item-' + _dragenternum), 'quick-dial-item-drag-over')
-            }
-            _dragenternum = n;
-            CSS.add($('item-' + n), 'quick-dial-item-drag-over')
-        }, 10, num);
-    }
-
-    function _ondragleave(num) {
-        window.clearTimeout(_dragtimeout);
-        _dragtimeout = window.setTimeout(function(n) {
-            if (_dragenternum) {
-                CSS.del($('item-' + _dragenternum), 'quick-dial-item-drag-over')
-            }
-        }, 10, num);
-    }
-
-    var COLUMNS = 4;
-    var ROWS = 2;
-    var MAX_COLUMN_ROW = 10;
-
-    function _getAllBookmarks() {
-        var result = [];
-        if (!gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory')) return result;
-
-        // var conn = Cc['@mozilla.org/browsernav-history-service;1'].getService(Ci.nsINavBookmarksService)
-        //        .QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-        var conn = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService).QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-        var sql = 'SELECT b.title as title, p.url as url FROM moz_bookmarks b, moz_places p WHERE b.type = 1 AND b.fk = p.id AND p.hidden = 0';
-        var statement = conn.createStatement(sql);
-        while (statement.executeStep()) {
-            result.push({
-                favicon: _getFaviconForURL(statement.getString(1)),
-                title: statement.getString(0),
-                url: statement.getString(1)
-            });
-        }
-
-        return result;
-    }
-
-    function _filter(str) {
-        return !str ? str : str.replace(/'/g, '\\\'');
-    }
-
-    function _fillSiteSelections(sites, place) {
-        var html = [];
-        for (var i = 0; i < sites.length; i++) {
-            var site = sites[i];
-            var filterURL = site.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");
-            html.push('<div>');
-            html.push('    <div><img src="' + _getFaviconForURL(filterURL) + '" /></div>');
-            html.push('    <div>');
-            html.push('    <a class="text-ellipsis" href="' + filterURL + '" onclick="quickDial.quickSelect(\'' + _filter(filterURL) + '\', \'' + _filter(site.title) + '\'); return false;">' + escapeHTML(site.title) + '</a>');
-            html.push('    </div>');
-            html.push('</div>');
-        }
-        place.innerHTML = html.join('\n');
-    }
-
+    Utils.prefs.setCharPref('moa.ntab.dial.thumbsize', aSize);
+  },
+  get gridSize() {
+    let col = 4;
+    let row = 2;
+    try {
+      col = Utils.prefs.getIntPref('moa.ntab.dial.column');
+      row = Utils.prefs.getIntPref('moa.ntab.dial.row');
+    } catch(e) {}
+    col = Math.max(3, Math.min(col, 6));
+    row = Math.max(2, Math.min(row, 4));
     return {
-        initDialBox: function(refreshWholePage) {
-            if (!refreshWholePage) {
-                if (isInitialized) {
-                    ntab.showView('quick_dial');
-                    return;
-                }
-            } else {
-                if (!isInitialized) {
-                    return;
-                }
-            }
-            isInitialized = true;
-
-            var _cell = gPref.getIntPref('moa.ntab.dial.column');
-            _cell = _cell > 0 ? _cell < MAX_COLUMN_ROW ? _cell : MAX_COLUMN_ROW : COLUMNS;
-            var _row = gPref.getIntPref('moa.ntab.dial.row');
-            _row = _row > 0 ? _row < MAX_COLUMN_ROW ? _row : MAX_COLUMN_ROW : ROWS;
-
-            var html = [];
-            for (var i = 0; i < _row; i++) {
-                html.push('<div>');
-
-                for (var j = 0; j < _cell; j++) {
-                    var num = i * _cell + j + 1;
-                    var dial = quickDialModule.getDial(num);
-                    var item_id = 'item-' + num;
-
-                    html.push('<div>');
-                    html.push('    <div class="div-table quick-dial-item ' + (dial ? 'dial-used' : '') + '" id="' + item_id + '" draggable="true"' + 'ondragstart="quickDial.ondragstart(event, ' + num + ');" ' + 'ondragover="quickDial.ondragover(event);" ondrop="quickDial.ondrop(event, ' + num + ');"' + 'ondragenter="quickDial.ondragenter(event, ' + num + ');"' + 'ondragleave="quickDial.ondragleave(event, ' + num + ');" >');
-                    var itemHTML = generateHTMLForDial(num, dial, false, true);
-                    html.push(itemHTML);
-                    html.push('    </div>');
-                    html.push('</div>');
-                }
-
-                html.push('</div>');
-            }
-            $('quick_dial_box').innerHTML = html.join('');
-
-            function _setFavIcons() {
-                var faviconDIVArray = document.querySelectorAll('div.default-favicon');
-                for (var j = 0; j < faviconDIVArray.length; j++) {
-                    var imageURL = faviconDIVArray[j].getAttribute('imagesrc');
-                    var image = document.createElement('img');
-                    image.setAttribute('src', imageURL);
-                    faviconDIVArray[j].appendChild(image);
-                }
-            }
-
-            //insert favicon asynchronous  only asynchronous at first time
-            if (!refreshWholePage) {
-                window.setTimeout(_setFavIcons, 100);
-            } else {
-                _setFavIcons();
-            }
-
-            if (gPref.getBoolPref('moa.ntab.dial.showSearch')) {
-                // display search box
-                $('quickdial_search_banner').style.display = '';
-                $('quickdial_search').src = gPref.getCharPref('moa.ntab.dial.search.url');
-            } else {
-                $('quickdial_search_banner').style.display = 'none';
-            }
-
-            new iframeLoader({
-                onDOMContentLoaded: function() {
-                    $('quickdial_search').style.visibility = 'visible';
-                },
-                onTimeout: emptyFunction,
-                iframe: $('quickdial_search')
-            });
-
-            ntab.showView('quick_dial');
-        },
-
-        addDial: function(num) {
-            this.editDial(num);
-        },
-
-        refreshAll: function(num) {
-            var _cell = gPref.getIntPref('moa.ntab.dial.column');
-            _cell = _cell > 0 ? _cell < MAX_COLUMN_ROW ? _cell : MAX_COLUMN_ROW : COLUMNS;
-            var _row = gPref.getIntPref('moa.ntab.dial.row');
-            _row = _row > 0 ? _row < MAX_COLUMN_ROW ? _row : MAX_COLUMN_ROW : ROWS;
-
-            var total = _cell * _row;
-            for (var i = 0; i < total; i++) {
-                this.refreshDial(i + 1);
-            }
-        },
-
-        refreshDial: function(num) {
-            var dial = quickDialModule.getDial(num);
-            if (!dial) {
-                quickDialModule.removeDial();
-                return;
-            }
-            var wnd = getChromeWindow();
-            wnd.MOA.NTab.Snapshot.refreshSnapshot(dial.url);
-            quickDialModule.refreshDialViewRelated(dial.url);
-        },
-
-        quickSelect: function(url, title) {
-            var inputs = $('prompt-content-box').querySelectorAll('DIV.prompt-edit-dial > DIV:first-child > INPUT[type=text].input-url');
-            if (inputs.length != 1) return;
-            inputs[0].value = url;
-
-            inputs = $('prompt-content-box').querySelectorAll('DIV.prompt-edit-dial > DIV:first-child > INPUT[type=text].input-title');
-            inputs[0].value = title;
-        },
-
-        editDial: function(num) {
-            var elem = document.createElement('div');
-            elem.innerHTML = templates.dialEditingTemplate;
-            elem.className = 'prompt-edit-dial';
-
-            var pd = new PromptDialog({
-                elem: elem,
-                beforeShow: function() {
-                    // init tabbox
-                    TAB.init(elem);
-
-
-                    if (gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory')) {
-                        // most visted web sites.
-                        _fillSiteSelections(queryHistoryByFreq(20), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.mostvisited-sites')[0]);
-
-                        // Show bookmarks
-                        _fillSiteSelections(_getAllBookmarks(), elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.bookmark-sites')[0])
-                    }
-
-                    // set other sites
-                    httpGet(gPref.getCharPref('moa.ntab.dial.sitesjson'), function(response) {
-                        if (response.readyState == 4 && 200 == response.status) {
-                            var sites = null;
-                            try {
-                                sites = JSON.parse(response.responseText);
-                            } catch (err) {}
-
-                            if (!sites) return;
-
-                            _fillSiteSelections(sites, elem.querySelectorAll('DIV.tabbox > DIV.tabpanels > DIV.nav-sites')[0]);
-                        }
-                    });
-
-                    var dial = quickDialModule.getDial(num);
-
-                    if (!dial) {
-                        CSS.add(elem, 'prompt-add-dial');
-                    }
-
-                    var urlinput = elem.querySelectorAll('DIV:first-child > INPUT[type=text].input-url')[0];
-                    var titleinput = elem.querySelectorAll('DIV:first-child > INPUT[type=text].input-title')[0];
-                    if (dial) {
-                        urlinput.value = dial.url;
-                        titleinput.value = dial.title;
-                    } else {
-                        urlinput.value = 'http://';
-                        titleinput.value = _('ntab.dial.editdialog.titleinput');
-                    }
-
-                    // response for ENTER key
-                    var inputs = elem.querySelectorAll('DIV:first-child > INPUT[type=text]');
-                    for (var i = 0; i < inputs.length; i++) {
-                        inputs[i].onkeypress = function(event) {
-                            switch (event.keyCode) {
-                                // enter
-                            case 13:
-                                if (false != _onok()) {
-                                    pd.destroy();
-                                }
-                                break;
-                            }
-                        }
-                    }
-                },
-                afterShow: function() {
-                    var dial = quickDialModule.getDial(num);
-                    if (!dial) {
-                        var urlinput = elem.querySelectorAll('DIV:first-child > INPUT[type=text].input-title')[0];
-                        urlinput.focus();
-                        urlinput.setSelectionRange(0, urlinput.value.length);
-                    }
-                },
-                onOK: function() {
-                    return _onok();
-                },
-                onCancel: function() {
-                    pd.destroy();
-                }
-            });
-
-            function _onok() {
-                var input = elem.querySelectorAll('DIV:first-child > INPUT.input-url')[0];
-                input.value = input.value.trim();
-                if ('' == input.value) {
-                    input.focus();
-                    return false;
-                }
-                // append http:// as default prefix
-                input.value = completeURL(input.value);
-                // TODO check if it is a url
-                if (!/^(http(s)?|ftp):\/\/.+/.test(input.value)) {
-                    alert('请输入一个正确的网址！');
-                    input.focus();
-                    return false;
-                }
-
-                var url = input.value;
-                var dial = quickDialModule.getDial(num);
-
-                var refresh = elem.querySelectorAll('DIV:first-child > INPUT.checkbox-refresh')[0].checked;
-                // Check if url has been changed, if yes, then create snapshot for it.
-                if (refresh || !dial || url != dial.url) {
-                    // get main chrome window
-                    var wnd = getChromeWindow();
-                    wnd.MOA.NTab.Snapshot.createSnapshot(url);
-                }
-
-                var title = elem.querySelectorAll('DIV:first-child > INPUT.input-title')[0].value.trim();
-                // Update dial
-                quickDialModule.updateDial(num, {
-                    url: url,
-                    title: title
-                }, refresh);
-            }
-        },
-
-        delDial: function(num) {
-            var element = document.createElement('DIV');
-            element.className = 'confirm-msg';
-            var dial = quickDialModule.getDial(num);
-            element.textContent = _('ntab.dial.delConfirmMsg', [dial.title ? dial.title : dial.url]);
-            new PromptDialog({
-                elem: element,
-                onOK: function() {
-                    quickDialModule.removeDial(num);
-                }
-            });
-        },
-
-        updateDialView: function(num) {
-            var item_id = 'item-' + num;
-            if (!$(item_id)) return;
-
-            var dial = quickDialModule.getDial(num);
-            $(item_id).innerHTML = generateHTMLForDial(num, dial, true, false);
-        },
-
-        prefObserver: {
-            QueryInterface: function(aIID) {
-                if (aIID.equals(Components.interfaces.nsIObserver) || aIID.equals(Components.interfaces.nsISupports) || aIID.equals(Components.interfaces.nsISupportsWeakReference)) return this;
-                throw Components.results.NS_NOINTERFACE;
-            },
-
-            observe: function(subject, topic, data) {
-                if (topic == 'nsPref:changed') {
-                    if (data == 'moa.ntab.quickdial.hidehistory') {
-                        quickDial.onShowHideHistory();
-                        return;
-                    }
-                    if (data.indexOf('moa.ntab.dial.update.') == 0) {
-                        quickDial.updateDialView(data.substring('moa.ntab.dial.update.'.length));
-                    }
-                }
-            }
-        },
-
-        ondragstart: function(event, num) {
-            event.dataTransfer.setData('text/ntab-dial', num);
-            event.dataTransfer.effectAllowed = 'move';
-            event.dataTransfer.dropEffect = 'move';
-        },
-
-        ondrop: function(event, num) {
-            event.preventDefault();
-            var source = event.dataTransfer.getData('text/ntab-dial');
-            if (source && source != num) {
-                quickDialModule.exchangeDial(source, num);
-            } else if (event.dataTransfer.getData("text/uri-list")) {
-                var title = '';
-                if (event.dataTransfer.getData("text/html")) {
-                    var fragment = Cc["@mozilla.org/feed-unescapehtml;1"].getService(Ci.nsIScriptableUnescapeHTML).parseFragment(event.dataTransfer.getData("text/html"), false, null, document.createElement('DIV'))
-                    title = fragment.textContent;
-                }
-
-                quickDialModule.updateDial(num, {
-                    url: event.dataTransfer.getData("text/uri-list"),
-                    title: title
-                });
-            }
-            // stop propagation, in order to stop trigerring open tab action etc.
-            event.stopPropagation();
-            _ondragleave(num);
-        },
-
-        ondragover: function(event) {
-            if (event.dataTransfer.getData('text/ntab-dial') || event.dataTransfer.getData("text/uri-list")) {
-                event.preventDefault();
-            }
-        },
-
-        ondragenter: function(event, num) {
-            if (event.dataTransfer.getData('text/ntab-dial') || event.dataTransfer.getData("text/uri-list")) {
-                event.preventDefault();
-                _ondragenter(num);
-            }
-        },
-
-        ondragleave: function(event, num) {
-            _ondragleave(num);
-        },
-
-        hideHistory: function(hide) {
-            gPref.setBoolPref('moa.ntab.quickdial.hidehistory', hide);
-        },
-
-        onShowHideHistory: function() {
-            var hide = gPref.getBoolPref('moa.ntab.quickdial.hidehistory');
-            if (true === hide) {
-                CSS.add($('history'), 'hide');
-                CSS.del($('show_history'), 'hide');
-            } else {
-                CSS.add($('show_history'), 'hide');
-                CSS.del($('history'), 'hide');
-            }
-        },
-
-        onclickdial: function(num) {
-            tracker.track({
-                type: 'quickdial',
-                action: 'click',
-                fid: quickDialModule.getDial(num).defaultposition,
-                sid: num
-            });
+      'col': col,
+      'row': row
+    }
+  },
+  set gridSize(aSize) {
+    Utils.prefs.setIntPref('moa.ntab.dial.column', aSize.col);
+    Utils.prefs.setIntPref('moa.ntab.dial.row', aSize.row);
+  },
+  get gridContainer() {
+    delete this.gridContainer;
+    return this.gridContainer = document.querySelector('#grid');
+  },
+  _editGridItem: function Grid__editGridItem(aIndex) {
+    let dial = quickDialModule.getDial(aIndex);
+    Overlay.overlay.style.display = 'block';
+    Overlay.overlay.setAttribute('data-index', aIndex);
+    let prompt = Overlay.overlay.querySelector('#prompt');
+    if (!prompt.getAttribute('src')) {
+      let self = this;
+      prompt.addEventListener('load', function() {
+        Overlay.init();
+      }, false);
+      prompt.setAttribute('src', FrameStorage.frames('edit.html'));
+    }
+  },
+  _eventInit: function Grid__eventInit(aLi) {
+    let self = this;
+    let index = aLi.getAttribute('data-index');
+    let button = aLi.querySelectorAll('button');
+    let title = aLi.querySelector('span.title').textContent;
+    if (button.length) {
+      button[0].addEventListener('click', function(evt) {
+        self._editGridItem(index);
+      }, false);
+      button[1].addEventListener('click', function(evt) {
+        if (confirm(_('ntab.dial.delConfirmMsg', [title]))) {
+          quickDialModule.removeDial(index);
         }
+      }, false);
     }
-})();
-
-function _fillSites(sites, place, showIcon) {
-
-    var divs = [];
-    for (var i = 0; i < sites.length; i++) {
-        var site = sites[i];
-        var filterURL = site.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");
-        var div = document.createElement('DIV');
-        if (showIcon) {
-            div.innerHTML = '<div><img src="chrome://ntab/skin/icon/favicon.png"></img></div><a class="text-ellipsis" href="' + completeURL(filterURL) + '">' + escapeHTML(site.title) + '</a>';
-        } else {
-            div.innerHTML = '<a class="text-ellipsis" href="' + completeURL(filterURL) + '">' + escapeHTML(site.title) + '</a>';
-        }
-        place.appendChild(div);
-        divs.push(div);
-    }
-
-    // Optimize favicon loading perfomance, when ntab page is first-run.
-    if (showIcon) {
-        window.setTimeout(function() {
-            for (var i = 0; i < sites.length; i++) {
-                var site = sites[i];
-                var filterURL = site.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn");
-                var iconUrl = _getFaviconForURL(filterURL);
-                if (!iconUrl || iconUrl == 'chrome://ntab/skin/icon/favicon.png') {
-                    iconUrl = site.iconUrl ? site.iconUrl : iconUrl;
-                }
-                divs[i].childNodes[0].childNodes[0].src = iconUrl;
-            }
-        }, 100);
-    }
-}
-
-function _fillRemoteSites(sitesContent, place) {
-    sitesContent = _filter(sitesContent);
-    place.innerHTML = sitesContent;
-}
-
-function _filter(inString) {
-    inString = inString.replace(/expression\((.|\n)*\);?/ig, "");
-    inString = inString.replace(/\s*(href|src)\s*=\s*("\s*(javascript|vbscript)\s*:\s*[^"]+"|'\s*(javascript|vbscript)\s*:\s*[^']+'|(javascript|vbscript)\s*:\s*[^\s]+)\s*(?=>)/ig, "");
-    inString = inString.replace(/\s*on[a-z]+\s*=\s*("[^"]+"|'[^']+'|[^\s]+)\s*(?=>)/ig, "");
-    inString = inString.replace(/<(script|link|style|iframe)(.|\n)*<\/\1>\s*/ig, "");
-    return inString;
-}
-
-function fillHistory() {
-    quickDial.onShowHideHistory();
-
-    if (gPref.getBoolPref('moa.ntab.quickdial.showpersonalhistory')) {
-        // set most visited sites.
-        _fillSites(queryHistoryByFreq(10), $('history').querySelectorAll('DIV.mostvisited-sites')[0]);
-
-        // set last session sites
-        _fillSites(session.query(10), $('history').querySelectorAll('DIV.lastsession-sites')[0]);
-    }
-
-
-    // set others
-    var branch = gPref.getCharPref('moa.ntab.dial.branch');
-    var sitesTabs = null;
-    try {
-        var defaultDataJSM = {};
-        Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
-        sitesTabs = defaultDataJSM.defaultQuickDial.sitesTabs;
-    } catch (e) {
-        sitesTabs = [];
-    }
-
-    sitesTabs.forEach(function(tabObj) {
-        var tabs = $('history').querySelectorAll('DIV.tabbox > DIV.tabs')[0];
-        var tabDiv = document.createElement('DIV');
-        tabDiv.textContent = _(tabObj.nameStr);
-        tabDiv.className = 'tab';
-        tabDiv.id = 'nav_sites';
-        // Insert tab node before hide-btn which is the last one.
-        tabs.insertBefore(tabDiv, tabs.childNodes[tabs.childNodes.length - 1]);
-
-
-        var tabPanelDiv = null;
-        if ($(tabObj.panelId)) {
-            tabPanelDiv = $(tabObj.panelId);
-        } else {
-            tabPanelDiv = document.createElement('DIV');
-            tabPanelDiv.className = 'tabpanel sites-list link-trace';
-            tabPanelDiv.id = tabObj.panelId;
-            $('history').querySelectorAll('DIV.tabbox > DIV.tabpanels')[0].appendChild(tabPanelDiv);
-        }
-
-        httpGet(gPref.getCharPref(tabObj.urlPref), function(response) {
-            if (response.readyState == 4 && 200 == response.status) {
-                var sites = null;
-                try {
-                    //sites = JSON.parse(response.responseText);
-                    sitesContent = response.responseText;
-                } catch (err) {
-                    // alert(err);
-                }
-
-                if (!sitesContent) return;
-
-                //                _fillSites(sites, tabPanelDiv, tabObj.showIcon);
-                _fillRemoteSites(sitesContent, tabPanelDiv);
-            }
-        });
-    });
-
-
-    var tabs = $('history').querySelectorAll('DIV.tabbox > DIV.tabs')[0];
-    var anchor = document.createElement('a');
-    anchor.textContent = _('ntab.dial.label.firefoxchina');
-    anchor.href = gPref.getCharPref('moa.ntab.view.firefoxchina.url');
-    anchor.className = 'homepagetabanchor';
-    var anchorDiv = document.createElement('DIV');
-    anchorDiv.className = 'homepagetab';
-    anchorDiv.appendChild(anchor);
-    tabs.insertBefore(anchorDiv, tabs.childNodes[tabs.childNodes.length - 1]);
-
-
-    TAB.init($('history'), function(node) {
-        gPref.setCharPref('moa.ntab.quickdial.history.view', node.id);
-    });
-
-    // switch to last view
-    var lastTabView = gPref.getCharPref('moa.ntab.quickdial.history.view');
-    if ($(lastTabView) && $(lastTabView).onclick) {
-        $(lastTabView).onclick();
-    }
-}
-
-document.addEventListener('contextmenu', getChromeWindow().MOA.NTab.onContextMenu, false);
-document.addEventListener('click', function(event) {
-    var element = event.target.parentNode instanceof HTMLAnchorElement ? event.target.parentNode : event.target;
-    if (!element instanceof HTMLAnchorElement) return;
-
-    if (!element.href || !isValidUrl(element.href)) return;
-
-    element.target = gPref.getBoolPref('moa.ntab.openLinkInNewTab') ? '_blank' : '_top';
-}, false);
-
-var partnerBookmark = {
-    _urlpairs: [
-        ['http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com'],
-        ['http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com']
-    ],
-    get bmsvc() {
-        delete this.bmsvc;
-        return this.bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
-                                .getService(Ci.nsINavBookmarksService);
-    },
-    get ios() {
-        delete this.ios;
-        return this.ios = Cc["@mozilla.org/network/io-service;1"]
-                            .getService(Ci.nsIIOService);
-    },
-    update: function() {
-        for (var i = 0, l = this._urlpairs.length; i < l; i++) {
-            var origUri = this.ios.newURI(this._urlpairs[i][0], null, null);
-            var newUri = this.ios.newURI(this._urlpairs[i][1], null, null);
-            var bookmarksArray = this.bmsvc.getBookmarkIdsForURI(origUri, {});
-            for (var j = 0, k = bookmarksArray.length; j < k; j++) {
-                this.bmsvc.changeBookmarkURI(bookmarksArray[j], newUri);
-            }
-        }
-    }
-};
-
-window.addEventListener('DOMContentLoaded', function() {
-    // Prevent conflict with fastestfox
-    if (typeof jQuery != 'undefined' && typeof jQuery.noConflict == 'function') {
-        try {
-            jQuery.noConflict();
-        } catch (e) {}
-    }
-
-    gPref.addObserver('moa.ntab.', quickDial.prefObserver, true);
-    gPref.addObserver('moa.ntab.', ntab.prefObserver, true);
-    //    gPref.addObserver('browser.startup.homepage', cehomepage.prefObserver, true);
-    gPref.addObserver('moa.ntab.', default_browser.prefObserver, true);
-    gPref.addObserver('moa.ntab.backgroundimage', custom.prefObserver, true);
-    fillHistory();
-    ntab.updateView();
-    custom.showBgImage();
-    partnerBookmark.update();
-
-    tracker.track({
-        type: 'view',
-        action: 'load',
-        sid: gPref.getCharPref('moa.ntab.view')
-    });
-}, true);
-
-window.addEventListener('unload', function() {
-    gPref.removeObserver('moa.ntab.', quickDial.prefObserver, true);
-    gPref.removeObserver('moa.ntab.', ntab.prefObserver, true);
-    //    gPref.removeObserver('browser.startup.homepage', cehomepage.prefObserver, true);
-    gPref.removeObserver('moa.ntab.', default_browser.prefObserver, true);
-    gPref.removeObserver('moa.ntab.backgroundimage', custom.prefObserver, true);
-}, true);
-
-if (!isFirefoxLowerThan4()) {
-    Components.utils["import"]("resource://gre/modules/AddonManager.jsm");
-    var addonlistener = {
-        onUninstalling: function(addon) {
-            if (addon.id == "cehomepage@mozillaonline.com") {
-                document.location = "about:blank";
-            }
-        },
-
-        onDisabling: function(addon) {
-            if (addon.id == "cehomepage@mozillaonline.com") {
-                document.location = "about:blank";
-            }
-        }
-    };
-    AddonManager.addAddonListener(addonlistener);
-    window.addEventListener("unload", function() {
-        AddonManager.removeAddonListener(addonlistener);
+    aLi.querySelector('a').addEventListener('click', function(evt) {
+      if (evt.currentTarget.href) {
+        let fid = aLi.getAttribute('data-fid');
+        tracker.track({ type: 'quickdial', action: 'click', fid: fid, sid: index });
+      } else {
+        self._editGridItem(index);
+      }
     }, false);
-}
+    aLi.addEventListener('dragstart', function(evt) {
+      evt.dataTransfer.mozSetDataAt('application/x-moz-node', evt.currentTarget, 0);
+    }, false);
+    aLi.addEventListener('dragover', function(evt) {
+      evt.preventDefault();
+    }, false);
+    aLi.addEventListener('dragenter', function(evt) {
+      if (evt.dataTransfer.types.contains('application/x-moz-node')) {
+        evt.preventDefault();
+      }
+    }, false);
+    aLi.addEventListener('drop', function(evt) {
+      evt.preventDefault();
+      let node = evt.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
+      if (node.getAttribute('data-index') == index) {
+        return;
+      }
+      quickDialModule.exchangeDial(node.getAttribute('data-index'), index);
+    }, false);
+  },
+  _createGridItem: function Grid__createGridItem(aIndex) {
+    let dial = quickDialModule.getDial(aIndex);
+
+    let li = document.createElement('li');
+    li.setAttribute('draggable', dial ? 'true' : 'false');
+    li.setAttribute('data-index', aIndex);
+    li.setAttribute('data-fid', dial ? dial.defaultposition : '');
+    li.setAttribute('title', dial ? dial.title || '' : _('ntab.dial.label.clicktoadddial'));
+
+    if (dial) {
+      let edit = document.createElement('button');
+      edit.setAttribute('title', _('ntab.dial.label.edit'));
+      li.appendChild(edit);
+      let remove = document.createElement('button');
+      remove.setAttribute('title', _('ntab.dial.label.del'));
+      li.appendChild(remove);
+    }
+
+    let a = document.createElement('a');
+    a.setAttribute('draggable', 'false');
+    a.setAttribute('href', dial ? dial.url : '');
+    a.setAttribute('target', '_blank');
+
+    let span_thumb = document.createElement('span');
+    span_thumb.className = 'thumb';
+    span_thumb.style.backgroundImage = dial ? 'url(' + (dial.thumbnail ? dial.thumbnail : (PageThumbs.getThumbnailURL(dial.url) + '&ts=' + Date.now())) + ')' : '';
+    span_thumb.style.backgroundPosition = dial ? (PageThumbs.getThumbnailType(dial.url) == 'snapshot' ? 'left top' : 'center center') : '';
+    a.appendChild(span_thumb);
+
+    let span_title = document.createElement('span');
+    span_title.className = 'title';
+    span_title.textContent = dial ? dial.title || '' : '';
+    a.appendChild(span_title);
+
+    li.appendChild(a);
+    this._eventInit(li);
+
+    return li;
+  },
+  _createGrid: function Grid__createGrid() {
+    let thumbSize = this.thumbSize;
+    let gridSize = this.gridSize;
+
+    let total = 12;
+    let className_ = ''
+    if (thumbSize) {
+      this.gridContainer.className = thumbSize + '-thumb r' + gridSize.row + ' c' + gridSize.col;
+      total = gridSize.col * gridSize.row;
+    } else {
+      this.gridContainer.className = '';
+    }
+
+    let ul = document.createElement('ul');
+    for (let i = 1; i <= total; i++) {
+      let gridItem = this._createGridItem(i);
+      ul.appendChild(gridItem);
+    }
+    return ul;
+  },
+  _updateSettingsDisplay: function Grid__updateSettingsDisplay() {
+    let thumbSize = this.thumbSize;
+    let className_ = thumbSize ? 'customize' : '';
+    document.querySelector('#qd-settings > label > input[value="' + className_ + '"]').checked = 'checked';
+    document.querySelector('#qd-settings').className = className_;
+    document.getElementById('thumb_size').value = this.thumbSize;
+    document.getElementById('row_num').value = this.gridSize.row;
+    document.getElementById('col_num').value = this.gridSize.col;
+  },
+  /* new installation should default to responsive, only guess thumbsize for
+     old users who have customized column or row counts. */
+  _guessThumbSize: function Grid__guessThumbSize() {
+    if (!(Utils.prefs.prefHasUserValue('moa.ntab.dial.column') ||
+          Utils.prefs.prefHasUserValue('moa.ntab.dial.row'))) {
+      return;
+    }
+    height = Math.round(window.screen.availHeight);
+    /* estimated chrome height, top/bottom element */
+    height -= (120 + 110 + 50);
+    /* height for s/m/l thumb is 110, 165, 220 with 10 * 2 margin */
+    let maxRow = {
+      's': Math.min(Math.floor(height / (110 + 20)), 4),
+      'm': Math.min(Math.floor(height / (165 + 20)), 4),
+      'l': Math.min(Math.floor(height / (220 + 20)), 4)
+    };
+    width = Math.round(window.screen.availWidth);
+    if (width >= 1920) {
+      /* 2x max prev/next width */
+      width -= 200;
+    } else {
+      width *= (86 / 96);
+    }
+    /* width for s/m/l thumb is 180, 270, 360 with 10 * 2 margin */
+    let maxCol = {
+      's': Math.min(Math.floor(width / (180 + 20)), 6),
+      'm': Math.min(Math.floor(width / (270 + 20)), 6),
+      'l': Math.min(Math.floor(width / (360 + 20)), 6)
+    };
+    let origCol = 4;
+    let origRow = 2;
+    try {
+      origCol = Utils.prefs.getIntPref('moa.ntab.dial.column');
+      origRow = Utils.prefs.getIntPref('moa.ntab.dial.row');
+    } catch(e) {}
+    let size = 's';
+    let col = 6;
+    let row = 4;
+    ['s', 'm', 'l'].forEach(function(aSize) {
+      if (origRow <= maxRow[aSize] && origCol <= maxCol[aSize]) {
+        size = aSize;
+        col = Math.max(origCol, 3);
+        row = Math.max(origRow, 2);
+      }
+    });
+    /* maybe if size/col/row is unchanged ?
+    origRow = Math.ceil(origCol * origRow / maxCol['s']);
+    origCol = maxCol['s'];
+    ['s', 'm', 'l'].forEach(function(aSize) {
+      if (origRow <= maxRow[aSize] && origCol <= maxCol[aSize]) {
+        size = aSize;
+        col = Math.max(origCol, 3);
+        row = Math.max(origRow, 2);
+      }
+    });
+    */
+    Utils.prefs.setIntPref('moa.ntab.dial.column', col);
+    Utils.prefs.setIntPref('moa.ntab.dial.row', row);
+    Utils.prefs.setCharPref('moa.ntab.dial.thumbsize', size);
+  },
+  /* remove defaults 8-11 for users with responsive layout and screen height
+     only enough for two rows */
+  _removeExtraDefaults: function Grid__removeExtraDefaults() {
+    if (Utils.prefs.prefHasUserValue('moa.ntab.dial.column') ||
+        Utils.prefs.prefHasUserValue('moa.ntab.dial.row') ||
+        Utils.prefs.prefHasUserValue('moa.ntab.dial.thumbsize')) {
+      return;
+    }
+    if (window.matchMedia('(max-height: 750px)').matches) {
+      let defaultData = JSON.parse(quickDialModule.getDefaultDataStr());
+      [8, 9, 10, 11].forEach(function(aIndex) {
+        let defaultDataItem = defaultData[aIndex];
+        let currentDataItem = quickDialModule.getDial(aIndex);
+        if (defaultDataItem && currentDataItem &&
+            defaultDataItem.url == currentDataItem.url) {
+          quickDialModule.removeDial(aIndex);
+        }
+      });
+    }
+  },
+  _migrate: function Grid__migrate() {
+    let prefKey = 'moa.ntab.gridview.version';
+    let oldVer = 1;
+    try {
+      oldVer = Utils.prefs.getIntPref(prefKey);
+    } catch(e) {}
+    switch (oldVer) {
+      case 1:
+        this._guessThumbSize();
+        this._removeExtraDefaults();
+      //  no break here, run every updates;
+      //case 2:
+      //  later update;
+    }
+    Utils.prefs.setIntPref(prefKey, 2);
+  },
+  init: function Grid_init() {
+    this._migrate();
+    this.update();
+  },
+  update: function Grid_update() {
+    this._updateSettingsDisplay();
+    let oldGrid = this.gridContainer.querySelector('ul');
+    let newGrid = this._createGrid();
+    if (oldGrid) {
+      this.gridContainer.replaceChild(newGrid, oldGrid);
+    } else {
+      this.gridContainer.appendChild(newGrid);
+    }
+  },
+  updateGridItem: function Grid_updateGridItem(aIndex) {
+    let newItem = this._createGridItem(aIndex);
+    let oldItem = document.querySelector('li[data-index="' + aIndex + '"]');
+    if (oldItem) {
+      oldItem.parentNode.replaceChild(newItem, oldItem);
+    }
+  },
+};
+
+let Background = {
+  get backgroundColor() {
+    return Utils.prefs.getCharPref('moa.ntab.backgroundcolor');
+  },
+  set backgroundColor(aColor) {
+    Utils.prefs.setCharPref('moa.ntab.backgroundcolor', aColor);
+    if (aColor) {
+      this.backgroundImage = '';
+    }
+  },
+  get backgroundImage() {
+    return Utils.prefs.getCharPref('moa.ntab.backgroundimage');
+  },
+  set backgroundImage(aImage) {
+    Utils.prefs.setCharPref('moa.ntab.backgroundimage', aImage);
+    if (aImage) {
+      this.backgroundColor = '';
+    }
+  },
+  init: function Background_init() {
+    this.update();
+  },
+  update: function Background_update() {
+    let color = this.backgroundColor;
+    let image = this.backgroundImage;
+
+    NTab.body.style.backgroundImage = image ? 'url("' + image + '")' : '';
+    NTab.body.style.backgroundSize = image ? 'cover' : '';
+    NTab.body.style.backgroundColor = color;
+
+    QDTabs.quickDial.className = '';
+    if (color) {
+      let shouldCheck = document.querySelector('#bgcolor-radio > label > input[value="' + color + '"]');
+      if (shouldCheck) {
+        shouldCheck.checked = 'checked';
+        QDTabs.quickDial.className = 'color';
+      }
+    } else {
+      let checked_ = document.querySelector('#bgcolor-radio > label > input:checked');
+      if (checked_) {
+        checked_.checked = '';
+      }
+    }
+    document.querySelector('input[name="bgimage"]').value = image;
+  },
+};
+
+let Footer = {
+  get displayFooter() {
+    return Utils.prefs.getBoolPref('moa.ntab.displayfooter');
+  },
+  set displayFooter(aDisplay) {
+    Utils.prefs.setBoolPref('moa.ntab.displayfooter', aDisplay);
+  },
+  get footer() {
+    delete this.footer;
+    return this.footer = document.querySelector('footer');
+  },
+  get toggle() {
+    delete this.toggle;
+    return this.toggle = document.querySelector('#toggle');
+  },
+  init: function Footer__init() {
+    let self = this;
+    this.toggle.addEventListener('click', function(evt) {
+      self.displayFooter = !self.displayFooter;
+    }, false);
+    this.update();
+  },
+  update: function Footer_update() {
+    if (this.displayFooter) {
+      this.footer.classList.remove('off');
+    } else {
+      this.footer.classList.add('off');
+    }
+  },
+};
+
+let QDTabs = {
+  get currentTab() {
+    let tab = 'grid';
+    try {
+      tab = Utils.prefs.getCharPref('moa.ntab.qdtab');
+    } catch(e) {}
+    if (['grid', 'site'].indexOf(tab) == -1) {
+      tab = 'grid';
+    }
+    tracker.track({ type: 'qdtab', action: 'load', sid: tab });
+    return tab;
+  },
+  set currentTab(aTab) {
+    Utils.prefs.setCharPref('moa.ntab.qdtab', aTab);
+    Utils.prefs.setBoolPref('moa.ntab.qdtab.used', true);
+    tracker.track({ type: 'qdtab', action: 'switch', sid: aTab });
+  },
+  get quickDial() {
+    delete this.quickDial;
+    return this.quickDial = document.querySelector('#quickdial');
+  },
+  get prev() {
+    delete this.prev;
+    return this.prev = document.querySelector('#prevtab');
+  },
+  get qdTabPanels() {
+    delete this.qdTabPanels;
+    return this.qdTabPanels = document.querySelector('#quick_dial_tabpanels');
+  },
+  get qdTabs() {
+    delete this.qdTabs;
+    return this.qdTabs = document.querySelector('#quick_dial_tabs');
+  },
+  init: function QDTabs_init() {
+    let self = this;
+    /* see https://developer.mozilla.org/en-US/docs/DOM/NodeList#Workarounds
+       for usage of [].forEach.call */
+    [].forEach.call(document.querySelectorAll('#quick_dial_tabs > a'), function(anchor) {
+      anchor.addEventListener('click', function(evt) {
+        self.currentTab = evt.target.getAttribute('data-tab');
+      }, false);
+    });
+    this.update();
+    document.querySelector('#prevtab').addEventListener('click', function(evt) {
+      let currentTab = self.qdTabPanels.className;
+      let prevTab = document.getElementById(currentTab).previousElementSibling;
+      if (prevTab) {
+        self.currentTab = prevTab.id;
+      }
+    }, false);
+    document.querySelector('#nexttab').addEventListener('click', function(evt) {
+      let currentTab = self.qdTabPanels.className;
+      let nextTab = document.getElementById(currentTab).nextElementSibling;
+      if (nextTab) {
+        self.currentTab = nextTab.id;
+      }
+    }, false);
+  },
+  update: function QDTabs_update() {
+    let tab = this.currentTab;
+    this.qdTabPanels.className = tab;
+    this.qdTabs.className = tab;
+    //hack for lack of reverse adjacent selector
+    this.prev.className = tab;
+    let iframes = document.getElementById(tab).querySelectorAll('iframe');
+    if (iframes.length && iframes[0] && !iframes[0].getAttribute('src')) {
+      iframes[0].setAttribute('src', FrameStorage.frames([tab, 'html'].join('.')));
+    }
+    if (iframes.length && iframes[1] && !iframes[1].getAttribute('src')) {
+      iframes[1].setAttribute('src', FrameStorage.frames([tab + '-l', 'html'].join('.')));
+    }
+  },
+};
+
+let Overlay = {
+  get overlay() {
+    delete this.overlay;
+    return this.overlay = document.querySelector('#overlay');
+  },
+  get prompt() {
+    delete this.prompt;
+    return this.prompt = document.querySelector('#prompt').contentDocument;
+  },
+  _inited: false,
+  init: function Overlay_init() {
+    if (this._inited) {
+      return;
+    }
+    let self = this;
+    document.querySelector('#prompt-close').addEventListener('click', function(evt) {
+      self._finish();
+    }, false);
+    this.overlay.addEventListener('click', function(evt) {
+      if (evt.target == evt.currentTarget) {
+        self._finish();
+      }
+    }, false);
+    document.addEventListener('keypress', function(evt) {
+      if (evt.keyCode == 27) {
+        self._finish();
+      };
+    }, false);
+    try {
+      [].forEach.call(this.prompt.querySelectorAll('li > a'), function(anchor) {
+        anchor.addEventListener('click', function(evt) {
+          evt.preventDefault();
+          let title = evt.target.textContent.replace(/\s/g, '');
+          let url = evt.target.href;
+          self._finish(title, url);
+          tracker.track({ type: 'links', action: 'click', sid: title });
+        }, false);
+      });
+      this.prompt.querySelector('#addbtn').addEventListener('click', function(evt) {
+        let title = self.prompt.querySelector('#title').value;
+        let url = completeURL(self.prompt.querySelector('#url').value);
+        self._finish(title, url);
+      }, false);
+    } catch(e) {}
+    this._inited = true;
+  },
+  _finish: function Overlay__finish(aTitle, aUrl) {
+    if (aUrl) {
+      let index = this.overlay.getAttribute('data-index');
+      quickDialModule.updateDial(index, { url: aUrl, title: aTitle }, false);
+    }
+    this.overlay.style.display = '';
+    this.prompt.querySelector('#title').value = '';
+    this.prompt.querySelector('#url').value = '';
+  },
+};
+
+let Launcher = {
+  get launcher() {
+    delete this.launcher;
+    return this.launcher = document.querySelector('#launcher');
+  },
+  _relatedtabsInit: function Launcher__relatedtabsInit() {
+    let self = this;
+    RelatedTabViewer.init();
+    document.querySelector('#related-tabs > label > input[type="checkbox"]').addEventListener('change', function(evt) {
+      [].forEach.call(document.querySelectorAll('#related-tabs > dl > dd > input[type="checkbox"]'), function(checkbox) {
+        checkbox.checked = evt.target.checked;
+      });
+    }, false);
+    document.querySelector('#related-tabs > input[type="button"]').addEventListener('click', function(evt) {
+      self.launcher.classList.toggle('related-tabs');
+      [].forEach.call(document.querySelectorAll('#related-tabs > dl > dd > input[type="checkbox"]:checked'), function(checkbox) {
+        Utils.chromeWindow.openUILinkIn(checkbox.getAttribute('data-url'), 'tab');
+        checkbox.checked = false;
+      });
+      document.querySelector('#related-tabs > label > input[type="checkbox"]').checked = false;
+    }, false);
+  },
+  _toolsInit: function Launcher__toolsInit() {
+    let self = this;
+    [].forEach.call(document.querySelectorAll('#tools > li'), function(li) {
+      li.addEventListener('click', function(evt) {
+        self.launcher.classList.toggle('tools');
+        switch(evt.currentTarget.id) {
+          case 'downloads':
+            Utils.chromeWindow.BrowserDownloadsUI();
+            break;
+          case 'bookmarks':
+            Utils.chromeWindow.PlacesCommandHook.showPlacesOrganizer("AllBookmarks");
+            break;
+          case 'history':
+            Utils.chromeWindow.PlacesCommandHook.showPlacesOrganizer("History");
+            break;
+          case 'apps':
+            Utils.chromeWindow.openUILinkIn("https://marketplace.mozilla.org/", "tab");
+            break;
+          case 'addons':
+            Utils.chromeWindow.BrowserOpenAddonsMgr();
+            break;
+          case 'sync':
+            Utils.chromeWindow.openPreferences("paneSync");
+            break;
+          case 'settings':
+            Utils.chromeWindow.openPreferences();
+            break;
+        }
+        tracker.track({ type: 'tools', action: 'click', sid: evt.currentTarget.id });
+      }, false);
+    });
+  },
+  _settingsInit: function Launcher__settingsInit() {
+    [].forEach.call(document.querySelectorAll('input[name="quickdial"]'), function(input) {
+      input.addEventListener('click', function(evt) {
+        document.querySelector('#qd-settings').className = evt.target.value;
+        if (evt.target.value) {
+          Grid.thumbSize = 'm';
+          QDTabs.currentTab = 'grid';
+        } else {
+          Grid.thumbSize = '';
+        }
+      }, false);
+    });
+    [].forEach.call(document.querySelectorAll('select'), function(select) {
+      select.addEventListener('change', function(evt) {
+        switch(evt.currentTarget.id) {
+          case 'row_num':
+          case 'col_num':
+            Grid.gridSize = {
+              row: parseInt(document.getElementById('row_num').value, 10),
+              col: parseInt(document.getElementById('col_num').value, 10)
+            };
+            break;
+          case 'thumb_size':
+            Grid.thumbSize = document.getElementById('thumb_size').value;
+            break;
+        }
+      }, false);
+    });
+    [].forEach.call(document.querySelectorAll('#bgcolor-radio > label > input[name="bgcolor"]'), function(input) {
+      input.addEventListener('click', function(evt) {
+        Background.backgroundColor = evt.target.value;
+      }, false);
+    });
+    document.querySelector('input[name="bgimage"]').addEventListener('change', function(evt) {
+      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
+      file.initWithPath(evt.target.value);
+      Background.backgroundImage = Utils.ioService.newFileURI(file).spec;
+    }, false);
+    [].forEach.call(document.querySelectorAll('#page-settings > fieldset > div > input[type="button"]'), function(input) {
+      input.addEventListener('click', function(evt) {
+        switch(evt.target.id) {
+          case 'bgreset':
+            Background.backgroundColor = 'transparent';
+            break;
+          case 'resetpref':
+            Utils.prefs.getChildList('moa.ntab.').forEach(function(aPref) {
+              Utils.prefs.clearUserPref(aPref);
+            });
+            break;
+          case 'feedback':
+            Utils.chromeWindow.openUILinkIn('http://www.huohu123.com:8080/generate/channel/feedback_i.php', 'tab');
+            break;
+        }
+      }, false);
+    });
+  },
+  init: function Launcher_init() {
+    let self = this;
+    [].forEach.call(document.querySelectorAll('#launcher > li'), function(li) {
+      li.addEventListener('click', function(evt) {
+        let menu = evt.target.getAttribute('data-menu');
+        if (menu) {
+          self.launcher.classList.toggle(menu);
+          if (self.launcher.classList.length) {
+            self.launcher.className = menu;
+          }
+          tracker.track({ type: 'menu', action: 'click', sid: menu });
+        }
+        evt.stopPropagation();
+      }, false);
+    });
+    document.addEventListener('click', function(evt) {
+      self.launcher.className = '';
+    }, false);
+    document.addEventListener('keypress', function(evt) {
+      if (evt.keyCode == 27) {
+        self.launcher.className = '';
+      };
+    }, false);
+    this._relatedtabsInit();
+    this._toolsInit();
+    this._settingsInit();
+  },
+};
+
+let NTab = {
+  observer: {
+    QueryInterface: function(aIID) {
+      if (aIID.equals(Ci.nsIObserver) ||
+          aIID.equals(Ci.nsISupports) ||
+          aIID.equals(Ci.nsISupportsWeakReference)) {
+        return this;
+      }
+      throw Cr.NS_NOINTERFACE;
+    },
+
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic == 'nsPref:changed') {
+        switch (aData) {
+          case 'moa.ntab.view':
+            NTab.update();
+            break;
+          case 'moa.ntab.qdtab':
+            QDTabs.update();
+            break;
+          case 'moa.ntab.dial.thumbsize':
+          case 'moa.ntab.dial.column':
+          case 'moa.ntab.dial.row':
+            Grid.update();
+            break;
+          case 'moa.ntab.backgroundcolor':
+          case 'moa.ntab.backgroundimage':
+            Background.update();
+            break;
+          case 'moa.ntab.displayfooter':
+            Footer.update();
+            break;
+        }
+        let itemPrefix = 'moa.ntab.dial.update.';
+        if (aData.indexOf(itemPrefix) == 0) {
+          let index = aData.substring(itemPrefix.length);
+          Grid.updateGridItem(index);
+        }
+      }
+    }
+  },
+  get currentPane() {
+    let pane = 'quickdial';
+    try {
+      pane = Utils.prefs.getCharPref('moa.ntab.view');
+    } catch(e) {}
+    if (['nav', 'quickdial', 'search', 'blank'].indexOf(pane) == -1) {
+      pane = 'quickdial';
+    }
+    tracker.track({ type: 'view', action: 'load', sid: pane });
+    return pane;
+  },
+  set currentPane(aPane) {
+    Utils.prefs.setCharPref('moa.ntab.view', aPane);
+    tracker.track({ type: 'view', action: 'switch', sid: aPane });
+  },
+
+  get body() {
+    delete this.body;
+    return this.body = document.body;
+  },
+  _paneInit: function Ntab__paneInit() {
+    let self = this;
+    [].forEach.call(document.querySelectorAll('#navpane > a'), function(anchor) {
+      anchor.addEventListener('click', function(evt) {
+        self.currentPane = evt.target.getAttribute('data-pane');
+      }, false);
+    });
+    this.update();
+  },
+  _observerInit: function NTab__observerInit() {
+    Utils.prefs.addObserver('moa.ntab.', this.observer, true);
+  },
+  _observerUninit: function NTab__observerUninit() {
+    Utils.prefs.removeObserver('moa.ntab.', this.observer, true);
+  },
+
+  handleEvent: function NTab_handle(evt) {
+    switch(evt.type) {
+      case 'DOMContentLoaded':
+        this.init();
+        break;
+      case 'unload':
+        this.uninit();
+        break;
+    }
+  },
+  init: function NTab_init() {
+    //display first, then action
+    Background.init();
+    Grid.init();
+    QDTabs.init();
+    this._paneInit();
+    this._observerInit();
+    Footer.init();
+    Launcher.init();
+    DefaultBrowser.init();
+  },
+  uninit: function NTab_uninit() {
+    this._observerUninit();
+  },
+  update: function NTab_updatePane() {
+    let pane = this.currentPane;
+    this.body.className = pane;
+    let iframe = document.getElementById(pane).querySelector('iframe');
+    if (iframe && !iframe.getAttribute('src')) {
+      let srcPrefKey = ['moa.ntab.view', pane, 'url'].join('.');
+      iframe.setAttribute('src', Utils.prefs.getCharPref(srcPrefKey));
+    }
+  },
+};
+window.addEventListener('DOMContentLoaded', NTab, false);
+window.addEventListener('unload', NTab, false);

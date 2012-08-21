@@ -16,12 +16,12 @@ AboutNTab.prototype = {
 		return (Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
 				Ci.nsIAboutModule.ALLOW_SCRIPT);
 	},
-	
+
 	newChannel: function(aURI) {
 		var ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
 		var secMan = Cc['@mozilla.org/scriptsecuritymanager;1'].getService(Ci.nsIScriptSecurityManager);
 		var principal = secMan.getCodebasePrincipal(aURI);
-		var home = 'chrome://ntab/content/ntab.html';
+		var home = 'chrome://ntab/content/ntab.xhtml';
 		var channel = ios.newChannel(home, null, null);
 		channel.originalURI = aURI;
 		return channel;

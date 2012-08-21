@@ -102,8 +102,8 @@ var quickDialModule = {
 				title: dialData[num].title,
 				url: dialData[num].url,
 				icon: dialData[num].icon,
-				defaultposition : defaultPosition[dialData[num].url] ? defaultPosition[dialData[num].url] : "",
-				thumbnail: dialData[num].thumbnail
+				defaultposition : defaultPosition[dialData[num].url] || "",
+				thumbnail: dialData[num].thumbnail || defaultDataJSM.defaultQuickDial.snapshotMap[dialData[num].url]
 			}
 		}
 
@@ -170,10 +170,9 @@ var quickDialModule = {
 		var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1']
 								.getService(Components.interfaces.nsIStringBundleService);
 		var stringBundle = stringBundleService.createBundle('chrome://ntab/locale/ntab.properties');
-		var defaultTitle = stringBundle.GetStringFromName('ntab.dial.editdialog.titleinput');
 
 		for (var idx in dialData) {
-			if (url == dialData[idx].url && (!dialData[idx].title || defaultTitle == dialData[idx].title)) {
+			if (url == dialData[idx].url && !dialData[idx].title) {
 				dialData[idx].title = title;
 				_onDialModified(idx);
 			}

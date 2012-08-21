@@ -1,0 +1,42 @@
+<!ENTITY ntab.title "新标签页">
+
+<!ENTITY ntab.label.setdefault "设为默认浏览器">
+<!ENTITY ntab.tooltip.switchtonav "切换至导航页">
+<!ENTITY ntab.tooltip.switchtoquickdial "切换至快速拨号">
+<!ENTITY ntab.tooltip.switchtosearch "切换至搜索页">
+<!ENTITY ntab.tooltip.switchtoblank "切换至空白页">
+
+<!ENTITY ntab.firefoxchina "火狐主页">
+
+<!ENTITY ntab.launcher.relatedtabs "访问记录">
+<!ENTITY ntab.launcher.relatedtabs.all "全选/全不选">
+<!ENTITY ntab.launcher.relatedtabs.open "打开">
+
+<!ENTITY ntab.launcher.tools "工具箱">
+<!ENTITY ntab.launcher.tools.downloads "下载">
+<!ENTITY ntab.launcher.tools.bookmarks "书签">
+<!ENTITY ntab.launcher.tools.history "历史">
+<!ENTITY ntab.launcher.tools.add-ons "附加组件">
+<!ENTITY ntab.launcher.tools.sync "同步">
+<!ENTITY ntab.launcher.tools.settings "设置">
+
+<!ENTITY ntab.launcher.pagesettings "页面设置">
+
+<!ENTITY ntab.launcher.pagesettings.quickdial "快速拨号">
+<!ENTITY ntab.launcher.pagesettings.quickdial.default "默认设置">
+<!ENTITY ntab.launcher.pagesettings.quickdial.customize "自定义">
+<!ENTITY ntab.launcher.pagesettings.quickdial.row "行数">
+<!ENTITY ntab.launcher.pagesettings.quickdial.col "列数">
+<!ENTITY ntab.launcher.pagesettings.quickdial.size "尺寸">
+<!ENTITY ntab.launcher.pagesettings.quickdial.size.small "小">
+<!ENTITY ntab.launcher.pagesettings.quickdial.size.middle "中">
+<!ENTITY ntab.launcher.pagesettings.quickdial.size.large "大">
+<!ENTITY ntab.launcher.pagesettings.background "背景">
+<!ENTITY ntab.launcher.pagesettings.background.reset "重置背景">
+<!ENTITY ntab.launcher.pagesettings.load-start "启动时打开新标签页">
+<!ENTITY ntab.launcher.pagesettings.restore "还原为初始设置">
+<!ENTITY ntab.launcher.pagesettings.feedback "用户反馈">
+
+<!ENTITY ntab.quickdial.grid "我最常用">
+<!ENTITY ntab.quickdial.site "分类导航">
+
