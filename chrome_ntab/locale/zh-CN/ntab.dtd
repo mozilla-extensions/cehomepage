@@ -9,7 +9,7 @@
 <!ENTITY ntab.firefoxchina "火狐主页">
 
 <!ENTITY ntab.launcher.relatedtabs "访问记录">
-<!ENTITY ntab.launcher.relatedtabs.all "全选/全不选">
+<!ENTITY ntab.launcher.relatedtabs.all "全选">
 <!ENTITY ntab.launcher.relatedtabs.open "打开">
 
 <!ENTITY ntab.launcher.tools "工具箱">

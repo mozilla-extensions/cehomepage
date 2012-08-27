@@ -286,7 +286,7 @@ section > iframe {
 }
 
 #grid > ul > li > a {
-  color: #777;
+  color: #3c3c3c;
   text-decoration: none;
 }
 #grid > ul > li > a > .thumb {
@@ -597,14 +597,17 @@ footer.off > #toggle {
   vertical-align: middle;
 }
 #related-tabs > dl > dd > a {
-  color: #777;
+  color: #3c3c3c;
   display: inline-block;
   max-width: 320px;
   text-decoration: none;
 }
 #related-tabs > dl > dd > a:hover {
-  color: #777;
+  color: #3c3c3c;
   text-decoration: underline;
+}
+#related-tabs > label + input {
+  margin-left: 24px;
 }
 
 /* tools, like about:home */

@@ -9,7 +9,7 @@
 <!ENTITY ntab.firefoxchina "Firefox Homepage">
 
 <!ENTITY ntab.launcher.relatedtabs "Recent Visits">
-<!ENTITY ntab.launcher.relatedtabs.all "Select/Unselect All">
+<!ENTITY ntab.launcher.relatedtabs.all "Select All">
 <!ENTITY ntab.launcher.relatedtabs.open "Open">
 
 <!ENTITY ntab.launcher.tools "Tools">
