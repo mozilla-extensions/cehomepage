@@ -38,6 +38,11 @@ let FrameStorage = {
     delete this.prefs;
     return this.prefs = branch;
   },
+  get timer() {
+    delete this.timer;
+    return this.timer = Cc["@mozilla.org/timer;1"]
+      .createInstance(Ci.nsITimer);
+  },
 
   _bundleFrame: function(aFilename) {
     let uri = Services.io.newURI('resource://ntab/frames/' + aFilename,
@@ -96,7 +101,7 @@ let FrameStorage = {
     this._keys = ['edit', 'site-l', 'site'];
     this.hiddenBrowser.addEventListener('load', function(evt) {
       self._saveCurrent();
-      self._updateNext();
+      self.timer.initWithCallback(self, 10000, Ci.nsITimer.TYPE_ONE_SHOT);;
     }, true);
     this._updateNext();
   }
