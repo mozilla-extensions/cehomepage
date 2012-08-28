@@ -493,7 +493,6 @@ let QDTabs = {
     if (['grid', 'site'].indexOf(tab) == -1) {
       tab = 'grid';
     }
-    tracker.track({ type: 'qdtab', action: 'load', sid: tab });
     return tab;
   },
   set currentTab(aTab) {
@@ -526,7 +525,7 @@ let QDTabs = {
         self.currentTab = evt.target.getAttribute('data-tab');
       }, false);
     });
-    this.update();
+    this.update(true);
     document.querySelector('#prevtab').addEventListener('click', function(evt) {
       let currentTab = self.qdTabPanels.className;
       let prevTab = document.getElementById(currentTab).previousElementSibling;
@@ -542,7 +541,7 @@ let QDTabs = {
       }
     }, false);
   },
-  update: function QDTabs_update() {
+  update: function QDTabs_update(aInit) {
     let tab = this.currentTab;
     this.qdTabPanels.className = tab;
     this.qdTabs.className = tab;
@@ -554,6 +553,9 @@ let QDTabs = {
     }
     if (iframes.length && iframes[1] && !iframes[1].getAttribute('src')) {
       iframes[1].setAttribute('src', FrameStorage.frames([tab + '-l', 'html'].join('.')));
+    }
+    if (aInit) {
+      tracker.track({ type: 'qdtab', action: 'load', sid: tab });
     }
   },
 };
@@ -803,7 +805,6 @@ let NTab = {
     if (['nav', 'quickdial', 'search', 'blank'].indexOf(pane) == -1) {
       pane = 'quickdial';
     }
-    tracker.track({ type: 'view', action: 'load', sid: pane });
     return pane;
   },
   set currentPane(aPane) {
@@ -822,7 +823,7 @@ let NTab = {
         self.currentPane = evt.target.getAttribute('data-pane');
       }, false);
     });
-    this.update();
+    this.update(true);
   },
   _observerInit: function NTab__observerInit() {
     Utils.prefs.addObserver('moa.ntab.', this.observer, true);
@@ -855,13 +856,16 @@ let NTab = {
   uninit: function NTab_uninit() {
     this._observerUninit();
   },
-  update: function NTab_updatePane() {
+  update: function NTab_update(aInit) {
     let pane = this.currentPane;
     this.body.className = pane;
     let iframe = document.getElementById(pane).querySelector('iframe');
     if (iframe && !iframe.getAttribute('src')) {
       let srcPrefKey = ['moa.ntab.view', pane, 'url'].join('.');
       iframe.setAttribute('src', Utils.prefs.getCharPref(srcPrefKey));
+    }
+    if (aInit) {
+      tracker.track({ type: 'view', action: 'load', sid: pane });
     }
   },
 };
