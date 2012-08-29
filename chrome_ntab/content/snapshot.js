@@ -33,6 +33,7 @@
 			'http://www.renren.com/': 'chrome://ntab/skin/thumb/master/renren.png',
 			'http://www.360buy.com/': 'chrome://ntab/skin/thumb/master/360.png',
 			'http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com': 'chrome://ntab/skin/thumb/master/360.png',
+			'http://www.yihaodian.com/?tracker_u=10977119545': 'chrome://ntab/skin/thumb/master/1hd.png',
 			'http://www.tmall.com/': 'chrome://ntab/skin/thumb/master/taobao.png',
 			'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/master/tmall.png',
 			'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',

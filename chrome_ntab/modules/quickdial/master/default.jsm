@@ -39,10 +39,10 @@ defaultQuickDial = {
 		},
 
 		'7': {
-			title: '\u4EAC\u4E1C\u5546\u57CE',
-			url: 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=433588__&to=http://www.360buy.com',
-			icon: 'chrome://ntab/skin/logo/360.ico',
-			rev: '3'
+			title: '1\u53F7\u5E97',
+			url: 'http://www.yihaodian.com/?tracker_u=10977119545',
+			icon: 'chrome://ntab/skin/logo/1hd.ico',
+			rev: '4'
 		}
 	},
 
@@ -55,6 +55,7 @@ defaultQuickDial = {
 		'http://www.renren.com/': 'chrome://ntab/skin/thumb/master/renren.png',
 		'http://www.360buy.com/': 'chrome://ntab/skin/thumb/master/360.png',
 		'http://click.union.360buy.com/JdClick/?unionId=20&siteId=433588__&to=http://www.360buy.com': 'chrome://ntab/skin/thumb/master/360.png',
+		'http://www.yihaodian.com/?tracker_u=10977119545': 'chrome://ntab/skin/thumb/master/1hd.png',
 		'http://www.tmall.com/': 'chrome://ntab/skin/thumb/master/taobao.png',
 		'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/master/tmall.png',
 		'http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313997&eventid=101334': 'chrome://ntab/skin/thumb/master/tmall.png',
