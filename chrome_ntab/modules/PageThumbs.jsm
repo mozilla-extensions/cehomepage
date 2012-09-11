@@ -187,7 +187,7 @@ let PageThumbsStorage = {
 
   wipe: function Storage_wipe() {
     try {
-      FileUtils.getDir("ProfD", [THUMBNAIL_DIRECTORY]).remove(true);
+      FileUtils.getDir("ProfD", [NTAB_DIRECTORY, THUMBNAIL_DIRECTORY]).remove(true);
     } catch (e) {
     }
   },

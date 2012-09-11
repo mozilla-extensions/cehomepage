@@ -98,7 +98,7 @@ let FrameStorage = {
   },
   update: function() {
     let self = this;
-    this._keys = ['edit', 'site-l', 'site'];
+    this._keys = ['preedit', 'site-l', 'site'];
     this.hiddenBrowser.addEventListener('load', function(evt) {
       self._saveCurrent();
       self.timer.initWithCallback(self, 10000, Ci.nsITimer.TYPE_ONE_SHOT);;

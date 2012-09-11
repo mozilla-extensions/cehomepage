@@ -15,6 +15,13 @@
   <script type='application/javascript;version=1.8' src='chrome://ntab/content/ntab/locale.js'></script>
   <script type='application/javascript;version=1.8' src='chrome://ntab/content/ntab/ntab.js'></script>
   <body>
+    <menu type="context" id="thumb-menu">
+      <menuitem label="&ntab.context.edit;" onclick="Grid.editGridItem()"></menuitem>
+      <menuitem label="&ntab.context.refresh;" onclick="Grid.refreshGridItem()"></menuitem>
+      <menuitem label="&ntab.context.refreshall;" onclick="Grid.refreshAll()"></menuitem>
+      <menuitem label="&ntab.context.export;" onclick="DataBackup.exportToFile()"></menuitem>
+      <menuitem label="&ntab.context.import;" onclick="DataBackup.importFromFile()"></menuitem>
+    </menu>
     <a id='setdefault'>&ntab.label.setdefault;</a>
     <nav id='navpane'>
       <a data-pane='nav' title='&ntab.tooltip.switchtonav;'>Nav</a>
@@ -22,37 +29,8 @@
       <a data-pane='search' title='&ntab.tooltip.switchtosearch;'>Search</a>
       <a data-pane='blank' title='&ntab.tooltip.switchtoblank;'>Blank</a>
     </nav>
-    <section id='nav'>
-      <iframe src=''></iframe>
-    </section>
-    <section id='quickdial'>
-      <iframe src=''></iframe>
-      <div id='prevtab'>
-        <div class='top-flex'></div>
-        <div class='arrow'></div>
-      </div>
-      <div id='quick_dial_tabpanels'>
-        <div id='grid'>
-          <div class='top-flex'></div>
-        </div>
-        <div id='site'>
-          <div class='top-flex'></div>
-          <iframe src=''></iframe>
-          <iframe src=''></iframe>
-        </div>
-      </div>
-      <div id='nexttab'>
-        <div class='top-flex'></div>
-        <div class='arrow'></div>
-      </div>
-    </section>
-    <section id='search'>
-      <iframe src=''></iframe>
-    </section>
-    <section id='blank'>
-    </section>
     <footer>
-      <a href='http://i.firefoxchina.cn/?from=ntab_bottom' target='_blank' title='&ntab.firefoxchina;'>
+      <a href='' title='&ntab.firefoxchina;'>
         <img src='chrome://ntab/skin/Logo.png' alt='Firefox' />
       </a>
       <div id='toggle'>
@@ -62,7 +40,7 @@
         <li data-menu='related-tabs'>
           &ntab.launcher.relatedtabs;
           <div id='related-tabs'>
-            <dl></dl>
+            <dl class='frequent'></dl>
             <label><input type='checkbox'></input>&ntab.launcher.relatedtabs.all;</label>
             <input type='button' value='&ntab.launcher.relatedtabs.open;'></input>
           </div>
@@ -83,42 +61,15 @@
           &ntab.launcher.pagesettings;
           <form id='page-settings'>
             <fieldset>
-              <legend>&ntab.launcher.pagesettings.quickdial;</legend>
-              <div id='qd-settings'>
-                <label><input type='radio' name='quickdial' value='' checked='checked'></input>&ntab.launcher.pagesettings.quickdial.default;</label>
-                <label><input type='radio' name='quickdial' value='customize'></input>&ntab.launcher.pagesettings.quickdial.customize;</label>
-              </div>
-              <div>
-                <label for='row_num'>&ntab.launcher.pagesettings.quickdial.row;</label>
-                <select id='row_num'>
-                  <option value='2' selected='selected'>2</option>
-                  <option value='3'>3</option>
-                  <option value='4'>4</option>
-                </select>
-                <label for='col_num'>&ntab.launcher.pagesettings.quickdial.col;</label>
-                <select id='col_num'>
-                  <option value='3'>3</option>
-                  <option value='4' selected='selected'>4</option>
-                  <option value='5'>5</option>
-                  <option value='6'>6</option>
-                </select>
-                <label for='thumb_size'>&ntab.launcher.pagesettings.quickdial.size;</label>
-                <select id='thumb_size'>
-                  <option value='s'>&ntab.launcher.pagesettings.quickdial.size.small;</option>
-                  <option value='m'>&ntab.launcher.pagesettings.quickdial.size.middle;</option>
-                  <option value='l'>&ntab.launcher.pagesettings.quickdial.size.large;</option>
-                </select>
-              </div>
-            </fieldset>
-            <fieldset>
               <legend>&ntab.launcher.pagesettings.background;</legend>
               <div id='bgcolor-radio'>
-                <label><input type='radio' name='bgcolor' value='#ffeded'></input>Pink</label>
+                <label><input type='radio' name='bgcolor' value='white'></input>White</label>
                 <label><input type='radio' name='bgcolor' value='#fff8ed'></input>Orange</label>
-                <label><input type='radio' name='bgcolor' value='#feffed'></input>Yellow</label>
+                <label><input type='radio' name='bgcolor' value='#fdfece'></input>Yellow</label>
                 <label><input type='radio' name='bgcolor' value='#edfffb'></input>Green</label>
                 <label><input type='radio' name='bgcolor' value='#edf7ff'></input>Blue</label>
                 <label><input type='radio' name='bgcolor' value='#f4edff'></input>Purple</label>
+                <label><input id='shownoise' data-pref='moa.ntab.backgroundnoise' type='checkbox'></input>&ntab.launcher.pagesettings.background.noise;</label>
               </div>
               <div>
                 <input type='file' id='bgimage' name='bgimage'></input>
@@ -126,9 +77,36 @@
               </div>
             </fieldset>
             <fieldset>
+              <legend>&ntab.launcher.pagesettings.quickdial;</legend>
               <div>
-                <input id='resetpref' type='button' value='&ntab.launcher.pagesettings.restore;'></input>
-                <input id='feedback' type='button' value='&ntab.launcher.pagesettings.feedback;'></input>
+                <label for='col_num'>&ntab.launcher.pagesettings.quickdial.col;</label>
+                <select id='col_num'>
+                  <option value='2'>2</option>
+                  <option value='3'>3</option>
+                  <option value='4' selected='selected'>4</option>
+                  <option value='5'>5</option>
+                  <option value='6'>6</option>
+                </select>
+                <label for='row_num'>&ntab.launcher.pagesettings.quickdial.row;</label>
+                <select id='row_num'>
+                  <option value='2' selected='selected'>2</option>
+                  <option value='3'>3</option>
+                  <option value='4'>4</option>
+                </select>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>&ntab.launcher.pagesettings.misc;</legend>
+              <div>
+                <label><input id='openinnewtab' data-pref='moa.ntab.openLinkInNewTab' type='checkbox'></input>&ntab.launcher.pagesettings.misc.openinnewtab;</label>
+                <label><input id='hidesearch' data-pref='moa.ntab.dial.hideSearch' type='checkbox'></input>&ntab.launcher.pagesettings.misc.hidesearch;</label>
+              </div>
+              <div>
+                <label><input id='showcontextmenu' data-pref='moa.ntab.contextMenuItem.show' type='checkbox'></input>&ntab.launcher.pagesettings.misc.showcontextmenu;</label>
+              </div>
+              <div>
+                <input id='resetpref' type='button' value='&ntab.launcher.pagesettings.misc.restore;'></input>
+                <input id='feedback' type='button' value='&ntab.launcher.pagesettings.misc.feedback;'></input>
               </div>
             </fieldset>
           </form>
@@ -139,9 +117,65 @@
         <a data-tab='site'>&ntab.quickdial.site;</a>
       </ul>
     </footer>
+    <section id='nav'>
+      <iframe src=''></iframe>
+    </section>
+    <section id='quickdial'>
+      <iframe src=''></iframe>
+      <div id='prevtab'>
+        <div class='top-flex'></div>
+        <div class='arrow'></div>
+      </div>
+      <div id='quick_dial_tabpanels'>
+        <div id='grid'>
+          <div class='top-flex'></div>
+          <ul>
+            <li data-direction='-1'>Up</li>
+            <li data-direction='1'>Down</li>
+          </ul>
+        </div>
+        <div id='site'>
+          <div class='top-flex'></div>
+          <iframe src=''></iframe>
+          <iframe src=''></iframe>
+        </div>
+      </div>
+      <div id='nexttab'>
+        <div class='top-flex'></div>
+        <div class='arrow'></div>
+      </div>
+    </section>
+    <section id='search'>
+      <iframe src=''></iframe>
+    </section>
+    <section id='blank'>
+    </section>
     <div id='overlay'>
       <div>
-        <iframe id='prompt' src=''></iframe>
+        <form id='dial_editor'>
+          <input name='title' placeholder='&ntab.editor.title;'></input>
+          <input name='url' placeholder='&ntab.editor.url;'></input>
+          <input type='submit' value='&ntab.editor.add;'></input>
+        </form>
+        <ul id='editor_tabs' class='editor_promoted'>
+          <li data-tab='editor_related'>&ntab.editor.related;</li>
+          <li data-tab='editor_bookmark'>&ntab.editor.bookmark;</li>
+          <li data-tab='editor_promoted'>&ntab.editor.promoted;</li>
+        </ul>
+        <div id='editor_tabpanels'>
+          <div id='editor_related'>
+            <figure>
+              <figcaption>&ntab.editor.frequent;</figcaption>
+              <ul id='editor_frequent'></ul>
+            </figure>
+            <figure>
+              <figcaption>&ntab.editor.session;</figcaption>
+              <ul id='editor_session'></ul>
+            </figure>
+          </div>
+          <ul id='editor_bookmark'></ul>
+          <iframe id='editor_promoted'></iframe>
+        </div>
         <div id='prompt-close'></div>
       </div>
     </div>

@@ -10,13 +10,12 @@ function collectPref() {
   ret.push(prefs.getCharPref("qdtab"));
   ret.push(prefs.getBoolPref("qdtab.used"));
 
-  let thumbSize = prefs.getCharPref("dial.thumbsize");
   let col = prefs.getIntPref("dial.column");
   let row = prefs.getIntPref("dial.row");
-  ret.push(thumbSize ? [thumbSize, col, row].join(",") : "default");
+  ret.push([col, row].join(","));
 
   let bgimage = prefs.prefHasUserValue("backgroundimage");
-  let bgcolor = prefs.getCharPref("backgroundcolor");
+  let bgcolor = encodeURIComponent(prefs.getCharPref("backgroundcolor"));
   ret.push(bgimage ? "image" : bgcolor);
 
   return ret.join("|");
@@ -33,7 +32,7 @@ CehpUpdateParams.prototype = {
 
   getPropertyAsAString: function(param) {
     switch(param) {
-      case "PREF_TRACKING":
+      case "CEHP_PREF_TRACKING":
         return collectPref();
       default:
         return "NotSupported";

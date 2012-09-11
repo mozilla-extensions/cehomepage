@@ -43,30 +43,6 @@ defaultQuickDial = {
 			url: 'http://www.yihaodian.com/?tracker_u=10977119545',
 			icon: '',
 			rev: '4'
-		},
-
-		'8': {
-			title: '\u51E1\u5BA2\u8BDA\u54C1',
-			url: 'http://www.vancl.com/websource/websource.aspx?url=http://www.vancl.com&source=mozilla',
-			icon: '',
-		},
-
-		'9': {
-			title: '\u805A\u7F8E\u4F18\u54C1',
-			url: 'http://www.jumei.com/?referer=huohu',
-			icon: '',
-		},
-
-		'10': {
-			title: '\u4ED9\u4FA0\u8BB0',
-			url: 'http://youxi.baidu.com/yxpm/pm.jsp?pid=11016500262_803226',
-			icon: '',
-		},
-
-		'11': {
-			title: '\u8D70\u79C0',
-			url: 'http://www.xiu.com/?from=10642111&utm_content=10642111&utm_campaign=roi&utm_source=huohu&utm_medium=zhuangbiao-text-0501',
-			icon: '',
 		}
 	},
 
@@ -87,10 +63,6 @@ defaultQuickDial = {
 		'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
 		'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
 		'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',
-		'http://www.vancl.com/websource/websource.aspx?url=http://www.vancl.com&source=mozilla': 'chrome://ntab/skin/thumb/master/vancl.png',
-		'http://www.jumei.com/?referer=huohu': 'chrome://ntab/skin/thumb/master/jumei.png',
-		'http://youxi.baidu.com/yxpm/pm.jsp?pid=11016500262_803226': 'chrome://ntab/skin/thumb/master/xianxia.png',
-		'http://www.xiu.com/?from=10642111&utm_content=10642111&utm_campaign=roi&utm_source=huohu&utm_medium=zhuangbiao-text-0501': 'chrome://ntab/skin/thumb/master/zouxiu.png',
         'http://www.google.com/': 'chrome://ntab/skin/thumb/master/google.jpg',
         'http://www.google.com.hk/': 'chrome://ntab/skin/thumb/master/google.jpg',
         'http://www.youdao.com/': 'chrome://ntab/skin/thumb/master/youdao.jpg',

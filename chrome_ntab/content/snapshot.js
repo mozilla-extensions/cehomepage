@@ -34,10 +34,6 @@
             'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
             'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
             'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',
-            'http://www.vancl.com/websource/websource.aspx?url=http://www.vancl.com&source=mozilla': 'chrome://ntab/skin/thumb/master/vancl.png',
-            'http://www.jumei.com/?referer=huohu': 'chrome://ntab/skin/thumb/master/jumei.png',
-            'http://youxi.baidu.com/yxpm/pm.jsp?pid=11016500262_803226': 'chrome://ntab/skin/thumb/master/xianxia.png',
-            'http://www.xiu.com/?from=10642111&utm_content=10642111&utm_campaign=roi&utm_source=huohu&utm_medium=zhuangbiao-text-0501': 'chrome://ntab/skin/thumb/master/zouxiu.png',
             'http://www.google.com/': 'chrome://ntab/skin/thumb/master/google.jpg',
             'http://www.google.com.hk/': 'chrome://ntab/skin/thumb/master/google.jpg',
             'http://www.youdao.com/': 'chrome://ntab/skin/thumb/master/youdao.jpg',
@@ -126,8 +122,8 @@
     var snapshots = [];
     var TIMEOUT_LOAD = 30000;
     var browserSize = {
-                        small : {width : 512, height : 512},
-                        normal : {width : 1024, height : 768},
+                        small : {width : 512, height : 318},
+                        normal : {width : 1024, height : 635},
                         cutArea : {width : 360, height : 220}
                       };
     function processQueue() {
