@@ -375,12 +375,14 @@ let Grid = {
   },
   _updateSettingsDisplay: function Grid__updateSettingsDisplay() {
     let rowSelect = document.querySelector('#row_num');
-    let limit = 0;
+    let limit = 4;
     let row = this.gridSize.row;
     if (NTabUtils.prefs.prefHasUserValue('moa.ntab.dial.rowlimit')) {
       limit = NTabUtils.prefs.getIntPref('moa.ntab.dial.rowlimit');
-    } else if (row > 4){
+    }
+    if (row > limit) {
       limit = Math.ceil(row / 5) * 5;
+      NTabUtils.prefs.setIntPref('moa.ntab.dial.rowlimit', limit);
     }
     for (let i = rowSelect.childElementCount + 2; i <= limit; i++) {
       let option = document.createElement('option');
