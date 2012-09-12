@@ -32,38 +32,6 @@
 
   <window id="main-window">
 	  <menupopup id="nt-menu"  oncommand="MOA.NTab.onContextCommand(event, event.target.id);">
-	  	<menu id="nt-switchview"
-	  		accesskey="&ntab.contextmenu.switchto.accesskey;"
-	  		label="&ntab.contextmenu.switchto;">
-	  		<menupopup oncommand="MOA.NTab.onContextCommand(event, this.parentNode.id);">
-	  			<menuitem name="view"
-			  		accesskey="&ntab.contextmenu.switchto.accesskey;"
-	  				type="radio"
-	  				value="nav"
-	  				label="&ntab.contextmenu.nav;" />
-	  			<menuitem name="view"
-			  		accesskey="&ntab.contextmenu.quickdial.accesskey;"
-	  				type="radio"
-	  				value="quickdial"
-	  				label="&ntab.contextmenu.quickdial;" />
-	  			<menuitem
-			  		accesskey="&ntab.contextmenu.search.accesskey;"
-	  				name="view"
-	  				type="radio"
-	  				value="search"
-	  				label="&ntab.contextmenu.search;" />
-	  			<menuitem
-			  		accesskey="&ntab.contextmenu.blank.accesskey;"
-	  				name="view"
-	  				type="radio"
-	  				value="blank"
-	  				label="&ntab.contextmenu.blank;" />
-	  		</menupopup>
-	  	</menu>
-        <menuitem id="nt-linkopenmodel"
-        	type="checkbox"
-	  		accesskey="&ntab.contextmenu.openLinkInNewTab.accesskey;"
-        	label="&ntab.contextmenu.openLinkInNewTab;"/>
 	  	<menuitem id="nt-edit"
 	  		accesskey="&ntab.contextmenu.edit.accesskey;"
 	  		label="&ntab.contextmenu.edit;" />
@@ -73,26 +41,12 @@
 	  	<menuitem id="nt-refreshall"
 	  		accesskey="&ntab.contextmenu.refreshall.accesskey;"
 	  		label="&ntab.contextmenu.refreshall;" />
-	  	<menuitem id="nt-changebg"
-	  		accesskey="&ntab.contextmenu.changebg.accesskey;"
-	  		label="&ntab.contextmenu.changebg;" />
-	  	<menuitem id="nt-clearbg"
-	  		accesskey="&ntab.contextmenu.clearbg.accesskey;"
-	  		label="&ntab.contextmenu.clearbg;" />
 		<menuitem id="nt-export"
 			accesskey="&ntab.contextmenu.export.accesskey;"
 			label="&ntab.contextmenu.export;"/>
 		<menuitem id="nt-import"
 			accesskey="&ntab.contextmenu.import.accesskey;"
 			label="&ntab.contextmenu.import;"/>
-        <menuitem id="nt-feedback"
-	  		accesskey="&ntab.contextmenu.feedback.accesskey;"
-	  		label="&ntab.contextmenu.feedback;"
-	  		class="menuitem-iconic" />
-		<menuitem id="nt-configntab"
-	  		accesskey="&ntab.contextmenu.configntab.accesskey;"
-	  		label="&ntab.contextmenu.configntab;" />
-	  	<!-- menuitem id="nt-preferences" label="&ntab.contextmenu.preferences;" / -->
 	  </menupopup>
   </window>
 </overlay>

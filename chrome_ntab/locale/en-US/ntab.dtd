@@ -38,7 +38,7 @@
 <!ENTITY ntab.launcher.pagesettings.misc "Misc">
 <!ENTITY ntab.launcher.pagesettings.misc.openinnewtab "Open link in new tab">
 <!ENTITY ntab.launcher.pagesettings.misc.hidesearch "Hide search bar on top of dial page">
-<!ENTITY ntab.launcher.pagesettings.misc.showcontextmenu "Add \"Add to quick dial\" to context menu">
+<!ENTITY ntab.launcher.pagesettings.misc.showcontextmenu "Add 'Add to quick dial' to context menu">
 <!ENTITY ntab.launcher.pagesettings.misc.restore "Restore original settings">
 <!ENTITY ntab.launcher.pagesettings.misc.feedback "User feedback">
 

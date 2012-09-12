@@ -493,9 +493,10 @@ let Grid = {
         evt.target.parentNode.dataset.scroll = '0';
       }, false);
     });
+    this.gridContainer.addEventListener('contextmenu', NTabUtils.chromeWindow.MOA.NTab.onContextMenu, false);
   },
-  editGridItem: function Grid_editGridItem() {
-    this._editGridItem(document.querySelector('#thumb-menu').dataset.index);
+  editGridItem: function Grid_editGridItem(aIndex) {
+    this._editGridItem(aIndex || document.querySelector('#thumb-menu').dataset.index);
   },
   init: function Grid_init() {
     this._migrate();
@@ -506,8 +507,8 @@ let Grid = {
     PageThumbsStorage.wipe();
     this.update();
   },
-  refreshGridItem: function Grid_refreshGridItem() {
-    let index = document.querySelector('#thumb-menu').dataset.index;
+  refreshGridItem: function Grid_refreshGridItem(aIndex) {
+    let index = aIndex || document.querySelector('#thumb-menu').dataset.index;
     let dial = quickDialModule.getDial(index);
     if (dial) {
       PageThumbsStorage.remove(dial.url);

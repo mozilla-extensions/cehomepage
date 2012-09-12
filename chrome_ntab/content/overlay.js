@@ -130,8 +130,8 @@
 			if (document.body == elem)
 				break;
 
-			if (elem.className && elem.className.indexOf('quick-dial-item') > -1) {
-				num = /item-(\d+)/.exec(elem.id)[1];
+			if (elem.dataset && elem.dataset.index > -1) {
+				num = parseInt(elem.dataset.index, 10);
 				break;
 			}
 
@@ -145,41 +145,19 @@
 	ns.onContextCommand = function(event, menuid) {
 		switch (menuid) {
 			case 'nt-refresh':
-				content.wrappedJSObject.quickDial.refreshDial(_num);
+				content.wrappedJSObject.Grid.refreshGridItem(_num);
 				break;
 			case 'nt-refreshall':
-				content.wrappedJSObject.quickDial.refreshAll(_num);
+				content.wrappedJSObject.Grid.refreshAll();
 				break;
 			case 'nt-edit':
-				content.wrappedJSObject.quickDial.editDial(_num);
-				break;
-			case 'nt-linkopenmodel':
-				gPref.setBoolPref('moa.ntab.openLinkInNewTab', !gPref.getBoolPref('moa.ntab.openLinkInNewTab'));
-				break;
-			case 'nt-switchview':
-				gPref.setCharPref('moa.ntab.view', event.target.value);
-				break;
-			case 'nt-changebg':
-				content.wrappedJSObject.custom.pickImage();
-				break;
-			case 'nt-clearbg':
-				content.wrappedJSObject.custom.clearBgImage();
+				content.wrappedJSObject.Grid.editGridItem(_num);
 				break;
 			case 'nt-export':
-				content.wrappedJSObject.dialsync.exportJSON();
+				content.wrappedJSObject.DataBackup.exportToFile();
 				break;
 			case 'nt-import':
-				content.wrappedJSObject.dialsync.importJSON();
-				break;
-			case 'nt-configntab':
-				window.showModalDialog('chrome://ntab/content/options.xul');
-				break;
-			case 'nt-feedback':
-				if (gPref.getBoolPref('moa.ntab.openLinkInNewTab')) {
-					gBrowser.selectedTab = gBrowser.addTab('http://17huohu.cn/event/13-new-tab-page-feedback/');
-				} else {
-					content.wrappedJSObject.location = 'http://17huohu.cn/event/13-new-tab-page-feedback/';
-				}
+				content.wrappedJSObject.DataBackup.importFromFile();
 				break;
 		}
 	};
@@ -193,73 +171,16 @@
 			}
 		}
 
-		document.getElementById('nt-linkopenmodel').setAttribute("checked", gPref.getBoolPref('moa.ntab.openLinkInNewTab'));
 		document.getElementById('nt-refresh').hidden = _num < 0;
 		document.getElementById('nt-edit').hidden = _num < 0;
 		document.getElementById('nt-refreshall').hidden = gPref.getCharPref('moa.ntab.view') !== 'quickdial';
-		document.getElementById('nt-clearbg').hidden = gPref.getCharPref('moa.ntab.backgroundimage') === '';
 
-		var viewswitcher = document.getElementById('nt-switchview').firstChild;
-		var view = gPref.getCharPref('moa.ntab.view');
-		for (var i = 0; i < viewswitcher.childNodes.length; i++) {
-			if (view == viewswitcher.childNodes[i].value) {
-				viewswitcher.childNodes[i].setAttribute('checked', true);
-				break;
-			}
-		}
 		document.getElementById('nt-menu').openPopupAtScreen(event.screenX, event.screenY, true);
 		event.preventDefault();
 	};
 
 	ns.onContextMenuGlobal = function() {
-		document.getElementById('context-ntab').hidden = !gPref.getBoolPref('moa.ntab.contextMenuItem.show');
-	};
-
-	ns.openTabByHotKey = function(event) {
-		var useHotKey = gPref.getBoolPref('moa.ntab.display.usehotkey');
-		if(!useHotKey) {
-			return;
-		}
-		event.preventDefault();
-		event.stopPropagation();
-		var realKey;
-		switch (event.keyCode) {
-			case 48 :
-				realKey = "10";
-				break;
-			case 49 :
-				realKey = "1";
-				break;
-			case 50 :
-				realKey = "2";
-				break;
-			case 51 :
-				realKey = "3";
-				break;
-			case 52 :
-				realKey = "4";
-				break;
-			case 53 :
-				realKey = "5";
-				break;
-			case 54 :
-				realKey = "6";
-				break;
-			case 55 :
-				realKey = "7";
-				break;
-			case 56 :
-				realKey = "8";
-				break;
-			case 57 :
-				realKey = "9";
-				break;
-		}
-		var dial = quickDialModule.getDial(realKey);
-//		gBrowser.addTab(dial.url);
-		if(dial) {
-			openUILinkIn(dial.url, 'tab');
-		}
+		document.getElementById('context-ntab').hidden = !gPref.getBoolPref('moa.ntab.contextMenuItem.show') || window._content.document.location.href == _url;
 	};
 })();
 
@@ -267,11 +188,5 @@ window.addEventListener("load", function() {
 	window.setTimeout(function() {
 		MOA.NTab.onLoad();
 		gBrowser.addEventListener("contextmenu", MOA.NTab.onContextMenuGlobal, false);
-		window.addEventListener("keydown", function(event) {
-			if (!event.ctrlKey || event.keyCode < 47 || event.keyCode > 58) {
-				return;
-			}
-			MOA.NTab.openTabByHotKey(event);
-		}, true );
 	}, 1);
 }, false);
