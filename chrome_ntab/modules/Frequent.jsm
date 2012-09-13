@@ -4,10 +4,19 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import('resource://gre/modules/PlacesUtils.jsm');
 
+let prefixes = [
+  /^http:\/\/i.firefoxchina.cn\/n(ew)?tab/,
+  /^http:\/\/i.firefoxchina.cn\/parts\/google_rdr/,
+  /^http:\/\/i.firefoxchina.cn\/redirect\/adblock/,
+  /^http:\/\/i.firefoxchina.cn\/(redirect\/)?search/,
+  /^http:\/\/i.g-fox.cn\/(rd|search)/,
+  /^http:\/\/www5.1616.net\/q/
+];
+
 let Frequent = {
   query: function(aCallback, aLimit) {
     let options = PlacesUtils.history.getNewQueryOptions();
-    options.maxResults = aLimit;
+    options.maxResults = aLimit + 10;
     options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING
 
     let links = [];
@@ -17,9 +26,16 @@ let Frequent = {
         let row;
 
         while (row = aResultSet.getNextRow()) {
+          if (links.length >= aLimit) {
+            break;
+          }
           let url = row.getResultByIndex(1);
           let title = row.getResultByIndex(2);
-          links.push({url: url, title: title});
+          if (!prefixes.some(function(aPrefix) {
+            return aPrefix.test(url);
+          })) {
+            links.push({url: url, title: title});
+          }
         }
       },
 

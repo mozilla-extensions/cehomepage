@@ -29,7 +29,7 @@ contract @mozilla.org/network/protocol/about;1?what=cehome {c0a76f7d-8214-4476-a
 
 component {eac198fa-e173-4274-8fb3-5857c6a52d10} components/cehpUpdateParam.js
 contract @mozillaonline.com/cehp-update-params;1 {eac198fa-e173-4274-8fb3-5857c6a52d10}
-category extension-update-params PREF_TRACKING @mozillaonline.com/cehp-update-params;1
+category extension-update-params CEHP_PREF_TRACKING @mozillaonline.com/cehp-update-params;1
 
 component {6df95035-de8b-4ed9-a825-9af6266d03b1} components/cehpThumbsProtocol.js
 contract @mozilla.org/network/protocol;1?name=cehp-page-thumb {6df95035-de8b-4ed9-a825-9af6266d03b1}

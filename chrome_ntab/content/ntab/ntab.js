@@ -41,7 +41,7 @@ let RelatedTabViewer = {
       frequenttabs.forEach(function({title, url}) {
         let attrs = {
           type:  "tab",
-          title: title || url,
+          title: title || _('moa.ntab.emptytitle'),
           url:   url
         }
         let tab = self.createItem(attrs);
@@ -57,7 +57,7 @@ let RelatedTabViewer = {
       sessiontabs.forEach(function({title, url}) {
         let attrs = {
           type:  "tab",
-          title: title || url,
+          title: title || _('moa.ntab.emptytitle'),
           url:   url
         }
         let tab = self.createItem(attrs);
@@ -124,7 +124,7 @@ let BookmarkViewer = {
       let li = document.createElement('li');
       let anchor = document.createElement('a');
       anchor.href = url;
-      anchor.textContent = title;
+      anchor.textContent = title || _('moa.ntab.emptytitle');
       anchor.title = url;
       anchor.style.backgroundImage = 'url(' + NTabUtils.getFavicon(url) + ')';
       li.appendChild(anchor);
@@ -168,6 +168,20 @@ let NTabUtils = {
     let url = this.ioService.newURI(aUrl, null, null);
     let favicon = this.faviconService.getFaviconImageForPage(url).spec;
     return favicon;
+  },
+  loadIFrame: function NTabUtils_loadIFrame(aFrame, aSrc) {
+    /*
+    restart with different number of iframes in the same page will cause iframes
+    pre-loaded with incorrect document, which may happen during an update.
+    so we force refresh any pre-loaded document with about:blank first
+    */
+    if (aFrame.contentDocument.URL != 'about:blank') {
+      aFrame.setAttribute('src', 'about:blank');
+    }
+    aFrame.setAttribute('src', aSrc);
+    if (aSrc == 'about:blank') {
+      aFrame.removeAttribute('src');
+    }
   }
 };
 
@@ -258,12 +272,12 @@ let Grid = {
       Overlay.inputUrl.value = dial.url;
     }
     let prompt = Overlay.overlay.querySelector('#editor_promoted');
-    if (!prompt.getAttribute('src')) {
+    if (prompt && !prompt.getAttribute('src')) {
       let self = this;
       prompt.addEventListener('load', function() {
         Overlay.init();
       }, false);
-      prompt.setAttribute('src', FrameStorage.frames('preedit.html'));
+      NTabUtils.loadIFrame(prompt, FrameStorage.frames('preedit.html'));
     }
   },
   _itemEventInit: function Grid__itemEventInit(aLi) {
@@ -705,11 +719,17 @@ let QDTabs = {
     let queryString = ['openInNewTab', openInNewTab].join('=');
 
     let iframes = document.getElementById(tab).querySelectorAll('iframe');
-    if (iframes.length && iframes[0] && !iframes[0].getAttribute('src')) {
-      iframes[0].setAttribute('src', [FrameStorage.frames([tab, 'html'].join('.')), queryString].join('?'));
+    if (iframes.length && iframes[0]) {
+      let src_ = [FrameStorage.frames([tab, 'html'].join('.')), queryString].join('?');
+      if (iframes[0].getAttribute('src') != src_) {
+        NTabUtils.loadIFrame(iframes[0], src_);
+      }
     }
-    if (iframes.length && iframes[1] && !iframes[1].getAttribute('src')) {
-      iframes[1].setAttribute('src', [FrameStorage.frames([tab + '-l', 'html'].join('.')), queryString].join('?'));
+    if (iframes.length && iframes[1]) {
+      let src_ = [FrameStorage.frames([tab + '-l', 'html'].join('.')), queryString].join('?');
+      if (iframes[1].getAttribute('src') != src_) {
+        NTabUtils.loadIFrame(iframes[1], src_);
+      }
     }
     if (aInit) {
       tracker.track({ type: 'qdtab', action: 'load', sid: tab });
@@ -764,7 +784,7 @@ let Overlay = {
         let li = document.createElement('li');
         let anchor = document.createElement('a');
         anchor.href = url;
-        anchor.textContent = title;
+        anchor.textContent = title || _('moa.ntab.emptytitle');
         anchor.title = url;
         anchor.style.backgroundImage = 'url(' + NTabUtils.getFavicon(url) + ')';
         li.appendChild(anchor);
@@ -777,7 +797,7 @@ let Overlay = {
         let li = document.createElement('li');
         let anchor = document.createElement('a');
         anchor.href = url;
-        anchor.textContent = title;
+        anchor.textContent = title || _('moa.ntab.emptytitle');
         anchor.title = url;
         anchor.style.backgroundImage = 'url(' + NTabUtils.getFavicon(url) + ')';
         li.appendChild(anchor);
@@ -1251,15 +1271,16 @@ let NTab = {
     let queryString = ['openInNewTab', openInNewTab].join('=');
 
     let iframe = document.getElementById(pane).querySelector('iframe');
-    if (iframe && !iframe.getAttribute('src')) {
+    if (iframe) {
       let srcPrefKey = ['moa.ntab.view', pane, 'url'].join('.');
       let src_ = NTabUtils.prefs.getCharPref(srcPrefKey);
       src_ = src_.replace(/%QS%/, queryString);
-      iframe.setAttribute('src', src_);
-    }
-    if (pane == 'quickdial' && this.hideSearch) {
-      iframe.setAttribute('src', 'about:blank');
-      iframe.removeAttribute('src');
+      if (pane == 'quickdial' && this.hideSearch) {
+        src_ = 'about:blank';
+      }
+      if (iframe.getAttribute('src') != src_) {
+        NTabUtils.loadIFrame(iframe, src_);
+      }
     }
     if (aInit) {
       tracker.track({ type: 'view', action: 'load', sid: pane });
