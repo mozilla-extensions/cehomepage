@@ -78,7 +78,9 @@ let RelatedTabViewer = {
       anchor.href = attrs.url;
       anchor.textContent = attrs.title;
       anchor.title = attrs.url;
-      anchor.setAttribute("target", "_blank");
+      if (NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab')) {
+        anchor.setAttribute("target", "_blank");
+      }
       item.appendChild(anchor);
     } else {
       item = document.createElement("dt");
@@ -1162,6 +1164,7 @@ let NTab = {
             // also update mini-nav's queryString
             NTab.update();
             QDTabs.update();
+            RelatedTabViewer.buildList();
             // intentionally no break;
           case 'moa.ntab.dial.column':
           case 'moa.ntab.dial.row':
