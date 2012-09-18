@@ -3,10 +3,15 @@ var EXPORTED_SYMBOLS = ['FrameStorage'];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-  "resource://gre/modules/FileUtils.jsm");
+if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
+  XPCOMUtils.defineLazyModuleGetter(this, "Services",
+    "resource://gre/modules/Services.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+    "resource://gre/modules/FileUtils.jsm");
+} else {
+  Cu.import('resource://gre/modules/Services.jsm');
+  Cu.import('resource://gre/modules/FileUtils.jsm');
+}
 
 let FrameStorage = {
   _file: '',

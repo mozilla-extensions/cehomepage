@@ -130,8 +130,8 @@
 			if (document.body == elem)
 				break;
 
-			if (elem.dataset && elem.dataset.index > -1) {
-				num = parseInt(elem.dataset.index, 10);
+			if (elem.hasAttribute('data-index') && parseInt(elem.getAttribute('data-index'), 10) > -1) {
+				num = parseInt(elem.getAttribute('data-index'), 10);
 				break;
 			}
 

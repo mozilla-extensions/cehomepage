@@ -21,17 +21,21 @@ const THUMBNAIL_BG_COLOR = "#fff";
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-  "resource://gre/modules/NetUtil.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-  "resource://gre/modules/FileUtils.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
+if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
+  XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+    "resource://gre/modules/NetUtil.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "Services",
+    "resource://gre/modules/Services.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+    "resource://gre/modules/FileUtils.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+    "resource://gre/modules/PlacesUtils.jsm");
+} else {
+  Cu.import('resource://gre/modules/NetUtil.jsm');
+  Cu.import('resource://gre/modules/Services.jsm');
+  Cu.import('resource://gre/modules/FileUtils.jsm');
+  Cu.import('resource://gre/modules/PlacesUtils.jsm');
+}
 
 XPCOMUtils.defineLazyGetter(this, "gCryptoHash", function () {
   return Cc["@mozilla.org/security/hash;1"].createInstance(Ci.nsICryptoHash);

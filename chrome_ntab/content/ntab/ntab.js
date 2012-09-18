@@ -268,7 +268,7 @@ let Grid = {
   _editGridItem: function Grid__editGridItem(aIndex) {
     let dial = quickDialModule.getDial(aIndex);
     Overlay.overlay.style.display = 'block';
-    Overlay.overlay.dataset.index = aIndex;
+    Overlay.overlay.setAttribute('data-index', aIndex);
     if (dial && dial.url) {
       Overlay.inputTitle.value = dial.title || dial.url;
       Overlay.inputUrl.value = dial.url;
@@ -284,7 +284,7 @@ let Grid = {
   },
   _itemEventInit: function Grid__itemEventInit(aLi) {
     let self = this;
-    let index = aLi.dataset.index;
+    let index = aLi.getAttribute('data-index');
     let button = aLi.querySelectorAll('button');
     let thumb = aLi.querySelector('span.thumb');
     let title = aLi.querySelector('span.title').textContent;
@@ -300,7 +300,7 @@ let Grid = {
     }
     aLi.querySelector('a').addEventListener('click', function(evt) {
       if (evt.currentTarget.href) {
-        let fid = aLi.dataset.fid;
+        let fid = aLi.getAttribute('data-fid');
         tracker.track({ type: 'quickdial', action: 'click', fid: fid, sid: index });
       } else {
         self._editGridItem(index);
@@ -320,13 +320,13 @@ let Grid = {
     aLi.addEventListener('drop', function(evt) {
       evt.preventDefault();
       let node = evt.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
-      if (node.dataset.index == index) {
+      if (node.getAttribute('data-index') == index) {
         return;
       }
-      quickDialModule.exchangeDial(node.dataset.index, index);
+      quickDialModule.exchangeDial(node.getAttribute('data-index'), index);
     }, false);
     thumb.addEventListener('contextmenu', function(evt) {
-      document.querySelector('#thumb-menu').dataset.index = index;
+      document.querySelector('#thumb-menu').getAttribute('data-index') = index;
     }, false);
   },
   _createGridItem: function Grid__createGridItem(aIndex) {
@@ -334,8 +334,8 @@ let Grid = {
 
     let li = document.createElement('li');
     li.setAttribute('draggable', dial ? 'true' : 'false');
-    li.dataset.index = aIndex;
-    li.dataset.fid = dial ? dial.defaultposition : '';
+    li.setAttribute('data-index', aIndex);
+    li.setAttribute('data-fid', dial ? dial.defaultposition : '');
     li.setAttribute('title', dial ? dial.title || '' : _('ntab.dial.label.clicktoadddial'));
 
     if (dial) {
@@ -498,8 +498,8 @@ let Grid = {
         evt.stopPropagation();
       }, false);
       aLi.addEventListener('mouseover', function(evt) {
-        let direction = evt.target.dataset.direction;
-        evt.target.parentNode.dataset.scroll = direction;
+        let direction = evt.target.getAttribute('data-direction');
+        evt.target.parentNode.setAttribute('data-scroll', direction);
         window.clearInterval(self._scrollInterval);
         self._scrollInterval = window.setInterval(function() {
           self._scroll(direction, 10);
@@ -508,13 +508,13 @@ let Grid = {
       aLi.addEventListener('mouseout', function(evt) {
         window.clearInterval(self._scrollInterval);
         self._scrollInterval = null;
-        evt.target.parentNode.dataset.scroll = '0';
+        evt.target.parentNode.setAttribute('data-scroll', '0');
       }, false);
     });
     this.gridContainer.addEventListener('contextmenu', NTabUtils.chromeWindow.MOA.NTab.onContextMenu, false);
   },
   editGridItem: function Grid_editGridItem(aIndex) {
-    this._editGridItem(aIndex || document.querySelector('#thumb-menu').dataset.index);
+    this._editGridItem(aIndex || document.querySelector('#thumb-menu').getAttribute('data-index'));
   },
   init: function Grid_init() {
     this._migrate();
@@ -526,7 +526,7 @@ let Grid = {
     this.update();
   },
   refreshGridItem: function Grid_refreshGridItem(aIndex) {
-    let index = aIndex || document.querySelector('#thumb-menu').dataset.index;
+    let index = aIndex || document.querySelector('#thumb-menu').getAttribute('data-index');
     let dial = quickDialModule.getDial(index);
     if (dial) {
       PageThumbsStorage.remove(dial.url);
@@ -691,7 +691,7 @@ let QDTabs = {
        for usage of [].forEach.call */
     [].forEach.call(document.querySelectorAll('#quick_dial_tabs > a'), function(anchor) {
       anchor.addEventListener('click', function(evt) {
-        self.currentTab = evt.target.dataset.tab;
+        self.currentTab = evt.target.getAttribute('data-tab');
       }, false);
     });
     this.update(true);
@@ -820,7 +820,7 @@ let Overlay = {
 
     [].forEach.call(this.editorTabs, function(tab) {
       tab.addEventListener('mouseover', function(evt) {
-        evt.target.parentNode.className = evt.target.dataset.tab;
+        evt.target.parentNode.className = evt.target.getAttribute('data-tab');
       }, false);
     });
     document.querySelector('#dial_editor').addEventListener('submit', function(evt) {
@@ -850,7 +850,7 @@ let Overlay = {
   },
   _finish: function Overlay__finish(aTitle, aUrl) {
     if (aUrl) {
-      let index = this.overlay.dataset.index;
+      let index = this.overlay.getAttribute('data-index');
       quickDialModule.updateDial(index, { url: aUrl, title: aTitle }, false);
     }
     if (this.inputTitle.hasAttribute('data-track')) {
@@ -889,7 +889,7 @@ let Launcher = {
     document.querySelector('#related-tabs > input[type="button"]').addEventListener('click', function(evt) {
       self.launcher.classList.toggle('related-tabs');
       [].forEach.call(document.querySelectorAll('#related-tabs > dl > dd > input[type="checkbox"]:checked'), function(checkbox) {
-        NTabUtils.chromeWindow.openUILinkIn(checkbox.dataset.url, 'tab');
+        NTabUtils.chromeWindow.openUILinkIn(checkbox.getAttribute('data-url'), 'tab');
         checkbox.checked = false;
       });
       document.querySelector('#related-tabs > label > input[type="checkbox"]').checked = false;
@@ -970,7 +970,7 @@ let Launcher = {
     });
     [].forEach.call(document.querySelectorAll('#page-settings > fieldset > div > label > input[type="checkbox"]'), function(input) {
       input.addEventListener('click', function(evt) {
-        NTabUtils.prefs.setBoolPref(evt.target.dataset.pref, evt.target.checked);
+        NTabUtils.prefs.setBoolPref(evt.target.getAttribute('data-pref'), evt.target.checked);
       }, false);
     });
   },
@@ -978,7 +978,7 @@ let Launcher = {
     let self = this;
     [].forEach.call(document.querySelectorAll('#launcher > li'), function(li) {
       li.addEventListener('click', function(evt) {
-        let menu = evt.target.dataset.menu;
+        let menu = evt.target.getAttribute('data-menu');
         if (menu) {
           self.launcher.classList.toggle(menu);
           if (self.launcher.classList.length) {
@@ -1221,7 +1221,7 @@ let NTab = {
     let self = this;
     [].forEach.call(document.querySelectorAll('#navpane > a'), function(anchor) {
       anchor.addEventListener('click', function(evt) {
-        self.currentPane = evt.target.dataset.pane;
+        self.currentPane = evt.target.getAttribute('data-pane');
       }, false);
     });
     this.update(true);
@@ -1234,7 +1234,7 @@ let NTab = {
   },
   _updateSettingsDisplay: function NTab__updateSettingsDisplay() {
     [].forEach.call(document.querySelectorAll('#page-settings > fieldset > div > label > input[type="checkbox"]'), function(input) {
-      input.checked = NTabUtils.prefs.getBoolPref(input.dataset.pref);
+      input.checked = NTabUtils.prefs.getBoolPref(input.getAttribute('data-pref'));
     });
   },
 
