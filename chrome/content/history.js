@@ -1,4 +1,44 @@
 (function() {
+
+    var exposeReadOnly = function (obj) {
+      if (null == obj) {
+        return obj;
+      }
+
+      if (typeof obj !== "object") {
+        return obj;
+      }
+
+      if (obj["__exposedProps__"]) {
+        return obj;
+      }
+
+      // If the obj is a navite wrapper, can not modify the attribute.
+      try {
+        obj.__exposedProps__ = {};
+      } catch (e) {
+        return;
+      }
+
+      var exposedProps = obj.__exposedProps__;
+      for (let i in obj) {
+        if (i === "__exposedProps__") {
+          continue;
+        }
+
+        if (i[0] === "_") {
+          continue;
+        }
+
+        exposedProps[i] = "r";
+
+        exposeReadOnly(obj[i]);
+      }
+
+      return obj;
+    };
+
+
     var Cc = Components.classes;
     var Ci = Components.interfaces;
     var Cu = Components.utils;
@@ -14,11 +54,11 @@
     function isFirefoxLowerThan4() {
         return typeof Application.getExtensions == "undefined";
     }
-    
+
     if (!isFirefoxLowerThan4()) {
         Components.utils["import"]("resource://gre/modules/AddonManager.jsm");
     }
-    
+
     if (!window.opener) {
         window.addEventListener('unload', function(evt) {
             if (evt.originalTarget == document) {
@@ -41,7 +81,7 @@
     /**
      * Pref browser.startup.homepage have been set to "about:cehome" in the pref.js
      * And in distribution.ini, browser.startup.homepage is set to http://i.firefoxchina.cn.
-     * 
+     *
      * Before version 0.8.9, users' pref may have been set to about:cehome because of bug 151.
      * To make sure users' homepage could also be displayed normally even if the addon is disabled,
      * check pref to see if it is about:cehome, then restore the pref.
@@ -80,11 +120,11 @@
             }
         }
         log(['cehomepage inject', host]);
-        cwin['cehomepage'] = {};
-        homepage.init(cwin.cehomepage);
-        frequent.init(cwin.cehomepage);
-        last.init(cwin.cehomepage);
-        sessionStore.init(cwin.cehomepage);
+        var cehomepage = {};
+        homepage.init(cehomepage);
+        frequent.init(cehomepage);
+        last.init(cehomepage);
+        sessionStore.init(cehomepage);
         if (cwin['do_history']) {
             cwin.do_history.call(cwin);
         }
@@ -93,11 +133,12 @@
             getService(Ci.nsIPrivateBrowsingService);
             var inPrivateBrowsingMode = pbs.privateBrowsingEnabled;
             if (inPrivateBrowsingMode != null && inPrivateBrowsingMode == false) {
-                cwin.cehomepage['inPrivateMode'] = true;
+                cehomepage['inPrivateMode'] = true;
             }
         } catch (e) {
             //this means it's in a earlier version of firefox, do nothing;
         }
+        cwin['cehomepage'] = exposeReadOnly(cehomepage);
 
     }
 
@@ -480,17 +521,17 @@
             return files;
         }
     };
-    
+
 
     var addonlistener = {
         onUninstalling: function (addon) {
             cancelAboutProtocol(addon);
         },
-    
+
         onDisabling: function (addon) {
             cancelAboutProtocol(addon);
         },
-    
+
         onOperationCancelled: function(addon) {
             if(addon.id == "cehomepage@mozillaonline.com") {
                 var homepage = prefs.getLocale("browser.startup.homepage", "");
@@ -504,7 +545,7 @@
             }
         }
     };
-    
+
     function cancelAboutProtocol(addon) {
         if(addon.id == "cehomepage@mozillaonline.com") {
             var homepage = prefs.getLocale("browser.startup.homepage", "");
@@ -518,11 +559,11 @@
             }
         }
     }
-    
+
     window.addEventListener('load', function() {
         window.setTimeout(function(evt) {
             resetHomepageIfPossible();
-            
+
             // the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
             var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage", false);
             if (autoSetHomepage) {
@@ -537,7 +578,7 @@
                     });
                 }
             }
-            
+
             /**
              * The distribution.ini of the old users may still remians the cehomepage pref as "about:cehome"
              * Still need to keep the addon listener.
@@ -551,14 +592,14 @@
                 }, false);
             }
         }, 10);
-        
+
         // Can not put the logic below in the timeout function.
         // Or the home page can not get the injected object in the very beginning, e.g. the very first run after profile is created.
         document.getElementById('appcontent').addEventListener("DOMContentLoaded", function(evt) {
             if (!evt.originalTarget instanceof HTMLDocument) {
                 return;
             }
-            
+
             try {
                 var view = evt.originalTarget.defaultView;
                 if (view.top == view || view.top == view.parent) {
