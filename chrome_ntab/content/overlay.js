@@ -179,6 +179,30 @@
 		event.preventDefault();
 	};
 
+	ns.onKeydown = function(evt) {
+		//var selectedDocument = gBrowser.selectedBrowser.contentDocument;
+		if (//selectedDocument.URL == _url &&
+			gPref.getBoolPref('moa.ntab.display.usehotkey') &&
+			evt.ctrlKey && 48 <= evt.keyCode && evt.keyCode <= 57) {
+			evt.preventDefault();
+			evt.stopPropagation();
+			var index = evt.keyCode - 48 || 10;
+			/*var selector = ['li[data-index="', index, '"] > a'].join('');
+			var anchor = selectedDocument.querySelector(selector);
+			if (anchor) {
+				var clickEvt = selectedDocument.createEvent("MouseEvents");
+				clickEvt.initMouseEvent("click", true, true,
+					selectedDocument.defaultView,
+					0, 0, 0, 0, 0, false, false, false, false, 0, null);
+				anchor.dispatchEvent(clickEvt);
+			}*/
+			var dial = quickDialModule.getDial(index);
+			if(dial && dial.url) {
+				openUILinkIn(dial.url, 'tab');
+			}
+		}
+	};
+
 	ns.onContextMenuGlobal = function() {
 		document.getElementById('context-ntab').hidden = !gPref.getBoolPref('moa.ntab.contextMenuItem.show') || window._content.document.location.href == _url;
 	};
@@ -188,5 +212,6 @@ window.addEventListener("load", function() {
 	window.setTimeout(function() {
 		MOA.NTab.onLoad();
 		gBrowser.addEventListener("contextmenu", MOA.NTab.onContextMenuGlobal, false);
+		window.addEventListener("keydown", MOA.NTab.onKeydown, true);
 	}, 1);
 }, false);

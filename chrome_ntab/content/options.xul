@@ -60,7 +60,7 @@
 			<checkbox label='&ntab.config.addurl;' preference="ntab-display-addurl"/>
 			<!--<checkbox label="&ntab.config.loadInExistingTabs;" preference="ntab-display-loadInExistingTabs" />-->
 
-			<!--<checkbox label='&ntab.config.usehotkey;' preference="ntab-display-usehotkey"/>-->
+			<checkbox label='&ntab.config.usehotkey;' preference="ntab-display-usehotkey"/>
 		</vbox>
   </prefpane>
 </prefwindow>

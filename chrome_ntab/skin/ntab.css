@@ -286,7 +286,7 @@ section > iframe {
 #grid > ol {
   list-style: none;
   margin: -10px auto 50px;
-  max-width: 1520px;
+  max-width: 1160px;
   overflow: hidden;
   width: -moz-calc(100% - 2 * 40px);
 }
@@ -375,25 +375,25 @@ footer.off ~ #quickdial > #quick_dial_tabpanels > #grid > ol {
 
 /* customized grid */
 #grid.c2 > ol {
-  max-width: 760px;
+  max-width: 580px;
 }
 #grid.c2 > ol > li {
   width: -moz-calc((100% - 40px) / 2);
 }
 #grid.c3 > ol {
-  max-width: 1140px;
+  max-width: 870px;
 }
 #grid.c3 > ol > li {
   width: -moz-calc((100% - 60px) / 3);
 }
 #grid.c5 > ol {
-  max-width: 1900px;
+  max-width: 1450px;
 }
 #grid.c5 > ol > li {
   width: -moz-calc((100% - 100px) / 5);
 }
 #grid.c6 > ol {
-  max-width: 2280px;
+  max-width: 1740px;
 }
 #grid.c6 > ol > li {
   width: -moz-calc((100% - 120px) / 6);

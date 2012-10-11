@@ -198,13 +198,12 @@ let DefaultBrowser = {
     return this.setDefault = document.querySelector('#setdefault');
   },
   init: function DefaultBrowser_init() {
-    if (this.isDefaultBrowser) {
-      this.setDefault.setAttribute('hidden', 'true');
-    } else {
+    if (!this.isDefaultBrowser) {
       let self = this;
       this.setDefault.addEventListener('click', function() {
         self.setAsDefault()
       }, false);
+      this.setDefault.removeAttribute('hidden');
     }
   },
   setAsDefault: function DefaultBrowser_setAsDefault() {
@@ -487,7 +486,23 @@ let Grid = {
       self._scroll(direction, speed);
     }, false);
     if (window.WheelEvent) {
-      //placeholder for Fx 17+
+      this.gridContainer.addEventListener('wheel', function(evt) {
+        let direction = evt.deltaY / Math.abs(evt.deltaY);
+        let speed = 0;
+        switch (evt.deltaMode) {
+          case evt.DOM_DELTA_LINE:
+            speed = 1;
+            break;
+          case evt.DOM_DELTA_PAGE:
+            speed = 3;
+            break;
+        }
+        speed *= (self.gridItemHeight + 20);
+        if (!speed) {
+          speed = Math.abs(evt.deltaY);
+        }
+        self._scroll(direction, speed);
+      }, false);
     } else {
       this.gridContainer.addEventListener('MozMousePixelScroll', function(evt) {
         self._scroll(1, evt.detail);
@@ -996,18 +1011,6 @@ let Launcher = {
       if (evt.keyCode == 27) {
         self.launcher.className = '';
       };
-      if (48 <= evt.charCode && evt.charCode <= 57 && evt.ctrlKey &&
-          NTabUtils.prefs.getBoolPref('moa.ntab.display.usehotkey')) {
-        let index = evt.charCode - 48 || 10;
-        let selector = ['li[data-index="', index, '"] > a'].join('');
-        let anchor = document.querySelector(selector);
-        if (anchor) {
-          let clickEvt = document.createEvent("MouseEvents");
-          clickEvt.initMouseEvent("click", true, true, window,
-            0, 0, 0, 0, 0, false, false, false, false, 0, null);
-          anchor.dispatchEvent(clickEvt);
-        }
-      }
     }, false);
     this._relatedtabsInit();
     this._toolsInit();

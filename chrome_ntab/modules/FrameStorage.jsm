@@ -30,6 +30,7 @@ let FrameStorage = {
 
     let browser = document.createElement('browser');
     browser.setAttribute("type", "content");
+    browser.setAttribute("disableglobalhistory", "true");
     browser.collapsed = true;
 
     let panel = document.getElementById("browser-panel");
