@@ -302,13 +302,13 @@
                 var stmt = conn.createStatement(this.sql);
                 stmt.bindInt32Parameter(0, n);
                 while (stmt.executeStep()) {
-                    res.push(exposeReadOnly({
+                    res.push({
                         title: stmt.getString(0),
                         uri: stmt.getString(1).replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn")
-                    }));
+                    });
                 }
             } finally {
-                return res;
+                return exposeReadOnly(res);
             }
         },
         query_old: function(n) {
@@ -376,17 +376,17 @@
                     if (e.url == 'about:blank') {
                         continue;
                     }
-                    res.push(exposeReadOnly({
+                    res.push({
                         title: e.title,
                         url: e.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn"),
                         length: tab.entries.length,
                         data: JSON.stringify(tab),
                         window_idx: i,
                         tab_idx: j
-                    }));
+                    });
                 }
             }
-            return res;
+            return exposeReadOnly(res);
         },
         read: function() {
             var files = this.getSessionFiles();
