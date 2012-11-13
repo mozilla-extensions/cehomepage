@@ -183,7 +183,7 @@
 		//var selectedDocument = gBrowser.selectedBrowser.contentDocument;
 		if (//selectedDocument.URL == _url &&
 			gPref.getBoolPref('moa.ntab.display.usehotkey') &&
-			evt.ctrlKey && 48 <= evt.keyCode && evt.keyCode <= 57) {
+			evt.ctrlKey && 48 < evt.keyCode && evt.keyCode <= 57) {
 			evt.preventDefault();
 			evt.stopPropagation();
 			var index = evt.keyCode - 48 || 10;
