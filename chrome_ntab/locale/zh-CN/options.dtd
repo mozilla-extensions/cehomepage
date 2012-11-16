@@ -6,7 +6,7 @@
 <!ENTITY ntab.config.hidesearch "隐藏搜索栏">
 <!ENTITY ntab.config.addurl "右键菜单中包括“添加至快速拨号”">
 <!ENTITY ntab.config.loadInExistingTabs " 火狐启动时在空白标签中加载新标签页">
-<!ENTITY ntab.config.usehotkey "使用快捷方式打开快速访问页（Ctrl+0~9）">
+<!ENTITY ntab.config.usehotkey "使用快捷方式打开快速访问页（Ctrl+1~9）">
 <!ENTITY ntab.config.yes "是">
 <!ENTITY ntab.config.no "否">
 <!ENTITY ntab.config.tip1 "⑴右键菜单中包括“添加当前页为快速拨号页”">
