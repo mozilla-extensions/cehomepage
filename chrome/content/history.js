@@ -96,15 +96,6 @@
         }
     }
 
-    function convertAboutHomeToUserPref() {
-        var homepage = prefs.getLocale("browser.startup.homepage", "");
-        if ("about:home" == homepage) {
-            /* char pref will be seen as user pref when default is complex
-               so use prefs.set instead of setLocale */
-            prefs.set("browser.startup.homepage", homepage);
-        }
-    }
-
     function cehomepage_autoSetHomepage() {
         var homepage = prefs.getLocale("extensions.cehomepage.homepage", "about:cehome");
         prefs.set("browser.startup.homepage", homepage);
@@ -572,7 +563,6 @@
     window.addEventListener('load', function() {
         window.setTimeout(function(evt) {
             resetHomepageIfPossible();
-            convertAboutHomeToUserPref();
 
             // the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
             var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage", false);
