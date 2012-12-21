@@ -166,7 +166,7 @@ var utils = {
 			};
 		}
 
-		persist.saveURI(uri, null, null, null, null, file);
+		persist.saveURI(uri, null, null, null, null, file, null);
 	},
 
 	fileExists: function(file_att) {
