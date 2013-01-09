@@ -29,6 +29,8 @@
             'http://youxi.baidu.com/yxpm/pm.jsp?pid=11016500091_877110': 'chrome://ntab/skin/thumb/master/baidu-youxi.png',
             'http://www.tmall.com/': 'chrome://ntab/skin/thumb/master/taobao.png',
             'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/master/tmall.png',
+            'http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313997&eventid=101334': 'chrome://ntab/skin/thumb/master/tmall.png',
+            'http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997': 'chrome://ntab/skin/thumb/master/taobaohot.jpg',
             'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
             'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
             'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',
