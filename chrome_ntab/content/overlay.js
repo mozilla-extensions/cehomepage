@@ -34,14 +34,6 @@
         }
     }
 
-    function doFocus() {
-        if (gURLBar) {
-            setTimeout(function() {
-                gURLBar.focus();
-            }, 0);
-        }
-    }
-
     var partnerBookmark = {
         _urlpairs: [
             ['http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com'],
@@ -98,14 +90,55 @@
         }
     };
 
+    var newTabPref = {
+        _appPrefKey: 'browser.newtab.url',
+        extPrefKey: 'moa.ntab.openInNewTab',
+
+        inUse: true,
+
+        _observer: {
+            QueryInterface: function(aIID) {
+                if (aIID.equals(Ci.nsIObserver) ||
+                    aIID.equals(Ci.nsISupports) ||
+                    aIID.equals(Ci.nsISupportsWeakReference)) {
+                    return this;
+                }
+                throw Cr.NS_NOINTERFACE;
+            },
+
+            observe: function(aSubject, aTopic, aData) {
+                if (aTopic == 'nsPref:changed') {
+                    switch (aData) {
+                        case newTabPref.extPrefKey:
+                            newTabPref.refresh();
+                            break;
+                    }
+                }
+            }
+        },
+
+        init: function() {
+            gPref.addObserver(this.extPrefKey, this._observer, true);
+            this.refresh();
+
+            gInitialPages.push(_url);
+        },
+        refresh: function() {
+            this.inUse = gPref.getBoolPref(this.extPrefKey);
+            if (this.inUse) {
+                gPref.setCharPref(this._appPrefKey, _url);
+            } else {
+                gPref.clearUserPref(this._appPrefKey);
+            }
+        }
+    };
+
     ns.browserOpenTab = function(event) {
-        if (gPref.getBoolPref('moa.ntab.openInNewTab')) {
-            var newTab = gBrowser.addTab(_url);
-            gBrowser.selectedTab = newTab;
-            // empty user typed value.
-            newTab.linkedBrowser.userTypedValue = '';
-            // focus address bar
-            doFocus();
+        if (newTabPref.inUse) {
+            openUILinkIn(_url, 'tab');
+
+            // for Fx 12 and older versions
+            focusAndSelectUrlBar();
         } else {
             window.originalBrowserOpenTab(event);
         }
@@ -139,6 +172,7 @@
             gBrowser.addEventListener('NewTab', window.BrowserOpenTab, false);
         }
 
+        newTabPref.init();
         partnerBookmark.update();
 
     };
