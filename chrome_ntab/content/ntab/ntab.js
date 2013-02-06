@@ -334,8 +334,12 @@ let Grid = {
     let li = document.createElement('li');
     li.setAttribute('draggable', dial ? 'true' : 'false');
     li.setAttribute('data-index', aIndex);
-    li.setAttribute('data-fid', dial ? dial.defaultposition : '');
-    li.setAttribute('title', dial ? dial.title || '' : _('ntab.dial.label.clicktoadddial'));
+    li.setAttribute('data-fid', dial
+                              ? dial.defaultposition || ''
+                              : '');
+    li.setAttribute('title', dial
+                           ? dial.title || ''
+                           : _('ntab.dial.label.clicktoadddial'));
 
     if (dial) {
       let edit = document.createElement('button');
@@ -356,11 +360,29 @@ let Grid = {
       a.setAttribute('contextmenu', 'thumb-menu');
     }
 
+    let backgroundImage = '';
+    let backgroundPosition = '';
+    let backgroundSize = '';
+    if (dial) {
+        backgroundPosition = 'center center';
+        if (dial.thumbnail) {
+            backgroundImage = dial.thumbnail;
+        } else {
+            backgroundImage = PageThumbs.getThumbnailURL(dial.url) + '&ts=' + Date.now();
+            if (PageThumbs.getThumbnailType(dial.url) == 'snapshot') {
+                backgroundPosition = 'left top';
+                backgroundSize = 'cover';
+            }
+        }
+        backgroundImage = 'url(' + backgroundImage + ')';
+    }
+
     let span_thumb = document.createElement('span');
     span_thumb.className = 'thumb';
-    span_thumb.style.backgroundImage = dial ? 'url(' + (dial.thumbnail ? dial.thumbnail : (PageThumbs.getThumbnailURL(dial.url) + '&ts=' + Date.now())) + ')' : '';
-    span_thumb.style.backgroundPosition = dial ? (PageThumbs.getThumbnailType(dial.url) == 'snapshot' ? 'left top' : 'center center') : '';
-    span_thumb.style.backgroundSize = dial && PageThumbs.getThumbnailType(dial.url) == 'snapshot' ? 'cover' : '';
+
+    span_thumb.style.backgroundImage = backgroundImage;
+    span_thumb.style.backgroundPosition = backgroundPosition;
+    span_thumb.style.backgroundSize = backgroundSize;
     a.appendChild(span_thumb);
 
     let span_title = document.createElement('span');

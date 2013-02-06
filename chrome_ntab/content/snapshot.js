@@ -10,65 +10,6 @@
     Components.utils['import']('resource://ntab/quickdial.jsm');
     Components.utils['import']('resource://ntab/hash.jsm');
 
-    // Pre-defined snapshot
-    var snapshotMap = {};
-    try {
-        var defaultDataJSM = {};
-        var prefs = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).getBranch('moa.ntab.dial.');
-        var branch = prefs.getCharPref('branch');
-        Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
-        snapshotMap = defaultDataJSM.defaultQuickDial.snapshotMap;
-    } catch (e) {
-        snapshotMap = {
-            'http://www.huohu123.com/': 'chrome://ntab/skin/thumb/master/huohu123.png',
-            'http://www.huohu123.com/?src=qd': 'chrome://ntab/skin/thumb/master/huohu123.png',
-            'http://www.huohu123.com/?src=ntab': 'chrome://ntab/skin/thumb/master/huohu123.png',
-            'http://www.baidu.com/': 'chrome://ntab/skin/thumb/master/baidu.png',
-            'http://www.baidu.com/index.php?tn=monline_5_dg': 'chrome://ntab/skin/thumb/master/baidu.png',
-            'http://www.renren.com/': 'chrome://ntab/skin/thumb/master/renren.png',
-            'http://youxi.baidu.com/yxpm/pm.jsp?pid=11016500091_877110': 'chrome://ntab/skin/thumb/master/baidu-youxi.png',
-            'http://www.tmall.com/': 'chrome://ntab/skin/thumb/master/taobao.png',
-            'http://s.click.taobao.com/t_9?p=mm_12811289_0_0&l=http%3A%2F%2Fmall.taobao.com%2F': 'chrome://ntab/skin/thumb/master/tmall.png',
-            'http://www.tmall.com/go/chn/tbk_channel/tmall_new.php?pid=mm_28347190_2425761_9313997&eventid=101334': 'chrome://ntab/skin/thumb/master/tmall.png',
-            'http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997': 'chrome://ntab/skin/thumb/master/taobaohot.jpg',
-            'http://www.sina.com.cn/': 'chrome://ntab/skin/thumb/master/sina.png',
-            'http://www.amazon.cn/': 'chrome://ntab/skin/thumb/master/joyo.png',
-            'http://www.amazon.cn/?source=mozilla9-23': 'chrome://ntab/skin/thumb/master/joyo.png',
-            'http://www.google.com/': 'chrome://ntab/skin/thumb/master/google.jpg',
-            'http://www.google.com.hk/': 'chrome://ntab/skin/thumb/master/google.jpg',
-            'http://www.youdao.com/': 'chrome://ntab/skin/thumb/master/youdao.jpg',
-            'http://cn.bing.com/': 'chrome://ntab/skin/thumb/master/bing.jpg',
-            'http://www.bing.com/': 'chrome://ntab/skin/thumb/master/bing.jpg',
-        };
-    }
-
-
-    /*** Implement methods in snapshot object. ***/
-
-    /**
-     * Return the chrome url of snapshot by website url.
-     * If snapshot is not generated yet, return null.
-     *
-     * @param url
-     *         url of website, e.g.： http://www.baidu.com
-     *
-     * @return string
-     *         return chrome url of snapshot, e.g.: chrome://ntab-profile/snapshot123.png
-     *      If snapshot is not generated yet, return null.
-     *
-     */
-    snapshot.getSnapshotUrl = function(url) {
-        if (snapshotMap[url])
-            return snapshotMap[url];
-
-        var file = utils.getProFile(['ntab', 'cache', [utils.md5(url), 'png'].join('.')]);
-        if (!file)
-            return '';
-
-        var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-        return ioService.newFileURI(file).spec;
-    };
-
     /**
      * Tell snapshot module to create a snapshot for a given url.
      *
@@ -80,40 +21,10 @@
      *         Snapshot module should call function back: MOA.NTab.TabLoader.snapshotDone()
      */
     snapshot.createSnapshot = function(url) {
-        if (snapshotMap[url])
-            return;
-
         // Add url to global hash, indicate that the url is under processing.
         hashModule.add(url, true);
         queue.push(url);
         processQueue();
-    };
-
-    /**
-     * Tell snapshot module to refresh snapshot for a given url.
-     *
-     * @param url
-     *         url of website
-     *
-     * @return
-     *         no return.
-     */
-    snapshot.refreshSnapshot = function(url) {
-        this.removeSnapshot(url);
-        this.createSnapshot(url);
-    };
-
-    /**
-     * Tell snapshot module to remove snapshot.
-     *
-     * @param url
-     *         url of website
-     *
-     * @return
-     *         no return
-     */
-    snapshot.removeSnapshot = function(url) {
-        utils.removeFile(['ntab', 'cache', [utils.md5(url), 'png'].join('.')]);
     };
 
     // Array to store urls
@@ -200,20 +111,6 @@
             window.clearTimeout(this.timeout);
             this.browser.removeEventListener('load', this.loadEvent, true);
 
-            function getFavicon(doc) {
-                var links = doc.getElementsByTagName('link');
-                for (var i = 0; i < links.length; i++) {
-                    var link = links[i];
-                    if (/icon/i.test(link.rel)) {
-                        return link.href;
-                    }
-                }
-
-                if (!utils.isLocal(doc.location)) {
-                    var uri = utils.getNsiURL(doc.location);
-                    return uri.prePath + '/favicon.ico';
-                }
-            }
             //adapted from https://gist.github.com/1036506
             function isDominantByOneColor(context, width, height) {
               let colorCount = {};
@@ -276,8 +173,6 @@
             var doc = wnd.document;
             // update title and favicon
             quickDialModule.updateTitleIfEmpty(this.url, doc.title);
-            utils.setFavicon(this.url, getFavicon(doc));
-            quickDialModule.updateFavicon(this.url);
 
             // Settimeout to draw thumbnail, make sure that whole page is complete rendered.
             var self = this;

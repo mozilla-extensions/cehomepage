@@ -7,6 +7,7 @@
 
     var _url = 'about:ntab';
     Components.utils['import']('resource://ntab/quickdial.jsm');
+    Components.utils['import']('resource://ntab/QuickDialData.jsm');
 
     function loadInExistingTabs() {
         if (!gPref.getBoolPref("moa.ntab.loadInExistingTabs")) {
@@ -174,7 +175,7 @@
 
         newTabPref.init();
         partnerBookmark.update();
-
+        QuickDialData.update();
     };
 
     ns.onMenuItemCommand = function(event) {

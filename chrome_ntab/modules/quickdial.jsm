@@ -1,9 +1,9 @@
 Components.utils['import']('resource://ntab/utils.jsm');
+Components.utils['import']('resource://ntab/QuickDialData.jsm');
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-var faviconService = Cc['@mozilla.org/browser/favicon-service;1'].getService(Ci.nsIFaviconService);
 
 var EXPORTED_SYMBOLS = ['quickDialModule'];
 
@@ -22,75 +22,7 @@ function completeURL(url) {
     }
 }
 
-// Read quickdial data from json file under profile directory.
-var dialData = null;
-var defaultDialData = null;
-var str = utils.readStrFromProFile(['ntab', 'quickdial.json']);
-if (!!str) {
-    dialData = JSON.parse(str);
-
-    var _needsUpdate = false;
-    // Refresh favicon and complete url
-    for (index in dialData) {
-        var dial = dialData[index];
-        dial.url = completeURL(dial.url);
-        if (["http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313996&k=e02915d8b8ad9603",
-             "http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997&k=e02915d8b8ad9603"].indexOf(dial.url) > -1
-            && true) {
-            dial.url = "http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997",
-            dial.rev = 2;
-            _needsUpdate = true;
-        }
-        if (["http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/",
-             "http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com",
-             "http://click.union.360buy.com/JdClick/?unionId=20&siteId=433588__&to=http://www.360buy.com",
-             "http://www.yihaodian.com/?tracker_u=10977119545"].indexOf(dial.url) > -1
-            && ((dial.icon && dial.icon.indexOf('chrome://') == 0) || dial.rev)) {
-            dial.title = '\u767E\u5EA6\u6E38\u620F';
-            dial.url = "http://youxi.baidu.com/yxpm/pm.jsp?pid=11016500091_877110";
-            dial.rev = 5;
-            _needsUpdate = true;
-        }
-        if (!dial.icon) {
-            try {
-                var icon = faviconService.getFaviconImageForPage(ioService.newURI(dial.url, null, null)).spec;
-                dial.icon = icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? '' : icon;
-            } catch(e) {
-                dump('\nError occurs when parsing quickdial.json: ' + e + '\n');
-            }
-        }
-    }
-    if (_needsUpdate) {
-        utils.setStrToProFile(['ntab', 'quickdial.json'], JSON.stringify(dialData));
-    }
-}
-
-
-
-var defaultDataJSM = {};
-try {
-    var prefs = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).getBranch('moa.ntab.dial.');
-    var branch = prefs.getCharPref('branch');
-    Components.utils['import']('resource://ntab/quickdial/' + branch + '/default.jsm', defaultDataJSM);
-} catch (e) {
-    defaultDataJSM.defaultQuickDial = {
-        dialData: {}
-    };
-}
-
-// If json file is empty, then use default value;
-if(!dialData) {
-    dialData = defaultDataJSM.defaultQuickDial.dialData;
-}
-defaultDialData = defaultDataJSM.defaultQuickDial.dialData;
-
-var defaultPosition = {};
-
-for (var key1 in defaultDialData) {
-    var val = defaultDialData[key1];
-    defaultPosition[val.url] = val.rev ? [key1, 'r', val.rev].join('') : key1;
-}
-
+var dialData = QuickDialData.read();
 
 function _notifyAllNewTab(num) {
     // Modify pref to notify all the opened new tab.
@@ -100,44 +32,15 @@ function _notifyAllNewTab(num) {
 
 function _onDialModified(num) {
     _notifyAllNewTab(num);
-    // Save all dial data into a json file
-    utils.setStrToProFile(['ntab', 'quickdial.json'], JSON.stringify(dialData));
+    QuickDialData.persist(dialData);
 }
 
 var quickDialModule = {
     getDial: function(num) {
-        if (dialData[num]) {
-            return {
-                title: dialData[num].title,
-                url: dialData[num].url,
-                icon: dialData[num].icon,
-                defaultposition : defaultPosition[dialData[num].url] || "",
-                thumbnail: dialData[num].thumbnail || defaultDataJSM.defaultQuickDial.snapshotMap[dialData[num].url]
-            }
-        }
-
-        return null;
+        return dialData[num];
     },
     refresh: function() {
-        str = utils.readStrFromProFile(['ntab', 'quickdial.json']);
-        if (!!str) {
-            dialData = JSON.parse(str);
-            for (index in dialData) {
-                var dial = dialData[index];
-                dial.url = completeURL(dial.url);
-                if (!dial.icon) {
-                    try {
-                        var icon = faviconService.getFaviconImageForPage(ioService.newURI(dial.url, null, null)).spec;
-                        dial.icon = icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? '' : icon;
-                    } catch(e) {
-                        dump('\nError occurs when parsing quickdial.json: ' + e + '\n');
-                    }
-                }
-            }
-        }
-    },
-    getDefaultDataStr: function() {
-        return JSON.stringify(defaultDialData);
+        dialData = QuickDialData.read();
     },
     /**
      * Add to blank dial directly without index given. Called by clicking on menu item.
@@ -176,10 +79,6 @@ var quickDialModule = {
      * Update dial title if title is empty or default value.
      */
     updateTitleIfEmpty: function(url, title) {
-        var stringBundleService = Components.classes['@mozilla.org/intl/stringbundle;1']
-                                .getService(Components.interfaces.nsIStringBundleService);
-        var stringBundle = stringBundleService.createBundle('chrome://ntab/locale/ntab.properties');
-
         for (var idx in dialData) {
             if (url == dialData[idx].url && !dialData[idx].title) {
                 dialData[idx].title = title;
@@ -188,31 +87,23 @@ var quickDialModule = {
         }
     },
 
-    updateFavicon: function(url) {
-        for (var idx in dialData) {
-            if (url == dialData[idx].url && !dialData[idx].icon) {
-                var icon = faviconService.getFaviconImageForPage(utils.getNsiURL(url)).spec;
-                dialData[idx].icon = icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? '' : icon;
-                _onDialModified(idx);
-            }
-        }
-    },
-
-    updateDial: function(num, data, delCache) {
+    updateDial: function(num, data, force) {
         // Check if cache file should be deleted.
-        if (true === delCache || (dialData[num] && dialData[num].url != data.url)) {
+        if (force || (dialData[num] && dialData[num].url != data.url)) {
             var delCacheFile = true;
             var url = dialData[num].url;
 
+            delete dialData[num];
+
             for (var idx in dialData) {
-                if (dialData[idx].url == dialData[num].url && ('' + num) != ('' + idx)) {
+                if (dialData[idx].url == url) {
                     delCacheFile = false;
                     break;
                 }
             }
 
             if (delCacheFile) {
-                utils.removeFile(['ntab', 'cache', utils.md5(dialData[num].url)]);
+                utils.removeFile(['ntab', 'cache', utils.md5(url)]);
             }
         }
 
@@ -222,12 +113,6 @@ var quickDialModule = {
         }
         dialData[num].title = data.title;
         dialData[num].url = completeURL(data.url);
-
-
-        try {
-            var icon = faviconService.getFaviconImageForPage(ioService.newURI(data.url, null, null)).spec;
-            dialData[num].icon = icon == 'chrome://mozapps/skin/places/defaultFavicon.png' ? '' : icon;
-        } catch (e) { }
 
         _onDialModified(num);
     },
