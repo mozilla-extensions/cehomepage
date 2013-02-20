@@ -52,11 +52,10 @@ var quickDialModule = {
      */
     fillBlankDial: function(data) {
         var prefs = Cc['@mozilla.org/preferences-service;1'].getService(Ci.nsIPrefService).getBranch('moa.ntab.dial.');
-        var MAX_COLUMN_ROW = 10;
         var _cell = prefs.getIntPref('column');
-        _cell = _cell > 0 ? _cell < MAX_COLUMN_ROW ? _cell : MAX_COLUMN_ROW : COLUMNS;
         var _row = prefs.getIntPref('row');
-        _row = _row > 0 ? _row < MAX_COLUMN_ROW ? _row : MAX_COLUMN_ROW : ROWS;
+        _cell = Math.max(2, Math.min(_cell, 6));
+        _row = Math.max(1, Math.min(_row, 20));
 
         var total = _cell * _row;
         var index = -1;

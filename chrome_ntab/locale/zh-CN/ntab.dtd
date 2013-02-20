@@ -32,13 +32,17 @@
 <!ENTITY ntab.launcher.pagesettings.background "背景设置">
 <!ENTITY ntab.launcher.pagesettings.background.noise "显示底纹">
 <!ENTITY ntab.launcher.pagesettings.background.reset "重置背景">
+<!ENTITY ntab.launcher.pagesettings.background.style.fill "填充">
+<!ENTITY ntab.launcher.pagesettings.background.style.fit "适应">
+<!ENTITY ntab.launcher.pagesettings.background.style.stretch "拉伸">
+<!ENTITY ntab.launcher.pagesettings.background.style.tile "平铺">
+<!ENTITY ntab.launcher.pagesettings.background.style.center "居中">
 <!ENTITY ntab.launcher.pagesettings.quickdial "行列选择">
 <!ENTITY ntab.launcher.pagesettings.quickdial.row "行数">
 <!ENTITY ntab.launcher.pagesettings.quickdial.col "列数">
 <!ENTITY ntab.launcher.pagesettings.misc "其他设置">
 <!ENTITY ntab.launcher.pagesettings.misc.openinnewtab "新标签页打开链接">
 <!ENTITY ntab.launcher.pagesettings.misc.hidesearch "隐藏搜索栏">
-<!ENTITY ntab.launcher.pagesettings.misc.showcontextmenu "右键菜单显示添加至快速拨号">
 <!ENTITY ntab.launcher.pagesettings.misc.restore "还原为初始设置">
 <!ENTITY ntab.launcher.pagesettings.misc.feedback "意见反馈">
 

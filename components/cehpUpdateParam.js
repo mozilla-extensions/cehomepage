@@ -6,17 +6,24 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 function collectPref() {
   let prefs = Services.prefs.getBranch("moa.ntab.");
   let ret = [];
-  ret.push(prefs.getCharPref("view"));
-  ret.push(prefs.getCharPref("qdtab"));
-  ret.push(prefs.getBoolPref("qdtab.used"));
 
-  let col = prefs.getIntPref("dial.column");
-  let row = prefs.getIntPref("dial.row");
-  ret.push([col, row].join(","));
+  try {
+    ret.push(prefs.getCharPref("view"));
+    ret.push(prefs.getCharPref("qdtab"));
+    ret.push(prefs.getBoolPref("qdtab.used"));
 
-  let bgimage = prefs.prefHasUserValue("backgroundimage");
-  let bgcolor = encodeURIComponent(prefs.getCharPref("backgroundcolor"));
-  ret.push(bgimage ? "image" : bgcolor);
+    let col = prefs.getIntPref("dial.column");
+    let row = prefs.getIntPref("dial.row");
+    ret.push([col, row].join(","));
+
+    let bgimage = prefs.prefHasUserValue("backgroundimage");
+    let bgcolor = encodeURIComponent(prefs.getCharPref("backgroundcolor"));
+    let bgimagestyle = prefs.getCharPref("backgroundimagestyle");
+    ret.push(bgimage ? bgimagestyle : bgcolor);
+
+    ret.push(prefs.getIntPref("dial.extrawidth"));
+    ret.push(prefs.getBoolPref("dial.useopacity"));
+  } catch(e) {}
 
   return ret.join("|");
 }

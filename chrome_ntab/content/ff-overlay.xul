@@ -8,8 +8,8 @@
   <script src="sendlink.js"/>
 
   <script type="text/javascript">
-  	// import session module, so that session can be stored when application quits.
-  	Components.utils['import']('resource://ntab/session.jsm');
+    // import session module, so that session can be stored when application quits.
+    Components.utils['import']('resource://ntab/session.jsm');
   </script>
   <stringbundleset id="stringbundleset">
     <stringbundle id="ntab-strings" src="chrome://ntab/locale/overlay.properties"/>
@@ -27,26 +27,36 @@
   </popup>
 
   <hbox style="overflow:hidden; height: 0;">
-  	<vbox id="nt-hidden-box"></vbox>
+    <vbox id="nt-hidden-box"></vbox>
   </hbox>
 
   <window id="main-window">
-	  <menupopup id="nt-menu"  oncommand="MOA.NTab.onContextCommand(event, event.target.id);">
-	  	<menuitem id="nt-edit"
-	  		accesskey="&ntab.contextmenu.edit.accesskey;"
-	  		label="&ntab.contextmenu.edit;" />
-	  	<menuitem id="nt-refresh"
-	  		accesskey="&ntab.contextmenu.refresh.accesskey;"
-	  		label="&ntab.contextmenu.refresh;" />
-	  	<menuitem id="nt-refreshall"
-	  		accesskey="&ntab.contextmenu.refreshall.accesskey;"
-	  		label="&ntab.contextmenu.refreshall;" />
-		<menuitem id="nt-export"
-			accesskey="&ntab.contextmenu.export.accesskey;"
-			label="&ntab.contextmenu.export;"/>
-		<menuitem id="nt-import"
-			accesskey="&ntab.contextmenu.import.accesskey;"
-			label="&ntab.contextmenu.import;"/>
-	  </menupopup>
+      <menupopup id="nt-menu"  oncommand="MOA.NTab.onContextCommand(event, event.target.id);">
+        <menuitem id="nt-edit"
+            accesskey="&ntab.contextmenu.edit.accesskey;"
+            label="&ntab.contextmenu.edit;" />
+        <menuitem id="nt-refresh"
+            accesskey="&ntab.contextmenu.refresh.accesskey;"
+            label="&ntab.contextmenu.refresh;" />
+        <menuitem id="nt-refreshall"
+            accesskey="&ntab.contextmenu.refreshall.accesskey;"
+            label="&ntab.contextmenu.refreshall;" />
+        <menuseparator/>
+        <menuitem id="nt-useopacity"
+            accesskey="&ntab.contextmenu.useopacity.accesskey;"
+            label="&ntab.contextmenu.useopacity;"
+            persist="checked" type="checkbox"/>
+        <!-- defaults to unchecked, so not affected by bug 15232 -->
+        <menuitem id="nt-moreoptions"
+            accesskey="&ntab.contextmenu.moreoptions.accesskey;"
+            label="&ntab.contextmenu.moreoptions;"/>
+        <menuseparator/>
+        <menuitem id="nt-export"
+            accesskey="&ntab.contextmenu.export.accesskey;"
+            label="&ntab.contextmenu.export;"/>
+        <menuitem id="nt-import"
+            accesskey="&ntab.contextmenu.import.accesskey;"
+            label="&ntab.contextmenu.import;"/>
+      </menupopup>
   </window>
 </overlay>

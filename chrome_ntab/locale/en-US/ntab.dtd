@@ -32,13 +32,17 @@
 <!ENTITY ntab.launcher.pagesettings.background "Background">
 <!ENTITY ntab.launcher.pagesettings.background.noise "Show texture">
 <!ENTITY ntab.launcher.pagesettings.background.reset "Reset background">
+<!ENTITY ntab.launcher.pagesettings.background.style.fill "Fill">
+<!ENTITY ntab.launcher.pagesettings.background.style.fit "Fit">
+<!ENTITY ntab.launcher.pagesettings.background.style.stretch "Stretch">
+<!ENTITY ntab.launcher.pagesettings.background.style.tile "Tile">
+<!ENTITY ntab.launcher.pagesettings.background.style.center "Center">
 <!ENTITY ntab.launcher.pagesettings.quickdial "Quick Dial">
 <!ENTITY ntab.launcher.pagesettings.quickdial.row "Row">
 <!ENTITY ntab.launcher.pagesettings.quickdial.col "Column">
 <!ENTITY ntab.launcher.pagesettings.misc "Misc">
 <!ENTITY ntab.launcher.pagesettings.misc.openinnewtab "Open link in new tab">
 <!ENTITY ntab.launcher.pagesettings.misc.hidesearch "Hide search bar on top of dial page">
-<!ENTITY ntab.launcher.pagesettings.misc.showcontextmenu "Add 'Add to quick dial' to context menu">
 <!ENTITY ntab.launcher.pagesettings.misc.restore "Restore original settings">
 <!ENTITY ntab.launcher.pagesettings.misc.feedback "User feedback">
 

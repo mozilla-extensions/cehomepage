@@ -44,7 +44,7 @@ let RelatedTabViewer = {
           title: title || _('moa.ntab.emptytitle'),
           url:   url
         }
-        let tab = self.createItem(attrs);
+        let tab = self.createItem(attrs, true);
         list.appendChild(tab);
       }, self);
 
@@ -60,13 +60,13 @@ let RelatedTabViewer = {
           title: title || _('moa.ntab.emptytitle'),
           url:   url
         }
-        let tab = self.createItem(attrs);
+        let tab = self.createItem(attrs, false);
         list.appendChild(tab);
       }, self);
     }, 10);
   },
 
-  createItem: function RelatedTabViewer_createItem(attrs) {
+  createItem: function RelatedTabViewer_createItem(attrs, removable) {
     let item = null;
     if (attrs["type"] == "tab") {
       item = document.createElement("dd");
@@ -78,10 +78,20 @@ let RelatedTabViewer = {
       anchor.href = attrs.url;
       anchor.textContent = attrs.title;
       anchor.title = attrs.url;
-      if (NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab')) {
+      if (NTabUtils.prefs.getBoolPref("moa.ntab.openLinkInNewTab")) {
         anchor.setAttribute("target", "_blank");
       }
       item.appendChild(anchor);
+      if (removable) {
+        let remove = document.createElement("button");
+        remove.setAttribute("title", _("moa.ntab.removepage"));
+        remove.addEventListener("click", function(evt) {
+          Frequent.remove([attrs.url]);
+          item.parentNode.removeChild(item);
+          RelatedTabViewer.buildList();
+        }, false);
+        item.appendChild(remove);
+      }
     } else {
       item = document.createElement("dt");
       item.className = attrs.class;
@@ -219,6 +229,21 @@ let Grid = {
     return NTabUtils.prefs.prefHasUserValue('moa.ntab.dial.column') ||
            NTabUtils.prefs.prefHasUserValue('moa.ntab.dial.row');
   },
+  get extraWidth() {
+    let extraWidth = NTabUtils.prefs.getIntPref('moa.ntab.dial.extrawidth');
+
+    if (extraWidth) {
+      let totalWidth = parseInt(document.defaultView.getComputedStyle(this.gridContainer).width, 10);
+      let maxExtraWidth = totalWidth - this.gridSize.col * this.gridItemMaxWidth;
+      if (maxExtraWidth > 0) {
+        extraWidth = Math.min(extraWidth, maxExtraWidth);
+        extraWidth = Math.max(extraWidth, 0);
+        NTabUtils.prefs.setIntPref('moa.ntab.dial.extrawidth', extraWidth);
+      }
+    }
+
+    return extraWidth;
+  },
   get gridSize() {
     let col = 4;
     let row = 2;
@@ -227,7 +252,7 @@ let Grid = {
       row = NTabUtils.prefs.getIntPref('moa.ntab.dial.row');
     } catch(e) {}
     col = Math.max(2, Math.min(col, 6));
-    row = Math.max(2, Math.min(row, 20));
+    row = Math.max(1, Math.min(row, 20));
     return {
       'col': col,
       'row': row
@@ -246,12 +271,20 @@ let Grid = {
     let width = document.defaultView.getComputedStyle(gridItem).width;
     return Math.round(parseInt(width, 10) * 0.62);
   },
+  get gridItemMaxWidth() {
+    // see also: max-width of "#grid > ol" in chrome://ntab/skin/ntab.css
+    return 270 + 2 * 10;
+  },
+  get gridItemOpacity() {
+    return NTabUtils.prefs.getBoolPref('moa.ntab.dial.useopacity');
+  },
   get gridItemStyle() {
     let cssRules = document.styleSheets[0].cssRules;
     let gridItemStyle = null;
     for(var i = 0, l = cssRules.length; i < l; i++) {
       if(cssRules[i].selectorText == "#grid > ol > li") {
         gridItemStyle = cssRules[i];
+        break;
       }
     }
     delete this.gridItemStyle;
@@ -323,9 +356,6 @@ let Grid = {
         return;
       }
       quickDialModule.exchangeDial(node.getAttribute('data-index'), index);
-    }, false);
-    thumb.addEventListener('contextmenu', function(evt) {
-      document.querySelector('#thumb-menu').getAttribute('data-index') = index;
     }, false);
   },
   _createGridItem: function Grid__createGridItem(aIndex) {
@@ -509,6 +539,9 @@ let Grid = {
     }, false);
     if (window.WheelEvent) {
       this.gridContainer.addEventListener('wheel', function(evt) {
+        if (evt.ctrlKey) {
+          return;
+        }
         let direction = evt.deltaY / Math.abs(evt.deltaY);
         let speed = 0;
         switch (evt.deltaMode) {
@@ -527,6 +560,9 @@ let Grid = {
       }, false);
     } else {
       this.gridContainer.addEventListener('MozMousePixelScroll', function(evt) {
+        if (evt.ctrlKey) {
+          return;
+        }
         self._scroll(1, evt.detail);
       }, false);
     }
@@ -571,7 +607,13 @@ let Grid = {
     }
   },
   resize: function Grid_resize() {
+    let extraWidth = this.extraWidth;
+    if (extraWidth) {
+      this.gridContainer.lastElementChild.style.maxWidth = (this.gridSize.col * this.gridItemMaxWidth + extraWidth) + 'px';
+    }
+
     this.gridItemStyle.style.height = this.gridItemHeight + 'px';
+    this.gridItemStyle.style.opacity = this.gridItemOpacity ? 0.7 : 1;
     this.gridContainer.firstElementChild.style.height = Math.max(this.topFlexHeight, 0) + 'px';
 
     let iHeight = this.gridContainer.scrollHeight;
@@ -622,8 +664,50 @@ let Background = {
       this.backgroundColor = '';
     }
   },
+  get backgroundImageStyle() {
+    return NTabUtils.prefs.getCharPref('moa.ntab.backgroundimagestyle');
+  },
+  set backgroundImageStyle(aStyle) {
+    NTabUtils.prefs.setCharPref('moa.ntab.backgroundimagestyle', aStyle);
+  },
   get backgroundNoise() {
     return NTabUtils.prefs.getBoolPref('moa.ntab.backgroundnoise');
+  },
+
+  _styleToPRS: function Background__styleToPRS(aStyle) {
+    switch (aStyle) {
+      case 'fit':
+        return {
+          position: 'center center',
+          repeat: 'no-repeat',
+          size: 'contain'
+        };
+      case 'stretch':
+        return {
+          position: '',
+          repeat: 'no-repeat',
+          size: '100% 100%'
+        };
+      case 'tile':
+        return {
+          position: '',
+          repeat: 'repeat',
+          size: ''
+        };
+      case 'center':
+        return {
+          position: 'center center',
+          repeat: 'no-repeat',
+          size: ''
+        };
+      case 'fill':
+      default:
+        return {
+          position: '',
+          repeat: 'no-repeat',
+          size: 'cover'
+        };
+    }
   },
   init: function Background_init() {
     this.update();
@@ -632,9 +716,14 @@ let Background = {
     let color = this.backgroundColor;
     let image = this.backgroundImage;
     let noise = this.backgroundNoise;
+    let style = this.backgroundImageStyle;
+
+    let prs = this._styleToPRS(style);
 
     NTab.body.style.backgroundImage = image ? 'url("' + image + '")' : '';
-    NTab.body.style.backgroundSize = image ? 'cover' : '';
+    NTab.body.style.backgroundPosition = image ? prs.position : '';
+    NTab.body.style.backgroundRepeat = image ? prs.repeat: '';
+    NTab.body.style.backgroundSize = image ? prs.size : '';
     NTab.body.style.backgroundColor = color;
     if (!image && !noise) {
       NTab.body.style.backgroundImage = 'url("")';
@@ -653,7 +742,23 @@ let Background = {
         checked_.checked = '';
       }
     }
+    if (style) {
+      let shouldCheck = document.querySelector('#bgimagestyle-radio > label > input[value="' + style + '"]');
+      if (shouldCheck) {
+        shouldCheck.checked = 'checked';
+      }
+    } else {
+      let checked_ = document.querySelector('#bgimagestyle-radio > label > input[name="bgimage-style"]:checked');
+      if (checked_) {
+        checked_.checked = '';
+      }
+    }
     document.querySelector('input[name="bgimage"]').value = image;
+    if (image) {
+      document.getElementById('bgimagestyle-radio').removeAttribute('hidden');
+    } else {
+      document.getElementById('bgimagestyle-radio').setAttribute('hidden', 'true');
+    }
   },
 };
 
@@ -975,6 +1080,11 @@ let Launcher = {
       file.initWithPath(evt.target.value);
       Background.backgroundImage = NTabUtils.ioService.newFileURI(file).spec;
     }, false);
+    [].forEach.call(document.querySelectorAll('#bgimagestyle-radio > label > input[name="bgimage-style"]'), function(input) {
+      input.addEventListener('click', function(evt) {
+        Background.backgroundImageStyle = evt.target.value;
+      }, false);
+    });
     [].forEach.call(document.querySelectorAll('select'), function(select) {
       select.addEventListener('change', function(evt) {
         switch(evt.currentTarget.id) {
@@ -1042,10 +1152,11 @@ let Launcher = {
 
 let DataBackup = {
   _intPrefs: ['dial.column', 'dial.row'],
-  _charPrefs: ['view', 'qdtab', 'backgroundcolor'],
+  _charPrefs: ['view', 'qdtab', 'backgroundcolor', 'backgroundimagestyle'],
   _boolPrefs: ['openInNewTab', 'displayfooter', 'openLinkInNewTab',
-    'loadInExistingTabs', 'dial.hideSearch', 'dial.showSearch',
-    'contextMenuItem.show', 'display.usehotkey'
+    'loadInExistingTabs', 'backgroundnoise', 'dial.showSearch',
+    'dial.hideSearch', 'dial.useopacity', 'contextMenuItem.show',
+    'display.usehotkey'
   ],
   _prefPairs: [
     ['column', 'dial.column'],
@@ -1075,12 +1186,8 @@ let DataBackup = {
     try {
       let file = this._getFile(Ci.nsIFilePicker.modeSave);
       if (file) {
-        let userData = utils.readStrFromProFile(['ntab', 'quickdial.json']) ||
-          quickDialModule.getDefaultDataStr();
+        let userData = utils.readStrFromProFile(['ntab', 'quickdialdata', 'user.json']) || '{}';
         let dialContent = JSON.parse(userData);
-        for (let index in dialContent) {
-          delete dialContent[index].icon;
-        }
         let userDataJSON = {
           dialContent: dialContent
         };
@@ -1111,9 +1218,10 @@ let DataBackup = {
         for (let index in dialContent) {
           if (/^\d+$/.test(index)) {
             let dial = dialContent[index];
-            if ((!dial.title && dial.title !== '') ||
+            if (!/^\d+$/.test(dial) &&
+                ((!dial.title && dial.title !== '') ||
                  !dial.url ||
-                 /javascript\s*:/.test(dial.url)) {
+                 /javascript\s*:/.test(dial.url))) {
               throw 'invalid dial title or url';
             }
           } else {
@@ -1149,7 +1257,9 @@ let DataBackup = {
           } catch(e) {}
         });
 
-        utils.setStrToProFile(['ntab', 'quickdial.json'], JSON.stringify(dialContent));
+        if (Object.keys(dialContent).length) {
+          utils.setStrToProFile(['ntab', 'quickdialdata', 'user.json'], JSON.stringify(dialContent));
+        }
 
         quickDialModule.refresh();
         Grid.init();
@@ -1157,7 +1267,7 @@ let DataBackup = {
         alert(_('moa.ntab.jsonfile.imported'));
       }
     } catch(e) {
-      alert(_('moa.ntab.jsonfile.importerror') + e);
+      alert(_('moa.ntab.jsonfile.importerror'));
     }
   }
 };
@@ -1193,10 +1303,13 @@ let NTab = {
             // intentionally no break;
           case 'moa.ntab.dial.column':
           case 'moa.ntab.dial.row':
+          case 'moa.ntab.dial.extrawidth':
+          case 'moa.ntab.dial.useopacity':
             Grid.update();
             break;
           case 'moa.ntab.backgroundcolor':
           case 'moa.ntab.backgroundimage':
+          case 'moa.ntab.backgroundimagestyle':
           case 'moa.ntab.backgroundnoise':
             Background.update();
             break;

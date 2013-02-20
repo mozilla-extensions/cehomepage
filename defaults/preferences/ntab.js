@@ -26,10 +26,14 @@ pref("moa.ntab.loadInExistingTabs", false);
 
 pref("moa.ntab.backgroundcolor", "transparent");
 pref("moa.ntab.backgroundimage", "");
+pref("moa.ntab.backgroundimagestyle", "fill");
 pref("moa.ntab.backgroundnoise", true);
 
 pref("moa.ntab.dial.showSearch", true);
 pref("moa.ntab.dial.hideSearch", false);
+
+pref("moa.ntab.dial.extrawidth", 0);
+pref("moa.ntab.dial.useopacity", false);
 
 pref("moa.ntab.contextMenuItem.show", true);
 

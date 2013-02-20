@@ -75,6 +75,13 @@
                 <input type='file' id='bgimage' name='bgimage'></input>
                 <input id='bgreset' type='button' value='&ntab.launcher.pagesettings.background.reset;'></input>
               </div>
+              <div id='bgimagestyle-radio' hidden='true'>
+                <label><input type='radio' name='bgimage-style' value='fill'></input>&ntab.launcher.pagesettings.background.style.fill;</label>
+                <label><input type='radio' name='bgimage-style' value='fit'></input>&ntab.launcher.pagesettings.background.style.fit;</label>
+                <label><input type='radio' name='bgimage-style' value='stretch'></input>&ntab.launcher.pagesettings.background.style.stretch;</label>
+                <label><input type='radio' name='bgimage-style' value='tile'></input>&ntab.launcher.pagesettings.background.style.tile;</label>
+                <label><input type='radio' name='bgimage-style' value='center'></input>&ntab.launcher.pagesettings.background.style.center;</label>
+              </div>
             </fieldset>
             <fieldset>
               <legend>&ntab.launcher.pagesettings.quickdial;</legend>
@@ -89,6 +96,7 @@
                 </select>
                 <label for='row_num'>&ntab.launcher.pagesettings.quickdial.row;</label>
                 <select id='row_num'>
+                  <option value='1'>1</option>
                   <option value='2' selected='selected'>2</option>
                   <option value='3'>3</option>
                   <option value='4'>4</option>
@@ -100,9 +108,6 @@
               <div>
                 <label><input id='openinnewtab' data-pref='moa.ntab.openLinkInNewTab' type='checkbox'></input>&ntab.launcher.pagesettings.misc.openinnewtab;</label>
                 <label><input id='hidesearch' data-pref='moa.ntab.dial.hideSearch' type='checkbox'></input>&ntab.launcher.pagesettings.misc.hidesearch;</label>
-              </div>
-              <div>
-                <label><input id='showcontextmenu' data-pref='moa.ntab.contextMenuItem.show' type='checkbox'></input>&ntab.launcher.pagesettings.misc.showcontextmenu;</label>
               </div>
               <div>
                 <input id='resetpref' type='button' value='&ntab.launcher.pagesettings.misc.restore;'></input>

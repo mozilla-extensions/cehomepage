@@ -145,6 +145,82 @@
         }
     };
 
+    var fakeZoom = {
+        setExtraWidth: function(direction) {
+            var extraWidth = gPrefService.getIntPref('moa.ntab.dial.extrawidth');
+            extraWidth = extraWidth + direction * 50;
+            gPrefService.setIntPref('moa.ntab.dial.extrawidth', extraWidth);
+        },
+
+        _setZoomForBrowser: null,
+        setZoomForBrowser: function(aBrowser, aVal) {
+            var browser = aBrowser || gBrowser.selectedBrowser;
+            if (browser.contentDocument.URL == _url) {
+                var origVal = ZoomManager.getZoomForBrowser(aBrowser);
+                var offset = aVal - origVal;
+                if (offset) {
+                    this.setExtraWidth(offset / Math.abs(offset));
+                }
+            } else {
+                this._setZoomForBrowser(aBrowser, aVal);
+            }
+        },
+
+        _handleMouseScrolled: function(evt) {
+            if (gBrowser.selectedBrowser.contentDocument.URL == _url) {
+                var pref = 'mousewheel.';
+
+                var pressedModifierCount = evt.shiftKey + evt.ctrlKey + evt.altKey +
+                                           evt.metaKey + evt.getModifierState('OS');
+                if (pressedModifierCount != 1) {
+                    pref += 'default.';
+                } else if (evt.shiftKey) {
+                    pref += 'with_shift.';
+                } else if (evt.ctrlKey) {
+                    pref += 'with_control.';
+                } else if (evt.altKey) {
+                    pref += 'with_alt.';
+                } else if (evt.metaKey) {
+                    pref += 'with_meta.';
+                } else {
+                    pref += 'with_win.';
+                }
+
+                pref += 'action';
+
+                var isZoomEvent = false;
+                try {
+                    isZoomEvent = gPrefService.getIntPref(pref) == MOUSE_SCROLL_ZOOM;
+                } catch(e) {}
+                if (!isZoomEvent) {
+                    return;
+                }
+
+                evt.preventDefault();
+
+                if (evt.detail) {
+                    this.setExtraWidth(-evt.detail / Math.abs(evt.detail));
+                }
+            } else {
+                FullZoom._handleMouseScrolled(evt);
+            }
+        },
+        handleEvent: function(evt) {
+            switch(evt.type) {
+                case 'DOMMouseScroll':
+                    this._handleMouseScrolled(evt);
+                    break;
+            }
+        },
+
+        init: function() {
+            this._setZoomForBrowser = ZoomManager.setZoomForBrowser.bind(ZoomManager);
+            ZoomManager.setZoomForBrowser = this.setZoomForBrowser.bind(this);
+
+            FullZoom.handleEvent = this.handleEvent.bind(this);
+        }
+    };
+
     ns.onLoad = function() {
         // load ntab page in existing empty tabs.
         // Under Firefox5, this function will open "about:ntab" in the blank page in which
@@ -172,6 +248,8 @@
             window.BrowserOpenTab = MOA.NTab.browserOpenTab;
             gBrowser.addEventListener('NewTab', window.BrowserOpenTab, false);
         }
+
+        fakeZoom.init();
 
         newTabPref.init();
         partnerBookmark.update();
@@ -219,11 +297,10 @@
 
     function getDialNum(elem) {
         var num = -1;
-        while (true) {
-            if (document.body == elem)
-                break;
-
-            if (elem.hasAttribute('data-index') && parseInt(elem.getAttribute('data-index'), 10) > -1) {
+        while (!(elem instanceof HTMLBodyElement)) {
+            if (elem.hasAttribute('data-index') &&
+                parseInt(elem.getAttribute('data-index'), 10) > -1 &&
+                elem.getAttribute('draggable') == 'true') {
                 num = parseInt(elem.getAttribute('data-index'), 10);
                 break;
             }
@@ -232,6 +309,22 @@
         }
 
         return num;
+    }
+
+    var toggleUseOpacity = function() {
+        var useOpacity = gPrefService.getBoolPref("moa.ntab.dial.useopacity");
+        gPrefService.setBoolPref("moa.ntab.dial.useopacity", !useOpacity);
+    };
+
+    var openCEHPOptions = function() {
+        var features = "chrome,titlebar,toolbar,centerscreen";
+        try {
+            var instantApply = gPrefService.getBoolPref("browser.preferences.instantApply");
+            features += instantApply ? ",dialog=no" : ",modal";
+        } catch (e) {
+            features += ",modal";
+        }
+        window.openDialog("chrome://ntab/content/options.xul", "cehpOptions", features).focus();
     }
 
     var _num = -1;
@@ -252,24 +345,26 @@
             case 'nt-import':
                 content.wrappedJSObject.DataBackup.importFromFile();
                 break;
+            case 'nt-useopacity':
+                toggleUseOpacity();
+                break;
+            case 'nt-moreoptions':
+                openCEHPOptions();
+                break;
         }
     };
 
     ns.onContextMenu = function(event) {
         _num = getDialNum(event.target);
-        if (_num < 0) {
-            if (event.target instanceof HTMLInputElement ||
-                event.target instanceof HTMLAnchorElement) {
-                return;
-            }
-        }
 
         document.getElementById('nt-refresh').hidden = _num < 0;
         document.getElementById('nt-edit').hidden = _num < 0;
         document.getElementById('nt-refreshall').hidden = gPref.getCharPref('moa.ntab.view') !== 'quickdial';
 
         document.getElementById('nt-menu').openPopupAtScreen(event.screenX, event.screenY, true);
+
         event.preventDefault();
+        event.stopPropagation();
     };
 
     ns.onKeydown = function(evt) {

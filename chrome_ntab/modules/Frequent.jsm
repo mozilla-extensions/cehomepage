@@ -51,5 +51,13 @@ let Frequent = {
     let query = PlacesUtils.history.getNewQuery();
     let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase);
     db.asyncExecuteLegacyQueries([query], 1, options, callback);
+  },
+
+  remove: function(aUrls) {
+    let urls = [];
+    aUrls.forEach(function(aUrl) {
+      urls.push(Services.io.newURI(aUrl, null, null));
+    });
+    PlacesUtils.bhistory.removePages(urls, urls.length);
   }
 };

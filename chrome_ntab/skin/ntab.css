@@ -541,7 +541,7 @@ footer.off > #toggle {
 #related-tabs > dl > dt,
 #related-tabs > dl > dd > a {
   overflow: hidden;
-  margin-left: 3px;
+  margin: 0 3px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -571,19 +571,32 @@ footer.off > #toggle {
 }
 
 #related-tabs > dl > dd > input,
-#related-tabs > dl > dd > a {
+#related-tabs > dl > dd > a,
+#related-tabs > dl > dd > button {
   cursor: pointer;
   vertical-align: middle;
 }
 #related-tabs > dl > dd > a {
   color: #3c3c3c;
   display: inline-block;
-  max-width: 320px;
   text-decoration: none;
+  width: 296px;
 }
 #related-tabs > dl > dd > a:hover {
   color: #3c3c3c;
   text-decoration: underline;
+}
+#related-tabs > dl > dd > button {
+  background-color: transparent;
+  background-image: url(chrome://ntab/skin/icon/remove.png);
+  background-repeat: no-repeat;
+  border: 0;
+  height: 20px;
+  width: 20px;
+  -moz-appearance: none;
+}
+#related-tabs > dl > dd > button:hover {
+  background-position: 0 -20px;
 }
 #related-tabs > label + input {
   margin-left: 24px;
