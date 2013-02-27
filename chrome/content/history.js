@@ -322,9 +322,9 @@
                     let row;
 
                     while (row = aResultSet.getNextRow()) {
-                        let url = row.getResultByIndex(1);
+                        let uri = row.getResultByIndex(1);
                         let title = row.getResultByIndex(2);
-                        links.push({url: url, title: title});
+                        links.push({uri: uri, title: title});
                     }
                 },
 
