@@ -270,25 +270,24 @@
     };
 
     var frequent = {
-        history: null,
-        querier: null,
-        option: null,
-        sql: 'SELECT (SELECT title FROM moz_places WHERE favicon_id = s.favicon_id AND visit_count > 0 AND hidden = 0 ORDER BY frecency DESC LIMIT 1) AS _title, (SELECT url FROM moz_places WHERE favicon_id = s.favicon_id AND visit_count > 0 AND hidden = 0 ORDER BY frecency DESC LIMIT 1) AS _url FROM moz_places s WHERE favicon_id IS NOT NULL AND frecency != 0 AND visit_count > 0 AND hidden = 0 GROUP BY favicon_id ORDER BY MAX(frecency) DESC LIMIT ?',
+        dboptions: null,
+        dbquery: null,
+        db: null,
+
         init: function(cehp) {
-            this.history = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService);
-            var qu = this.history.getNewQuery();
-            this.querier = qu;
-            var qo = this.history.getNewQueryOptions();
-            this.option = qo;
-            qo.resultType = Ci.nsINavHistoryQueryOptions.RESULTS_AS_URI;
-            qo.queryType = Ci.nsINavHistoryQueryOptions.QUERY_TYPE_HISTORY;
-            qo.expandQueries = true;
-            qo.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_VISITCOUNT_DESCENDING;
+            this.dboptions = PlacesUtils.history.getNewQueryOptions();
+            this.dboptions.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING;
+
+            this.dbquery = PlacesUtils.history.getNewQuery();
+            this.db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase);
 
             var me = this;
             cehp['frequent'] = {
                 query: function(n) {
-                    return ('nsPIPlacesDatabase' in Ci) ? me.query(n) : me.query_old(n);
+                    return me.query(n);
+                },
+                queryAsync: function(n, callback) {
+                    return me.queryAsync(n, callback);
                 },
                 remove: function(uri) {
                     return me.remove(uri);
@@ -296,42 +295,52 @@
             };
         },
         query: function(n) {
-            var res = [];
-            try {
-                var conn = Cc['@mozilla.org/browser/nav-history-service;1'].getService(Ci.nsINavHistoryService).QueryInterface(Ci.nsPIPlacesDatabase).DBConnection;
-                var stmt = conn.createStatement(this.sql);
-                stmt.bindInt32Parameter(0, n);
-                while (stmt.executeStep()) {
-                    res.push({
-                        title: stmt.getString(0),
-                        uri: stmt.getString(1).replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn")
-                    });
-                }
-            } finally {
-                return exposeReadOnly(res);
-            }
-        },
-        query_old: function(n) {
-            var res = [];
+            this.dboptions.maxResults = n;
 
-            this.option.maxResults = n;
-            var hr = this.history.executeQuery(this.querier, this.option);
-            var root = hr.root.QueryInterface(Ci.nsINavHistoryContainerResultNode);
-            root.containerOpen = true;
-            for (var i = 0; i < root.childCount; i++) {
-                var e = root.getChild(i);
-                res.push({
-                    uri: e.uri.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn"),
-                    title: e.title
+            var dbResults = this.db.executeQuery(this.dbquery, this.dboptions).root;
+
+            dbResults.containerOpen = true;
+            var count = dbResults.childCount;
+            var results = [];
+            for (var i = 0; i < count; i++) {
+                var result = dbResults.getChild(i);
+                results.push({
+                    title: result.title,
+                    uri: result.uri
                 });
             }
-            root.containerOpen = false;
+            dbResults.containerOpen = false;
 
-            return res;
+            return exposeReadOnly(results);
+        },
+        queryAsync: function(aMaxResults, aCallback) {
+            this.dboptions.maxResults = aMaxResults;
+
+            let links = [];
+            let callback = {
+                handleResult: function (aResultSet) {
+                    let row;
+
+                    while (row = aResultSet.getNextRow()) {
+                        let url = row.getResultByIndex(1);
+                        let title = row.getResultByIndex(2);
+                        links.push({url: url, title: title});
+                    }
+                },
+
+                handleError: function (aError) {
+                    aCallback(exposeReadOnly([]));
+                },
+
+                handleCompletion: function (aReason) {
+                    aCallback(exposeReadOnly(links));
+                }
+            };
+
+            this.db.asyncExecuteLegacyQueries([this.dbquery], 1, this.dboptions, callback);
         },
         remove: function(uri) {
-            var bh = this.history.QueryInterface(Ci.nsIBrowserHistory);
-            bh.removePage(this.uri(uri));
+            PlacesUtils.bhistory.removePage(this.uri(uri));
         },
         uri: function(spec) {
             return Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService).newURI(spec, null, null);
