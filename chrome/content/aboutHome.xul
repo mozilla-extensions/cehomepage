@@ -4,7 +4,7 @@
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		xmlns:html="http://www.w3.org/1999/xhtml"
 		title="&cehptitle;">
-  <html:link rel="icon" href="chrome://ntab/skin/logo/mozilla.ico" style="display:none"/>	
+  <html:link rel="icon" href="chrome://ntab/skin/logo/firefox.ico" style="display:none"/>	
   <browser id="content" type="content" src="" flex="1"/>
   <script type="text/javascript">
   window.addEventListener("load", function() {
