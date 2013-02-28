@@ -215,53 +215,5 @@ var utils = {
 		}
 
 		return result.join('');
-	},
-
-	isLocal: function(url) {
-		return /^(chrome:|file:)/.test(url);
-	},
-
-	getNsiURL: function(url) {
-		var nsiUrl = Cc['@mozilla.org/network/standard-url;1'].createInstance(Ci.nsIURL);
-		nsiUrl.spec = url;
-		return nsiUrl;
-	},
-
-	readURL: function(url) {
-		var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-		                .getService(Components.interfaces.nsIIOService);
-		var channel = ioService.newChannel(url, null, null);
-		var stream = channel.open();
-
-		var binary = Components.classes["@mozilla.org/binaryinputstream;1"]
-		             .createInstance(Components.interfaces.nsIBinaryInputStream);
-		binary.setInputStream(stream);
-
-		var size, data = "";
-		while(size = binary.available()) {
-		  data += binary.readBytes(size);
-		}
-		binary.close();
-		stream.close();
-		return data;
-	},
-
-	setFavicon: function(url, favicon) {
-		try {
-			var uri = this.getNsiURL(url);
-			var faviconURI = this.getNsiURL(favicon);
-			var faviconService = Cc['@mozilla.org/browser/favicon-service;1'].getService(Ci.nsIFaviconService);
-
-			if (!faviconService.setFaviconDataFromDataURL) {
-				faviconService.setAndLoadFaviconForPage(uri, faviconURI, false);
-			} else {
-				var data = this.readURL(favicon);
-				var dataURL = "data:image/png;base64," + btoa(data);
-				faviconService.setFaviconDataFromDataURL(faviconURI, dataURL, 0);
-				faviconService.setFaviconUrlForPage(uri, faviconURI);
-			}
-		} catch (e) {
-			dump(e);
-		}
 	}
 }

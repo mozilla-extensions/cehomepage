@@ -138,7 +138,7 @@ let BookmarkViewer = {
       anchor.href = url;
       anchor.textContent = title || _('moa.ntab.emptytitle');
       anchor.title = url;
-      anchor.style.backgroundImage = 'url(' + NTabUtils.getFavicon(url) + ')';
+      NTabUtils.setFaviconAsBg(url, anchor);
       li.appendChild(anchor);
 
       list.appendChild(li);
@@ -160,7 +160,7 @@ let NTabUtils = {
   get faviconService() {
     delete this.faviconService;
     return this.faviconService = Cc['@mozilla.org/browser/favicon-service;1'].
-      getService(Ci.nsIFaviconService);
+      getService(Ci.mozIAsyncFavicons || Ci.nsIFaviconService);
   },
   get ioService() {
     delete this.ioService;
@@ -176,10 +176,20 @@ let NTabUtils = {
     delete this.shellService;
     return this.shellService = ss;
   },
-  getFavicon: function NTabUtils_getFavicon(aUrl) {
+  setFaviconAsBg: function NTabUtils_setFaviconAsBg(aUrl, aElement) {
     let url = this.ioService.newURI(aUrl, null, null);
-    let favicon = this.faviconService.getFaviconImageForPage(url).spec;
-    return favicon;
+    let self = this;
+    let setFaviconAsBg = function(aFaviconUri) {
+      aFaviconUri = aFaviconUri || self.faviconService.defaultFavicon;
+      aFaviconUri = self.faviconService.getFaviconLinkForIcon(aFaviconUri);
+      aElement.style.backgroundImage = 'url(' + aFaviconUri.spec + ')';
+    };
+
+    if (Ci.mozIAsyncFavicons) {
+      this.faviconService.getFaviconURLForPage(url, setFaviconAsBg);
+    } else {
+      setFaviconAsBg(this.faviconService.getFaviconImageForPage(url));
+    }
   },
   loadIFrame: function NTabUtils_loadIFrame(aFrame, aSrc) {
     /*
@@ -930,7 +940,7 @@ let Overlay = {
         anchor.href = url;
         anchor.textContent = title || _('moa.ntab.emptytitle');
         anchor.title = url;
-        anchor.style.backgroundImage = 'url(' + NTabUtils.getFavicon(url) + ')';
+        NTabUtils.setFaviconAsBg(url, anchor);
         li.appendChild(anchor);
         frequent.appendChild(li);
       });
@@ -943,7 +953,7 @@ let Overlay = {
         anchor.href = url;
         anchor.textContent = title || _('moa.ntab.emptytitle');
         anchor.title = url;
-        anchor.style.backgroundImage = 'url(' + NTabUtils.getFavicon(url) + ')';
+        NTabUtils.setFaviconAsBg(url, anchor);
         li.appendChild(anchor);
         session.appendChild(li);
       });
