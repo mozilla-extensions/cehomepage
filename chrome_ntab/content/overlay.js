@@ -170,20 +170,38 @@
             if (gBrowser.selectedBrowser.contentDocument.URL == _url) {
                 var pref = 'mousewheel.';
 
-                var pressedModifierCount = evt.shiftKey + evt.ctrlKey + evt.altKey +
-                                           evt.metaKey + evt.getModifierState('OS');
-                if (pressedModifierCount != 1) {
-                    pref += 'default.';
-                } else if (evt.shiftKey) {
-                    pref += 'with_shift.';
-                } else if (evt.ctrlKey) {
-                    pref += 'with_control.';
-                } else if (evt.altKey) {
-                    pref += 'with_alt.';
-                } else if (evt.metaKey) {
-                    pref += 'with_meta.';
+                if (evt.getModifierState) {
+                    var pressedModifierCount = evt.shiftKey + evt.ctrlKey + evt.altKey +
+                                               evt.metaKey + evt.getModifierState('OS');
+                    if (pressedModifierCount != 1) {
+                        pref += 'default.';
+                    } else if (evt.shiftKey) {
+                        pref += 'with_shift.';
+                    } else if (evt.ctrlKey) {
+                        pref += 'with_control.';
+                    } else if (evt.altKey) {
+                        pref += 'with_alt.';
+                    } else if (evt.metaKey) {
+                        pref += 'with_meta.';
+                    } else {
+                        pref += 'with_win.';
+                    }
                 } else {
-                    pref += 'with_win.';
+                    if (evt.axis == evt.HORIZONTAL_AXIS) {
+                        pref += 'horizscroll.';
+                    }
+
+                    if (evt.shiftKey) {
+                        pref += 'withshiftkey.';
+                    } else if (evt.ctrlKey) {
+                        pref += 'withcontrolkey.';
+                    } else if (evt.altKey) {
+                        pref += 'withaltkey.';
+                    } else if (evt.metaKey) {
+                        pref += 'withmetakey.';
+                    } else {
+                        pref += 'withnokey.';
+                    }
                 }
 
                 pref += 'action';

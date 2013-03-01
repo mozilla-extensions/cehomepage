@@ -234,10 +234,10 @@ let Grid = {
 
     if (extraWidth) {
       let totalWidth = parseInt(document.defaultView.getComputedStyle(this.gridContainer).width, 10);
-      let maxExtraWidth = totalWidth - this.gridSize.col * this.gridItemMaxWidth;
-      if (maxExtraWidth > 0) {
-        extraWidth = Math.min(extraWidth, maxExtraWidth);
-        extraWidth = Math.max(extraWidth, 0);
+      let maxExtraWidth = Math.max(0, totalWidth - this.gridSize.col * this.gridItemMaxWidth);
+      let restrictedExtraWidth = Math.max(Math.min(extraWidth, maxExtraWidth), 0);
+      if (restrictedExtraWidth != extraWidth) {
+        extraWidth = restrictedExtraWidth;
         NTabUtils.prefs.setIntPref('moa.ntab.dial.extrawidth', extraWidth);
       }
     }

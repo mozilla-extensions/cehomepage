@@ -12,8 +12,12 @@ const Ci = Components.interfaces;
 Cu.import("resource://ntab/PageThumbs.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
+if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
+  XPCOMUtils.defineLazyModuleGetter(this, "Services",
+    "resource://gre/modules/Services.jsm");
+} else {
+  Cu.import('resource://gre/modules/Services.jsm');
+}
 
 function Protocol() {
 }
