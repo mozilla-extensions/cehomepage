@@ -1,20 +1,16 @@
 (function() {
     var ns = MOA.ns('NTab');
 
-    var gPref = Components.classes["@mozilla.org/preferences-service;1"]
-               .getService(Components.interfaces.nsIPrefService)
-               .QueryInterface(Components.interfaces.nsIPrefBranch2);
-
     var _url = 'about:ntab';
-    Components.utils['import']('resource://ntab/quickdial.jsm');
-    Components.utils['import']('resource://ntab/QuickDialData.jsm');
+    Cu.import('resource://ntab/quickdial.jsm');
+    Cu.import('resource://ntab/QuickDialData.jsm');
 
     function loadInExistingTabs() {
-        if (!gPref.getBoolPref("moa.ntab.loadInExistingTabs")) {
+        if (!Services.prefs.getBoolPref("moa.ntab.loadInExistingTabs")) {
             return;
         }
 
-        if (!gPref.getBoolPref('moa.ntab.openInNewTab')) {
+        if (!Services.prefs.getBoolPref('moa.ntab.openInNewTab')) {
             return;
         }
 
@@ -58,13 +54,13 @@
         get version() {
             var version = 0;
             try {
-                version = gPref.getIntPref(this._versionPref);
+                version = Services.prefs.getIntPref(this._versionPref);
             } catch(e) {}
             return version;
         },
         set version(version) {
             try {
-                gPref.setIntPref(this._versionPref, version);
+                Services.prefs.setIntPref(this._versionPref, version);
             } catch(e) {}
         },
 
@@ -119,17 +115,17 @@
         },
 
         init: function() {
-            gPref.addObserver(this.extPrefKey, this._observer, true);
+            Services.prefs.addObserver(this.extPrefKey, this._observer, true);
             this.refresh();
 
             gInitialPages.push(_url);
         },
         refresh: function() {
-            this.inUse = gPref.getBoolPref(this.extPrefKey);
+            this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
             if (this.inUse) {
-                gPref.setCharPref(this._appPrefKey, _url);
+                Services.prefs.setCharPref(this._appPrefKey, _url);
             } else {
-                gPref.clearUserPref(this._appPrefKey);
+                Services.prefs.clearUserPref(this._appPrefKey);
             }
         }
     };
@@ -147,9 +143,9 @@
 
     var fakeZoom = {
         setExtraWidth: function(direction) {
-            var extraWidth = gPrefService.getIntPref('moa.ntab.dial.extrawidth');
+            var extraWidth = Services.prefs.getIntPref('moa.ntab.dial.extrawidth');
             extraWidth = extraWidth + direction * 50;
-            gPrefService.setIntPref('moa.ntab.dial.extrawidth', extraWidth);
+            Services.prefs.setIntPref('moa.ntab.dial.extrawidth', extraWidth);
         },
 
         _setZoomForBrowser: null,
@@ -208,7 +204,7 @@
 
                 var isZoomEvent = false;
                 try {
-                    isZoomEvent = gPrefService.getIntPref(pref) == MOUSE_SCROLL_ZOOM;
+                    isZoomEvent = Services.prefs.getIntPref(pref) == MOUSE_SCROLL_ZOOM;
                 } catch(e) {}
                 if (!isZoomEvent) {
                     return;
@@ -286,8 +282,12 @@
             title = window._content.document.title;
         }
 
+        var stringBundle = document.getElementById('ntab-strings');
+
         if (!isValidUrl(url)) {
-            alert(document.getElementById('ntab-strings').getString('ntab.contextmenu.invalidurl'));
+            Services.prompt.alert(null,
+              stringBundle.getString('ntab.contextmenu.title'),
+              stringBundle.getString('ntab.contextmenu.invalidurl'));
             return;
         }
 
@@ -297,9 +297,13 @@
         });
 
         if (index > 0) {
-            alert(document.getElementById('ntab-strings').getFormattedString('ntab.contextmenu.addedtodial', [index]));
+            Services.prompt.alert(null,
+              stringBundle.getString('ntab.contextmenu.title'),
+              stringBundle.getFormattedString('ntab.contextmenu.addedtodial', [index]));
         } else {
-            alert(document.getElementById('ntab-strings').getString('ntab.contextmenu.noblankdial'));
+            Services.prompt.alert(null,
+              stringBundle.getString('ntab.contextmenu.title'),
+              stringBundle.getString('ntab.contextmenu.noblankdial'));
         }
     };
 
@@ -330,14 +334,14 @@
     }
 
     var toggleUseOpacity = function() {
-        var useOpacity = gPrefService.getBoolPref("moa.ntab.dial.useopacity");
-        gPrefService.setBoolPref("moa.ntab.dial.useopacity", !useOpacity);
+        var useOpacity = Services.prefs.getBoolPref("moa.ntab.dial.useopacity");
+        Services.prefs.setBoolPref("moa.ntab.dial.useopacity", !useOpacity);
     };
 
     var openCEHPOptions = function() {
         var features = "chrome,titlebar,toolbar,centerscreen";
         try {
-            var instantApply = gPrefService.getBoolPref("browser.preferences.instantApply");
+            var instantApply = Services.prefs.getBoolPref("browser.preferences.instantApply");
             features += instantApply ? ",dialog=no" : ",modal";
         } catch (e) {
             features += ",modal";
@@ -377,7 +381,7 @@
 
         document.getElementById('nt-refresh').hidden = _num < 0;
         document.getElementById('nt-edit').hidden = _num < 0;
-        document.getElementById('nt-refreshall').hidden = gPref.getCharPref('moa.ntab.view') !== 'quickdial';
+        document.getElementById('nt-refreshall').hidden = Services.prefs.getCharPref('moa.ntab.view') !== 'quickdial';
 
         document.getElementById('nt-menu').openPopupAtScreen(event.screenX, event.screenY, true);
 
@@ -388,7 +392,7 @@
     ns.onKeydown = function(evt) {
         //var selectedDocument = gBrowser.selectedBrowser.contentDocument;
         if (//selectedDocument.URL == _url &&
-            gPref.getBoolPref('moa.ntab.display.usehotkey') &&
+            Services.prefs.getBoolPref('moa.ntab.display.usehotkey') &&
             evt.ctrlKey && 48 < evt.keyCode && evt.keyCode <= 57) {
             evt.preventDefault();
             evt.stopPropagation();
@@ -410,7 +414,7 @@
     };
 
     ns.onContextMenuGlobal = function() {
-        document.getElementById('context-ntab').hidden = !gPref.getBoolPref('moa.ntab.contextMenuItem.show') || window._content.document.location.href == _url;
+        document.getElementById('context-ntab').hidden = !Services.prefs.getBoolPref('moa.ntab.contextMenuItem.show') || window._content.document.location.href == _url;
     };
 })();
 
