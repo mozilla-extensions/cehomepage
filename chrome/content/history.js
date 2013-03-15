@@ -38,26 +38,8 @@
       return obj;
     };
 
-
-    var Cc = Components.classes;
-    var Ci = Components.interfaces;
-    var Cu = Components.utils;
-    var jsm = { };
-    Components.utils['import']('resource://ntab/utils.jsm', jsm);
-
-    var DEBUG = false;
-
-    function log() {
-        return (DEBUG ? Application.console.log.apply(Application.console, arguments) : true);
-    }
-
-    function isFirefoxLowerThan4() {
-        return typeof Application.getExtensions == "undefined";
-    }
-
-    if (!isFirefoxLowerThan4()) {
-        Components.utils["import"]("resource://gre/modules/AddonManager.jsm");
-    }
+    var jsm = {};
+    Cu.import('resource://ntab/utils.jsm', jsm);
 
     if (!window.opener) {
         window.addEventListener('unload', function(evt) {
@@ -104,14 +86,14 @@
     function inject(host, win) {
         var cwin = win.wrappedJSObject;
         if (cwin['cehomepage']) {
-            log(['injected']);
+            MOA.debug(['injected']);
             return;
         }
         var hosts = prefs.get('extensions.cehomepage.allowed_domains', '').split(',');
         var length = host.length;
         while (true) {
             if (hosts.length == 0) {
-                log(['cehomepage deny', host]);
+                MOA.debug(['cehomepage deny', host]);
                 return;
             }
             var ahost = hosts.shift().trim().toLowerCase();
@@ -119,7 +101,7 @@
                 break;
             }
         }
-        log(['cehomepage inject', host]);
+        MOA.debug(['cehomepage inject', host]);
         var cehomepage = {};
         homepage.init(cehomepage);
         frequent.init(cehomepage);
@@ -170,7 +152,7 @@
             try {
                 this.branch.clearUserPref(k);
             } catch (ex) {
-                log(['clearUserPref', k, ex]);
+                MOA.debug(['clearUserPref', k, ex]);
             }
         }
     };
@@ -426,7 +408,7 @@
                     break;
                 } catch (ex) {
                     session = emptySession;
-                    log(['read session error', ex]);
+                    MOA.debug(['read session error', ex]);
                 }
             }
             return session;
@@ -592,14 +574,10 @@
              * The distribution.ini of the old users may still remians the cehomepage pref as "about:cehome"
              * Still need to keep the addon listener.
              */
-            if(!isFirefoxLowerThan4()) {
-                AddonManager.addAddonListener(addonlistener);
-                window.addEventListener('unload', function(evt) {
-                    if (!isFirefoxLowerThan4()) {
-                        AddonManager.removeAddonListener(addonlistener);
-                    }
-                }, false);
-            }
+            AddonManager.addAddonListener(addonlistener);
+            window.addEventListener('unload', function(evt) {
+                AddonManager.removeAddonListener(addonlistener);
+            }, false);
         }, 10);
 
         // Can not put the logic below in the timeout function.
@@ -612,11 +590,11 @@
             try {
                 var view = evt.originalTarget.defaultView;
                 if (view.top == view || view.top == view.parent) {
-                    log(['inject', view.location.host.toLowerCase()]);
+                    MOA.debug(['inject', view.location.host.toLowerCase()]);
                     inject(view.location.host.toLowerCase(), view);
                 }
             } catch (e) {
-                log('Error occurs when injecting.');
+                MOA.debug('Error occurs when injecting.');
             }
         }, false);
     }, false);

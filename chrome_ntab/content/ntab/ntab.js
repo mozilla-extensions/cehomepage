@@ -155,7 +155,14 @@ let NTabUtils = {
   },
   get chromeWindow() {
     delete this.chromeWindow;
-    return this.chromeWindow = getChromeWindow();
+    return this.chromeWindow = window.
+      QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIWebNavigation).
+      QueryInterface(Ci.nsIDocShellTreeItem).
+      rootTreeItem.
+      QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindow).
+      QueryInterface(Ci.nsIDOMChromeWindow);
   },
   get faviconService() {
     delete this.faviconService;

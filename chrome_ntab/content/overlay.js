@@ -5,6 +5,11 @@
     Cu.import('resource://ntab/quickdial.jsm');
     Cu.import('resource://ntab/QuickDialData.jsm');
 
+    XPCOMUtils.defineLazyGetter(ns, "gPrincipal", function () {
+      var uri = Services.io.newURI(_url, null, null);
+      return Services.scriptSecurityManager.getCodebasePrincipal(uri);
+    });
+
     function loadInExistingTabs() {
         if (!Services.prefs.getBoolPref("moa.ntab.loadInExistingTabs")) {
             return;
@@ -284,7 +289,7 @@
 
         var stringBundle = document.getElementById('ntab-strings');
 
-        if (!isValidUrl(url)) {
+        if (!isValidURI(url)) {
             Services.prompt.alert(null,
               stringBundle.getString('ntab.contextmenu.title'),
               stringBundle.getString('ntab.contextmenu.invalidurl'));
@@ -307,14 +312,17 @@
         }
     };
 
-    var isValidUrl = function (aUrl) {
-      // valid urls don't contain spaces ' '; if we have a space it isn't a valid url.
-      // Also disallow dropping javascript: or data: urls--bail out
-      if (!aUrl || !aUrl.length || aUrl.indexOf(" ", 0) != -1 ||
-           /^\s*(javascript|data|chrome):/.test(aUrl))
+    var isValidURI = function (aURI) {
+      try {
+        Services.scriptSecurityManager.
+          checkLoadURIStrWithPrincipal(ns.gPrincipal,
+            aURI,
+            Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL |
+            Ci.nsIScriptSecurityManager.DONT_REPORT_ERRORS);
+        return true;
+      } catch(e) {
         return false;
-
-      return true;
+      }
     };
 
     function getDialNum(elem) {
