@@ -1,3 +1,5 @@
+pref("browser.newtab.url", "about:ntab");
+
 pref("moa.ntab.view", "quickdial");
 pref("moa.ntab.qdtab", "grid");
 pref("moa.ntab.qdtab.used", false);
