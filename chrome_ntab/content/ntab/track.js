@@ -17,7 +17,7 @@ var tracker = (function() {
   }
 
   function _identify(link) {
-    while (link) {
+    while (link && link.classList) {
       if (link.classList.contains('no-link-trace')) {
         return false;
       }
