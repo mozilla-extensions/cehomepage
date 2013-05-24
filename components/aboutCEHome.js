@@ -1,9 +1,7 @@
-const Cc = Components.classes;
-const Ci = Components.interfaces;
-const Cr = Components.results;
-const Cu = Components.utils;
+const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+Cu.import('resource://gre/modules/Services.jsm');
 
 function AboutCEhome() {}
 AboutCEhome.prototype = {
@@ -13,28 +11,15 @@ AboutCEhome.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
 
   getURIFlags: function(aURI) {
-    return (Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT |
-            Ci.nsIAboutModule.ALLOW_SCRIPT);
+    return Ci.nsIAboutModule.ALLOW_SCRIPT;
   },
 
   newChannel: function(aURI) {
-    var ios = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
-    var secMan = Cc['@mozilla.org/scriptsecuritymanager;1'].getService(Ci.nsIScriptSecurityManager);
-    var principal = 'getSimpleCodebasePrincipal' in secMan
-                  ? secMan.getSimpleCodebasePrincipal(aURI)
-                  : secMan.getCodebasePrincipal(aURI);
     var home = 'chrome://cehomepage/content/aboutHome.xul';
-    var channel = ios.newChannel(home, null, null);
-    channel.originalURI = aURI;
+    var channel = Services.io.newChannel(home, null, null);
+    channel.originalURI = aURI;s
     return channel;
   }
 };
 
-// Definition for Firefox4
-if (XPCOMUtils.generateNSGetFactory) {
-  const NSGetFactory = XPCOMUtils.generateNSGetFactory([AboutCEhome]);
-} else {
-  const NSGetModule = function (aCompMgr, aFileSpec) {
-    return XPCOMUtils.generateModule([AboutCEhome]);
-  }
-}
+const NSGetFactory = XPCOMUtils.generateNSGetFactory([AboutCEhome]);
