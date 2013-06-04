@@ -56,4 +56,4 @@
 <!ENTITY ntab.editor.bookmark "Bookmarks">
 <!ENTITY ntab.editor.promoted "Promotion">
 <!ENTITY ntab.editor.frequent "Frequently visited">
-<!ENTITY ntab.editor.session "Tabs from last session">
+<!ENTITY ntab.editor.session "Recently visited">

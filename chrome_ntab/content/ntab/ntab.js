@@ -3,11 +3,10 @@ let Ci = Components.interfaces;
 let Cr = Components.results;
 let Cu = Components.utils;
 
-Cu.import('resource://ntab/Frequent.jsm');
 Cu.import('resource://ntab/FrameStorage.jsm');
+Cu.import('resource://ntab/History.jsm');
 Cu.import('resource://ntab/PageThumbs.jsm');
 Cu.import('resource://ntab/quickdial.jsm');
-Cu.import('resource://ntab/session.jsm');
 Cu.import('resource://ntab/utils.jsm');
 
 /* RemoteTabViewer from about:sync-tabs */
@@ -23,46 +22,47 @@ let RelatedTabViewer = {
   buildList: function RelatedTabViewer_buildList() {
     let self = this;
     Frequent.query(function(frequenttabs) {
-      let sessiontabs = session.query(10);
-      let list = self._tabsList;
+      Session.query(function(sessiontabs) {
+        let list = self._tabsList;
 
-      let count = list.childElementCount;
-      if (count > 0) {
-        for (let i = count - 1; i >= 0; i--)
-          list.removeChild(list.lastElementChild);
-      }
-
-      let frequentTitle = self.createItem({
-        type: 'section',
-        class: 'frequent',
-        sectionName: _('ntab.dial.label.frequentvisitedsites')
-      });
-      list.appendChild(frequentTitle);
-      frequenttabs.forEach(function({title, url}) {
-        let attrs = {
-          type:  "tab",
-          title: title || _('moa.ntab.emptytitle'),
-          url:   url
+        let count = list.childElementCount;
+        if (count > 0) {
+          for (let i = count - 1; i >= 0; i--)
+            list.removeChild(list.lastElementChild);
         }
-        let tab = self.createItem(attrs, true);
-        list.appendChild(tab);
-      }, self);
 
-      let sessionTitle = self.createItem({
-        type: 'section',
-        class: 'session',
-        sectionName: _('ntab.dial.label.lastvisitedsites')
-      });
-      list.appendChild(sessionTitle);
-      sessiontabs.forEach(function({title, url}) {
-        let attrs = {
-          type:  "tab",
-          title: title || _('moa.ntab.emptytitle'),
-          url:   url
-        }
-        let tab = self.createItem(attrs, false);
-        list.appendChild(tab);
-      }, self);
+        let frequentTitle = self.createItem({
+          type: 'section',
+          class: 'frequent',
+          sectionName: _('ntab.dial.label.frequentvisitedsites')
+        });
+        list.appendChild(frequentTitle);
+        frequenttabs.forEach(function({title, url}) {
+          let attrs = {
+            type:  "tab",
+            title: title || _('moa.ntab.emptytitle'),
+            url:   url
+          }
+          let tab = self.createItem(attrs, Frequent);
+          list.appendChild(tab);
+        }, self);
+
+        let sessionTitle = self.createItem({
+          type: 'section',
+          class: 'session',
+          sectionName: _('ntab.dial.label.lastvisitedsites')
+        });
+        list.appendChild(sessionTitle);
+        sessiontabs.forEach(function({title, url}) {
+          let attrs = {
+            type:  "tab",
+            title: title || _('moa.ntab.emptytitle'),
+            url:   url
+          }
+          let tab = self.createItem(attrs, Session);
+          list.appendChild(tab);
+        }, self);
+      }, 10);
     }, 10);
   },
 
@@ -86,7 +86,7 @@ let RelatedTabViewer = {
         let remove = document.createElement("button");
         remove.setAttribute("title", _("moa.ntab.removepage"));
         remove.addEventListener("click", function(evt) {
-          Frequent.remove([attrs.url]);
+          removable.remove([attrs.url]);
           item.parentNode.removeChild(item);
           RelatedTabViewer.buildList();
         }, false);
@@ -952,29 +952,31 @@ let Overlay = {
         frequent.appendChild(li);
       });
 
-      let sessionTabs = session.query(9);
-      sessionTabs.forEach(function({title, url}) {
-        let session = document.querySelector('#editor_session');
-        let li = document.createElement('li');
-        let anchor = document.createElement('a');
-        anchor.href = url;
-        anchor.textContent = title || _('moa.ntab.emptytitle');
-        anchor.title = url;
-        NTabUtils.setFaviconAsBg(url, anchor);
-        li.appendChild(anchor);
-        session.appendChild(li);
-      });
+      Session.query(function(aSessions) {
+        aSessions.forEach(function({title, url}) {
+          let session = document.querySelector('#editor_session');
+          let li = document.createElement('li');
+          let anchor = document.createElement('a');
+          anchor.href = url;
+          anchor.textContent = title || _('moa.ntab.emptytitle');
+          anchor.title = url;
+          NTabUtils.setFaviconAsBg(url, anchor);
+          li.appendChild(anchor);
+          session.appendChild(li);
+        });
 
-      BookmarkViewer.init();
 
-      [].forEach.call(self.overlay.querySelectorAll('li > a'), function(anchor) {
-        anchor.addEventListener('click', function(evt) {
-          evt.preventDefault();
-          let title = evt.target.textContent;
-          let url = evt.target.href;
-          self._choose(title, url, false);
-        }, false);
-      });
+        BookmarkViewer.init();
+
+        [].forEach.call(self.overlay.querySelectorAll('li > a'), function(anchor) {
+          anchor.addEventListener('click', function(evt) {
+            evt.preventDefault();
+            let title = evt.target.textContent;
+            let url = evt.target.href;
+            self._choose(title, url, false);
+          }, false);
+        });
+      }, 9);
     }, 9);
 
     [].forEach.call(this.editorTabs, function(tab) {

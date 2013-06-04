@@ -7,10 +7,6 @@
   <script type="application/x-javascript" src="snapshot.js"/>
   <script src="sendlink.js"/>
 
-  <script type="text/javascript">
-    // import session module, so that session can be stored when application quits.
-    Components.utils['import']('resource://ntab/session.jsm');
-  </script>
   <stringbundleset id="stringbundleset">
     <stringbundle id="ntab-strings" src="chrome://ntab/locale/overlay.properties"/>
   </stringbundleset>

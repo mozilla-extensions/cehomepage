@@ -56,4 +56,4 @@
 <!ENTITY ntab.editor.bookmark "我的书签">
 <!ENTITY ntab.editor.promoted "常用网址">
 <!ENTITY ntab.editor.frequent "访问最多的网页">
-<!ENTITY ntab.editor.session "上次访问的网页">
+<!ENTITY ntab.editor.session "最近访问的网页">

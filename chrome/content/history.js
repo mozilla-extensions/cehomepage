@@ -41,25 +41,6 @@
     var jsm = {};
     Cu.import('resource://ntab/utils.jsm', jsm);
 
-    if (!window.opener) {
-        window.addEventListener('unload', function(evt) {
-            if (evt.originalTarget == document) {
-                try {
-                    var pbs = Cc["@mozilla.org/privatebrowsing;1"].
-                    getService(Ci.nsIPrivateBrowsingService);
-                    var inPrivateBrowsingMode = pbs.privateBrowsingEnabled;
-                    if (inPrivateBrowsingMode != null && inPrivateBrowsingMode == false) {
-                        last.save();
-                    }
-                } catch (e) {
-                    //this means it's in a earlier version of firefox.
-                    last.save();
-                }
-            }
-            return true;
-        }, true);
-    }
-
     /**
      * Pref browser.startup.homepage have been set to "about:cehome" in the pref.js
      * And in distribution.ini, browser.startup.homepage is set to http://i.firefoxchina.cn.
@@ -111,14 +92,17 @@
             cwin.do_history.call(cwin);
         }
         try {
-            var pbs = Cc["@mozilla.org/privatebrowsing;1"].
-            getService(Ci.nsIPrivateBrowsingService);
-            var inPrivateBrowsingMode = pbs.privateBrowsingEnabled;
-            if (inPrivateBrowsingMode != null && inPrivateBrowsingMode == false) {
-                cehomepage['inPrivateMode'] = true;
+            Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
+            cehomepage['inPrivateMode'] = PrivateBrowsingUtils.isWindowPrivate(window);
+        } catch(e) {
+            try {
+                var inPrivateBrowsing = Cc["@mozilla.org/privatebrowsing;1"].
+                    getService(Ci.nsIPrivateBrowsingService).
+                    privateBrowsingEnabled;
+                cehomepage['inPrivateMode'] = inPrivateBrowsing;
+            } catch(e) {
+                // no private browsing support, do nothing
             }
-        } catch (e) {
-            //this means it's in a earlier version of firefox, do nothing;
         }
         cwin['cehomepage'] = exposeReadOnly(cehomepage);
 
@@ -251,20 +235,23 @@
         }
     };
 
-    var frequent = {
+    var history = {
         dboptions: null,
         dbquery: null,
         db: null,
+        name: 'none',
+        needsDeduplication: false,
+        order: Ci.nsINavHistoryQueryOptions.SORT_BY_NONE,
 
         init: function(cehp) {
             this.dboptions = PlacesUtils.history.getNewQueryOptions();
-            this.dboptions.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING;
+            this.dboptions.sortingMode = this.order;
 
             this.dbquery = PlacesUtils.history.getNewQuery();
             this.db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase);
 
             var me = this;
-            cehp['frequent'] = {
+            cehp[this.name] = {
                 query: function(n) {
                     return me.query(n);
                 },
@@ -277,17 +264,33 @@
             };
         },
         query: function(n) {
-            this.dboptions.maxResults = n;
+            this.dboptions.maxResults = (n || 8) + 16;
 
             var dbResults = this.db.executeQuery(this.dbquery, this.dboptions).root;
 
             dbResults.containerOpen = true;
             var count = dbResults.childCount;
+            var deduplication = {};
             var results = [];
             for (var i = 0; i < count; i++) {
+                if (results.length >= (n || 8) + 8) {
+                    break;
+                }
+
                 var result = dbResults.getChild(i);
+
+                var title = result.title;
+
+                if (this.needsDeduplication) {
+                    if (deduplication[title]) {
+                        continue;
+                    }
+                    deduplication[title] = 1;
+                }
+
                 results.push({
-                    title: result.title,
+                    title: title,
+                    url: result.uri,
                     uri: result.uri
                 });
             }
@@ -296,17 +299,31 @@
             return exposeReadOnly(results);
         },
         queryAsync: function(aMaxResults, aCallback) {
-            this.dboptions.maxResults = aMaxResults;
+            this.dboptions.maxResults = (aMaxResults || 8) + 16;
 
+            let deduplication = {};
             let links = [];
+            let self = this;
             let callback = {
                 handleResult: function (aResultSet) {
                     let row;
 
                     while (row = aResultSet.getNextRow()) {
+                        if (links.length >= (aMaxResults || 8) + 8) {
+                            break;
+                        }
+
                         let uri = row.getResultByIndex(1);
                         let title = row.getResultByIndex(2);
-                        links.push({uri: uri, title: title});
+
+                        if (self.needsDeduplication) {
+                            if (deduplication[title]) {
+                                continue;
+                            }
+                            deduplication[title] = 1;
+                        }
+
+                        links.push({uri: uri, url:uri, title: title});
                     }
                 },
 
@@ -329,189 +346,26 @@
         }
     };
 
-    var last = {
-        session: null,
-        restored: {},
-        init: function(cehp) {
-            var me = this;
-            cehp['last'] = {
-                query: function() {
-                    return me.query();
-                },
-                restore: function(tab, focus) {
-                    return me.restore(tab, focus);
-                },
-                remove: function(tab) {
-                    return me.remove(tab);
-                }
-            };
-        },
-        query: function() {
-            if (!this.session) {
-                this.session = this.read();
-            }
-            var res = [];
-            if (this.session.windows.length != 0) {
-                var wins = this.session.windows;
-            } else {
-                var wins = JSON.parse(jsm.utils.readStrFromProFile(['ntab', 'session.json'])).windows;
-            }
-            for (var i in wins) {
-                var win = wins[i];
-                for (var j in win.tabs) {
-                    var tab = win.tabs[j];
-                    var e = tab.entries[tab.index - 1];
-                    if (!e) {
-                        continue;
-                    }
-                    if (e.url == 'about:blank') {
-                        continue;
-                    }
-                    res.push({
-                        title: e.title,
-                        url: e.url.replace(/i\.g-fox\.cn/ig, "i.firefoxchina.cn"),
-                        length: tab.entries.length,
-                        data: JSON.stringify(tab),
-                        window_idx: i,
-                        tab_idx: j
-                    });
-                }
-            }
-            return exposeReadOnly(res);
-        },
-        read: function() {
-            var files = this.getSessionFiles();
-            var session = null;
-            var emptySession = {
-                windows: []
-            };
-            if (files.length == 0) return emptySession;
-            for (var i in files) {
-                var file = files[i];
-                try {
-                    var fileObj = this.getSessionDir();
-                    fileObj.append(file);
-                    if (!fileObj.exists()) continue;
-                    var content = '';
-                    var stream = Cc['@mozilla.org/network/file-input-stream;1'].createInstance(Ci.nsIFileInputStream);
-                    var converter = Cc['@mozilla.org/intl/converter-input-stream;1'].createInstance(Ci.nsIConverterInputStream);
-                    stream.init(fileObj, -1, 0, 0);
-                    converter.init(stream, 'UTF-8', 0, 0);
-                    var str = {};
-                    while (converter.readString(4096, str)) {
-                        content += str.value;
-                    }
-                    stream.close();
-                    session = JSON.parse(content) || emptySession;
-                    if (!session.windows) session.windows = [];
-                    fileObj.remove(false);
-                    break;
-                } catch (ex) {
-                    session = emptySession;
-                    MOA.debug(['read session error', ex]);
-                }
-            }
-            return session;
-        },
-        remove: function(tab) {
-            var win = null;
-            for (var i in this.session.windows) {
-                if (i == tab.window_idx) {
-                    var win = this.session.windows[i];
-                    for (var j in win.tabs) {
-                        if (j == tab.tab_idx) {
-                            var t = win.tabs[j];
-                            var e = t.entries[t.index - 1];
-                            win.tabs.splice(j, 1);
-                            break;
-                        }
-                    }
-                    if (win.tabs.length == 0) this.session.windows.splice(i, 1);
-                    break;
-                }
-            }
-        },
-        restore: function(data, focus) {
-            var oldt = this.restored[data];
-            if (oldt) {
-                if (focus) gBrowser.selectedTab = oldt;
-            } else {
-                var me = this;
-                window.setTimeout(function() {
-                    var enabled = true;
-                    if (!prefs.get('browser.sessionstore.enabled', true)) {
-                        enabled = false;
-                        prefs.set('browser.sessionstore.enabled', true);
-                    }
-                    var ss = Components.classes['@mozilla.org/browser/sessionstore;1'].getService(Ci.nsISessionStore);
-                    var tab = gBrowser.addTab();
-                    ss.setTabState(tab, data);
-                    me.restored[data] = tab;
-                    if (!enabled) {
-                        prefs.set('browser.sessionstore.enabled', false);
-                    }
-                }, 0);
-            }
-        },
-        save: function() {
-            var enabled = true;
-            if (!prefs.get('browser.sessionstore.enabled', true)) {
-                enabled = false;
-                prefs.set('browser.sessionstore.enabled', true);
-            }
-            var ss = Components.classes['@mozilla.org/browser/sessionstore;1'].getService(Ci.nsISessionStore);
-            var state = ss.getBrowserState();
-            if (!enabled) {
-                prefs.set('browser.sessionstore.enabled', false);
-            }
 
-            var keep = prefs.get('extensions.cehomepage.keepsessions', 10);
-            if (keep < 1) keep = 1;
-            var files = this.getSessionFiles();
-            while (files.length >= keep) {
-                var sf = this.getSessionDir();
-                sf.append(files.pop());
-                if (sf.exists()) {
-                    sf.remove(false);
-                }
-            }
-            var session = this.getSessionDir();
-            session.append(Date.now() + '.js');
-            if (!session.exists()) session.create(session.NORMAL_FILE_TYPE, 0644);
-            this.write(state, session);
+    var frequent = Object.create(history, {
+        name: {
+            value: 'frequent'
         },
-        write: function(state, file) {
-            var stream = Cc['@mozilla.org/network/file-output-stream;1'].createInstance(Ci.nsIFileOutputStream);
-            stream.init(file, 0x02 | 0x08 | 0x20, 0644, 0);
-            var converter = Cc['@mozilla.org/intl/converter-output-stream;1'].createInstance(Ci.nsIConverterOutputStream);
-            converter.init(stream, 'UTF-8', 0, 0);
-            converter.writeString(state);
-            converter.close();
-        },
-        getSessionDir: function() {
-            var dir = Cc['@mozilla.org/file/directory_service;1'].getService(Ci.nsIProperties).get('ProfD', Ci.nsIFile);
-            dir.append('cesessions');
-            if (!dir.exists()) {
-                dir.create(dir.DIRECTORY_TYPE, 0700);
-            }
-            return dir;
-        },
-        getSessionFiles: function() {
-            var files = [];
-            var dir = this.getSessionDir();
-            var fit = dir.directoryEntries;
-            var file = null;
-            while (fit.hasMoreElements()) {
-                file = fit.getNext();
-                file.QueryInterface(Ci.nsIFile);
-                files.push(file.leafName);
-            }
-            files.sort(function(a, b) {
-                return b > a;
-            });
-            return files;
+        order: {
+            value: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING
         }
-    };
+    });
+    var last = Object.create(history, {
+        name: {
+            value: 'last'
+        },
+        needsDeduplication: {
+            value: true
+        },
+        order: {
+            value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
+        }
+    });
 
 
     var addonlistener = {

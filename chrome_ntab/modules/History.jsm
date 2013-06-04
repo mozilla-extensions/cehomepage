@@ -1,4 +1,4 @@
-let EXPORTED_SYMBOLS = ["Frequent"];
+let EXPORTED_SYMBOLS = ["Frequent", "Session"];
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import('resource://gre/modules/Services.jsm');
@@ -14,12 +14,17 @@ let prefixes = [
 ];
 
 let Frequent = {
+  needsDeduplication: false,
+  order: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING,
+
   query: function(aCallback, aLimit) {
     let options = PlacesUtils.history.getNewQueryOptions();
-    options.maxResults = aLimit + 10;
-    options.sortingMode = Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING
+    options.maxResults = aLimit + 16;
+    options.sortingMode = this.order;
 
+    let deduplication = {};
     let links = [];
+    let self = this;
 
     let callback = {
       handleResult: function (aResultSet) {
@@ -31,6 +36,14 @@ let Frequent = {
           }
           let url = row.getResultByIndex(1);
           let title = row.getResultByIndex(2);
+
+          if (self.needsDeduplication) {
+            if (deduplication[title]) {
+              continue;
+            }
+            deduplication[title] = 1;
+          }
+
           if (!prefixes.some(function(aPrefix) {
             return aPrefix.test(url);
           })) {
@@ -61,3 +74,12 @@ let Frequent = {
     PlacesUtils.bhistory.removePages(urls, urls.length);
   }
 };
+
+let Session = Object.create(Frequent, {
+  needsDeduplication: {
+    value: true
+  },
+  order: {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
+  }
+});
