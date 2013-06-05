@@ -17,7 +17,7 @@ AboutCEhome.prototype = {
   newChannel: function(aURI) {
     var home = 'chrome://cehomepage/content/aboutHome.xul';
     var channel = Services.io.newChannel(home, null, null);
-    channel.originalURI = aURI;s
+    channel.originalURI = aURI;
     return channel;
   }
 };
