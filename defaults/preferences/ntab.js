@@ -1,3 +1,4 @@
+pref("browser.newtab.preload", false);
 pref("browser.newtab.url", "about:ntab");
 
 pref("moa.ntab.view", "quickdial");

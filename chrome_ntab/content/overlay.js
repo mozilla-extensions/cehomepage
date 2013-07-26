@@ -100,7 +100,8 @@
     };
 
     var newTabPref = {
-        _appPrefKey: 'browser.newtab.url',
+        _appPreloadKey: 'browser.newtab.preload',
+        _appUrlKey: 'browser.newtab.url',
         extPrefKey: 'moa.ntab.openInNewTab',
 
         inUse: true,
@@ -135,9 +136,10 @@
         refresh: function() {
             this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
             if (this.inUse) {
-                Services.prefs.setCharPref(this._appPrefKey, _url);
+                Services.prefs.clearUserPref(this._appPreloadKey);
+                Services.prefs.clearUserPref(this._appUrlKey);
             } else {
-                Services.prefs.clearUserPref(this._appPrefKey);
+                Services.prefs.setCharPref(this._appUrlKey, "about:newtab");
             }
         }
     };
