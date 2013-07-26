@@ -330,9 +330,18 @@ footer.off ~ #quickdial > #quick_dial_tabpanels > #grid > ol {
 }
 #grid > ol > li > a > .thumb {
   background: no-repeat white;
+  border: none;
   display: block;
   height: 100%;
   width: 100%;
+}
+#grid > ol > li > a > .thumb + span.thumb {
+  position: relative;
+  top: -100%;
+  z-index: -1;
+}
+#grid > ol.dragging > li > a > .thumb + span.thumb {
+  z-index: 1;
 }
 #grid > ol > li > a > .title {
   background: #fafafa;
@@ -346,6 +355,12 @@ footer.off ~ #quickdial > #quick_dial_tabpanels > #grid > ol {
   text-overflow: ellipsis;
   white-space: nowrap;
   width: 100%;
+}
+#grid > ol > li > a > iframe.thumb ~ span.title {
+  display: none;
+}
+#grid > ol.dragging > li > a > .thumb + span.thumb {
+  display: block;
 }
 
 #grid > ol > li[draggable="false"] {

@@ -204,7 +204,8 @@ let NTabUtils = {
     pre-loaded with incorrect document, which may happen during an update.
     so we force refresh any pre-loaded document with about:blank first
     */
-    if (aFrame.contentDocument.URL != 'about:blank') {
+    if (aFrame.contentDocument &&
+        aFrame.contentDocument.URL != 'about:blank') {
       aFrame.setAttribute('src', 'about:blank');
     }
     aFrame.setAttribute('src', aSrc);
@@ -284,7 +285,7 @@ let Grid = {
     return this.gridContainer = document.querySelector('#grid');
   },
   get gridItemHeight() {
-    let gridItem = document.querySelector('span.thumb');
+    let gridItem = document.querySelector('.thumb');
     let width = document.defaultView.getComputedStyle(gridItem).width;
     return Math.round(parseInt(width, 10) * 0.62);
   },
@@ -357,6 +358,7 @@ let Grid = {
     }, false);
     aLi.addEventListener('dragstart', function(evt) {
       evt.dataTransfer.mozSetDataAt('application/x-moz-node', evt.currentTarget, 0);
+      evt.currentTarget.parentNode.className = 'dragging';
     }, false);
     aLi.addEventListener('dragover', function(evt) {
       evt.preventDefault();
@@ -366,9 +368,17 @@ let Grid = {
         evt.preventDefault();
       }
     }, false);
+    aLi.addEventListener('dragend', function(evt) {
+      if (evt.currentTarget.parentNode) {
+        evt.currentTarget.parentNode.className = '';
+      }
+    }, false);
     aLi.addEventListener('drop', function(evt) {
       evt.preventDefault();
       let node = evt.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
+      if (node.parentNode) {
+        node.parentNode.className = '';
+      }
       if (node.getAttribute('data-index') == index) {
         return;
       }
@@ -411,17 +421,17 @@ let Grid = {
     let backgroundPosition = '';
     let backgroundSize = '';
     if (dial) {
-        backgroundPosition = 'center center';
-        if (dial.thumbnail) {
-            backgroundImage = dial.thumbnail;
-        } else {
-            backgroundImage = PageThumbs.getThumbnailURL(dial.url) + '&ts=' + Date.now();
-            if (PageThumbs.getThumbnailType(dial.url) == 'snapshot') {
-                backgroundPosition = 'left top';
-                backgroundSize = 'cover';
-            }
+      backgroundPosition = 'center center';
+      if (dial.thumbnail) {
+        backgroundImage = dial.thumbnail;
+      } else {
+        backgroundImage = PageThumbs.getThumbnailURL(dial.url) + '&ts=' + Date.now();
+        if (PageThumbs.getThumbnailType(dial.url) == 'snapshot') {
+          backgroundPosition = 'left top';
+          backgroundSize = 'cover';
         }
-        backgroundImage = 'url(' + backgroundImage + ')';
+      }
+      backgroundImage = 'url(' + backgroundImage + ')';
     }
 
     let span_thumb = document.createElement('span');
@@ -430,6 +440,20 @@ let Grid = {
     span_thumb.style.backgroundImage = backgroundImage;
     span_thumb.style.backgroundPosition = backgroundPosition;
     span_thumb.style.backgroundSize = backgroundSize;
+
+    // navigator.onLine is always true except for offline mode
+    if (navigator.onLine && dial && dial.frame) {
+      let frame_thumb = document.createElement('iframe');
+      frame_thumb.className = 'thumb';
+
+      //frame_thumb.src = dial.frame;
+      a.appendChild(frame_thumb);
+      NTabUtils.loadIFrame(frame_thumb, dial.frame);
+
+      span_thumb.style.backgroundImage = 'url()';
+      span_thumb.style.backgroundColor = 'transparent';
+    }
+
     a.appendChild(span_thumb);
 
     let span_title = document.createElement('span');
@@ -880,13 +904,13 @@ let QDTabs = {
     let queryString = ['openInNewTab', openInNewTab].join('=');
 
     let iframes = document.getElementById(tab).querySelectorAll('iframe');
-    if (iframes.length && iframes[0]) {
+    if (tab == 'site' && iframes.length && iframes[0]) {
       let src_ = [FrameStorage.frames([tab, 'html'].join('.')), queryString].join('?');
       if (iframes[0].getAttribute('src') != src_) {
         NTabUtils.loadIFrame(iframes[0], src_);
       }
     }
-    if (iframes.length && iframes[1]) {
+    if (tab == 'site' && iframes.length && iframes[1]) {
       let src_ = [FrameStorage.frames([tab + '-l', 'html'].join('.')), queryString].join('?');
       if (iframes[1].getAttribute('src') != src_) {
         NTabUtils.loadIFrame(iframes[1], src_);
