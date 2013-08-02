@@ -517,6 +517,8 @@ let Grid = {
       let searchElements = this._searchElements(dial.search);
       span_thumb.appendChild(searchElements[0]);
       span_title.appendChild(searchElements[1]);
+      // work around the search input jumping w backspace
+      span_title.style.outline = '1px solid #d7d7d7';
     } else {
       span_title.textContent = dial ? dial.title || '' : '';
     }
