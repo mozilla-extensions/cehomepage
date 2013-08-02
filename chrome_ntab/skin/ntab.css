@@ -330,18 +330,29 @@ footer.off ~ #quickdial > #quick_dial_tabpanels > #grid > ol {
 }
 #grid > ol > li > a > .thumb {
   background: no-repeat white;
-  border: none;
   display: block;
   height: 100%;
   width: 100%;
 }
-#grid > ol > li > a > .thumb + span.thumb {
+#grid > ol > li > a > .thumb > ul {
+  height: 40px;
+  margin: auto;
+  overflow: hidden;
   position: relative;
-  top: -100%;
-  z-index: -1;
+  top: 50%;
+  width: 160px;
 }
-#grid > ol.dragging > li > a > .thumb + span.thumb {
-  z-index: 1;
+#grid > ol > li > a > .thumb > ul > li {
+  display: inline-block;
+  font-size: 12px;
+  line-height: 20px;
+  padding: 0 2px;
+}
+#grid > ol > li > a > .thumb > ul > li > a {
+  color: #bcbcbc;
+}
+#grid > ol > li > a > .thumb > ul > li > a:hover {
+  color: #ef8200;
 }
 #grid > ol > li > a > .title {
   background: #fafafa;
@@ -356,11 +367,34 @@ footer.off ~ #quickdial > #quick_dial_tabpanels > #grid > ol {
   white-space: nowrap;
   width: 100%;
 }
-#grid > ol > li > a > iframe.thumb ~ span.title {
-  display: none;
+/* hackish style ... */
+#grid > ol > li > a > .title > form {
+  background-color: #fafafa;
+  border-top: 1px solid #d7d7d7;
+  color: #767676;
+  height: 24px;
 }
-#grid > ol.dragging > li > a > .thumb + span.thumb {
-  display: block;
+#grid > ol > li > a > .title > form > input[type="text"] {
+  background-position: left bottom;
+  background-repeat: no-repeat;
+  border: none;
+  height: 25px;
+  margin: -2px 0 0 -2px;
+  padding: 0 0 0 26px;
+  width: -moz-calc(100% - 52px);
+}
+#grid > ol > li > a > .title > form > input[type="submit"] {
+  background-color: #d7d7d7;
+  background-image: url(chrome://ntab/skin/icon/search-icon.png);
+  border: none;
+  height: 25px;
+  margin: -2px 0 0;
+  padding: 0;
+  text-indent: -9999px;
+  width: 26px;
+}
+#grid > ol > li > a > .title > form > input[type="submit"]:hover {
+  background-color: #a4d0ef;
 }
 
 #grid > ol > li[draggable="false"] {

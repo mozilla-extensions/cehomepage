@@ -285,7 +285,7 @@ let Grid = {
     return this.gridContainer = document.querySelector('#grid');
   },
   get gridItemHeight() {
-    let gridItem = document.querySelector('.thumb');
+    let gridItem = document.querySelector('span.thumb');
     let width = document.defaultView.getComputedStyle(gridItem).width;
     return Math.round(parseInt(width, 10) * 0.62);
   },
@@ -337,7 +337,7 @@ let Grid = {
     let index = aLi.getAttribute('data-index');
     let button = aLi.querySelectorAll('button');
     let thumb = aLi.querySelector('span.thumb');
-    let title = aLi.querySelector('span.title').textContent;
+    let title = aLi.getAttribute('title');
     if (button.length) {
       button[0].addEventListener('click', function(evt) {
         self._editGridItem(index);
@@ -352,13 +352,14 @@ let Grid = {
       if (evt.currentTarget.href) {
         let fid = aLi.getAttribute('data-fid');
         tracker.track({ type: 'quickdial', action: 'click', fid: fid, sid: index });
+      } else if (evt.currentTarget.querySelector('form')) {
+        evt.currentTarget.querySelector('form > input').focus();
       } else {
         self._editGridItem(index);
       }
     }, false);
     aLi.addEventListener('dragstart', function(evt) {
       evt.dataTransfer.mozSetDataAt('application/x-moz-node', evt.currentTarget, 0);
-      evt.currentTarget.parentNode.className = 'dragging';
     }, false);
     aLi.addEventListener('dragover', function(evt) {
       evt.preventDefault();
@@ -368,22 +369,90 @@ let Grid = {
         evt.preventDefault();
       }
     }, false);
-    aLi.addEventListener('dragend', function(evt) {
-      if (evt.currentTarget.parentNode) {
-        evt.currentTarget.parentNode.className = '';
-      }
-    }, false);
     aLi.addEventListener('drop', function(evt) {
       evt.preventDefault();
       let node = evt.dataTransfer.mozGetDataAt('application/x-moz-node', 0);
-      if (node.parentNode) {
-        node.parentNode.className = '';
-      }
       if (node.getAttribute('data-index') == index) {
         return;
       }
       quickDialModule.exchangeDial(node.getAttribute('data-index'), index);
     }, false);
+  },
+  _searchElements: function Grid__searchElements(search) {
+    let searchWithKeyword = function(keyword) {
+      keyword = encodeURIComponent(keyword);
+      let url = search.template.replace('%KEYWORD%', keyword);
+      let where = NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab')
+                ? 'tab'
+                : 'current';
+      NTabUtils.chromeWindow.openUILinkIn(url, where);
+    };
+
+    let keywordsUl = document.createElement('ul');
+
+    let form = document.createElement('form');
+    form.addEventListener('submit', function(evt) {
+      evt.preventDefault();
+      let keyword = input.value || input.getAttribute('placeholder');
+      searchWithKeyword(keyword);
+    }, false);
+
+    let input = document.createElement('input');
+    input.style.backgroundImage = 'url(' + search.icon + ')';
+    input.type = 'text';
+    input.addEventListener('click', function(evt) {
+      evt.preventDefault();
+      evt.stopPropagation();
+    }, false);
+    input.addEventListener('keydown', function(evt) {
+      if (evt.keyCode == 13) {
+        evt.preventDefault();
+        evt.stopPropagation();
+
+        let keyword = input.value || input.getAttribute('placeholder');
+        searchWithKeyword(keyword);
+      }
+    }, false);
+    form.appendChild(input);
+
+    let submit = document.createElement('input');
+    submit.type = 'submit';
+    submit.value = 'Go';
+    form.appendChild(submit);
+
+    let xhr = new XMLHttpRequest();
+    xhr.open('GET', search.keywords, true);
+    xhr.onload = function(evt) {
+      try {
+        let response = JSON.parse(xhr.responseText);
+
+        let defaultKeyword = response.default;
+        input.setAttribute('placeholder', defaultKeyword);
+
+        let keywords = response.keywords;
+        for (let i = 0, l = keywords.length; i < l; i++) {
+          let keywordLi = document.createElement('li');
+
+          let anchor = document.createElement('a');
+          /* maybe just set href */
+          anchor.href = '#';
+          anchor.textContent = keywords[i];
+          anchor.addEventListener('click', function(evt) {
+            evt.preventDefault();
+            evt.stopPropagation();
+
+            let keyword = evt.currentTarget.textContent;
+            searchWithKeyword(keyword);
+          }, false);
+          keywordLi.appendChild(anchor);
+
+          keywordsUl.appendChild(keywordLi);
+        }
+      } catch(e) {}
+    };
+    xhr.send();
+
+    return [keywordsUl, form];
   },
   _createGridItem: function Grid__createGridItem(aIndex) {
     let dial = quickDialModule.getDial(aIndex);
@@ -440,25 +509,17 @@ let Grid = {
     span_thumb.style.backgroundImage = backgroundImage;
     span_thumb.style.backgroundPosition = backgroundPosition;
     span_thumb.style.backgroundSize = backgroundSize;
-
-    // navigator.onLine is always true except for offline mode
-    if (navigator.onLine && dial && dial.frame) {
-      let frame_thumb = document.createElement('iframe');
-      frame_thumb.className = 'thumb';
-
-      //frame_thumb.src = dial.frame;
-      a.appendChild(frame_thumb);
-      NTabUtils.loadIFrame(frame_thumb, dial.frame);
-
-      span_thumb.style.backgroundImage = 'url()';
-      span_thumb.style.backgroundColor = 'transparent';
-    }
-
     a.appendChild(span_thumb);
 
     let span_title = document.createElement('span');
     span_title.className = 'title';
-    span_title.textContent = dial ? dial.title || '' : '';
+    if (dial && dial.search) {
+      let searchElements = this._searchElements(dial.search);
+      span_thumb.appendChild(searchElements[0]);
+      span_title.appendChild(searchElements[1]);
+    } else {
+      span_title.textContent = dial ? dial.title || '' : '';
+    }
     a.appendChild(span_title);
 
     li.appendChild(a);
