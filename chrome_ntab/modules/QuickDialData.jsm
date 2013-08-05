@@ -10,10 +10,13 @@ if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
     "resource://gre/modules/Services.jsm");
   XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
     "resource://gre/modules/FileUtils.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "quickDialModule",
+    "resource://ntab/quickdial.jsm");
 } else {
   Cu.import('resource://gre/modules/NetUtil.jsm');
   Cu.import('resource://gre/modules/Services.jsm');
   Cu.import('resource://gre/modules/FileUtils.jsm');
+  Cu.import('resource://ntab/quickdial.jsm');
 }
 XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
@@ -215,6 +218,13 @@ let QuickDialData = {
     }
     this._dumpData(this._userData, data);
   },
+  reset: function() {
+    if (this._userData.exists()) {
+      this._userData.remove(false);
+
+      quickDialModule.refresh();
+    }
+  },
 
   update: function() {
     let self = this;
@@ -224,9 +234,6 @@ let QuickDialData = {
         self._dumpData(self._latestData, JSON.parse(aData.data));
         self.LastModified = aLastModified;
 
-        if (!this.quickDialModule) {
-          Cu.import('resource://ntab/quickdial.jsm');
-        }
         quickDialModule.refresh();
       }
     });

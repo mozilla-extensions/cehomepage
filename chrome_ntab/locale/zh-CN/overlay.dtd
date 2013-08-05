@@ -13,6 +13,9 @@
 <!ENTITY ntab.contextmenu.import.accesskey "I">
 <!ENTITY ntab.contextmenu.import "导入我的配置文件">
 
+<!ENTITY ntab.contextmenu.reset.accesskey "S">
+<!ENTITY ntab.contextmenu.reset "重置快速拨号">
+
 <!ENTITY cehptitle "火狐主页">
 
 <!ENTITY ntab.contextmenu.useopacity.accesskey "T">

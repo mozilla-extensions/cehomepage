@@ -364,7 +364,22 @@
             features += ",modal";
         }
         window.openDialog("chrome://ntab/content/options.xul", "cehpOptions", features).focus();
-    }
+    };
+
+    var resetAboutNTab = function() {
+        var p = Services.prompt;
+        var stringBundle = document.getElementById('ntab-strings');
+        if (p.confirmEx(null,
+                stringBundle.getString('ntab.contextmenu.title'),
+                stringBundle.getString('ntab.contextmenu.reset'),
+                p.STD_YES_NO_BUTTONS + p.BUTTON_POS_1_DEFAULT + p.BUTTON_DELAY_ENABLE,
+                '', '', '', null, {}) === 0) {
+            QuickDialData.reset();
+            if (gBrowser.selectedBrowser.contentDocument.URL == _url) {
+                gBrowser.selectedBrowser.contentDocument.location.reload();
+            }
+        }
+    };
 
     var _num = -1;
     ns.onContextCommand = function(event, menuid) {
@@ -389,6 +404,9 @@
                 break;
             case 'nt-moreoptions':
                 openCEHPOptions();
+                break;
+            case 'nt-reset':
+                resetAboutNTab();
                 break;
         }
     };

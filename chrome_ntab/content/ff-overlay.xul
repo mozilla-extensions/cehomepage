@@ -53,6 +53,10 @@
         <menuitem id="nt-import"
             accesskey="&ntab.contextmenu.import.accesskey;"
             label="&ntab.contextmenu.import;"/>
+        <menuseparator/>
+        <menuitem id="nt-reset"
+            accesskey="&ntab.contextmenu.reset.accesskey;"
+            label="&ntab.contextmenu.reset;"/>
       </menupopup>
   </window>
 </overlay>
