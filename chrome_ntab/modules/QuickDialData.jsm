@@ -138,7 +138,8 @@ let QuickDialData = {
     switch(aItem.url) {
       case "http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313996&k=e02915d8b8ad9603":
       case "http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997&k=e02915d8b8ad9603":
-        aItem.url = "http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997";
+      case "http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997":
+        aItem.url = "http://www.taobao.com/";
         break;
       case "http://click.union.360buy.com/JdClick/?unionId=206&siteId=8&to=http://www.360buy.com/":
       // remove item when counts per day < 10?
@@ -156,6 +157,17 @@ let QuickDialData = {
     delete aItem.icon;
     delete aItem.rev;
     delete aItem.thumbnail;
+
+    return aItem;
+  },
+  _itemMigration: function(aItem) {
+    switch(aItem.url) {
+      case "http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997":
+        aItem.url = "http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_13466329%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_13466329";
+        break;
+      default:
+        break;
+    }
 
     return aItem;
   },
@@ -197,9 +209,13 @@ let QuickDialData = {
           let defaultItem = defaultData[item];
           defaultItem.defaultposition = [item, defaultItem.rev].join('r');
           item = defaultItem;
+        } else {
+          item = this._itemMigration(item);
+          userData[index] = item;
         }
         ret[index] = item;
       }
+      this._dumpData(this._userData, userData);
     } else {
       for (let index in defaultData) {
         let defaultItem = defaultData[index];
