@@ -378,14 +378,18 @@ let Grid = {
       quickDialModule.exchangeDial(node.getAttribute('data-index'), index);
     }, false);
   },
-  _searchElements: function Grid__searchElements(search) {
-    let searchWithKeyword = function(keyword) {
+  _searchElements: function Grid__searchElements(search, fid) {
+    let searchWithKeyword = function(keyword, ref) {
+      tracker.track({ type: 'quickdial', action: 'search', fid: fid, sid: ref });
       keyword = encodeURIComponent(keyword);
       let url = search.template.replace('%KEYWORD%', keyword);
       let where = NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab')
                 ? 'tab'
                 : 'current';
-      NTabUtils.chromeWindow.openUILinkIn(url, where);
+      // w/o this setTimeout, tracking ping will not be sent
+      setTimeout(function() {
+        NTabUtils.chromeWindow.openUILinkIn(url, where);
+      }, 0);
     };
 
     let keywordsUl = document.createElement('ul');
@@ -394,7 +398,7 @@ let Grid = {
     form.addEventListener('submit', function(evt) {
       evt.preventDefault();
       let keyword = input.value || input.getAttribute('placeholder');
-      searchWithKeyword(keyword);
+      searchWithKeyword(keyword, 'search');
     }, false);
 
     let input = document.createElement('input');
@@ -410,7 +414,7 @@ let Grid = {
         evt.stopPropagation();
 
         let keyword = input.value || input.getAttribute('placeholder');
-        searchWithKeyword(keyword);
+        searchWithKeyword(keyword, 'search');
       }
     }, false);
     form.appendChild(input);
@@ -418,6 +422,10 @@ let Grid = {
     let submit = document.createElement('input');
     submit.type = 'submit';
     submit.value = 'Go';
+    // submit the form, but don't bubble to the parent anchor
+    submit.addEventListener('click', function(evt) {
+      evt.stopPropagation();
+    }, false);
     form.appendChild(submit);
 
     let xhr = new XMLHttpRequest();
@@ -442,7 +450,7 @@ let Grid = {
             evt.stopPropagation();
 
             let keyword = evt.currentTarget.textContent;
-            searchWithKeyword(keyword);
+            searchWithKeyword(keyword, 'keyword');
           }, false);
           keywordLi.appendChild(anchor);
 
@@ -514,7 +522,8 @@ let Grid = {
     let span_title = document.createElement('span');
     span_title.className = 'title';
     if (dial && dial.search) {
-      let searchElements = this._searchElements(dial.search);
+      let searchElements = this._searchElements(dial.search,
+                                                dial.defaultposition || '');
       span_thumb.appendChild(searchElements[0]);
       span_title.appendChild(searchElements[1]);
       // work around the search input jumping w backspace
