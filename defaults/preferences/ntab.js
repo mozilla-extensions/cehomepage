@@ -37,6 +37,7 @@ pref("moa.ntab.dial.hideSearch", false);
 
 pref("moa.ntab.dial.extrawidth", 0);
 pref("moa.ntab.dial.useopacity", false);
+pref("moa.ntab.dial.refreshhack", false);
 
 pref("moa.ntab.contextMenuItem.show", true);
 

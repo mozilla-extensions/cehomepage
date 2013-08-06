@@ -1411,6 +1411,7 @@ let NTab = {
           case 'moa.ntab.dial.row':
           case 'moa.ntab.dial.extrawidth':
           case 'moa.ntab.dial.useopacity':
+          case 'moa.ntab.dial.refreshhack':
             Grid.update();
             break;
           case 'moa.ntab.backgroundcolor':

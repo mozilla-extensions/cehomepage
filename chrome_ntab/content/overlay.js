@@ -375,9 +375,11 @@
                 p.STD_YES_NO_BUTTONS + p.BUTTON_POS_1_DEFAULT + p.BUTTON_DELAY_ENABLE,
                 '', '', '', null, {}) === 0) {
             QuickDialData.reset();
-            if (gBrowser.selectedBrowser.contentDocument.URL == _url) {
-                gBrowser.selectedBrowser.contentDocument.location.reload();
-            }
+
+            // toggle this pref will trigger Grid.update() in about:ntab
+            Services.prefs.setBoolPref(
+                "moa.ntab.dial.refreshhack",
+                !Services.prefs.getBoolPref("moa.ntab.dial.refreshhack"));
         }
     };
 
