@@ -379,10 +379,12 @@ let Grid = {
     }, false);
   },
   _searchElements: function Grid__searchElements(search, fid) {
-    let searchWithKeyword = function(keyword, ref) {
+    let searchWithKeyword = function(keyword, url, ref) {
       tracker.track({ type: 'quickdial', action: 'search', fid: fid, sid: ref });
-      keyword = encodeURIComponent(keyword);
-      let url = search.template.replace('%KEYWORD%', keyword);
+      if (!url) {
+        keyword = encodeURIComponent(keyword);
+        url = search.template.replace('%KEYWORD%', keyword);
+      }
       let where = NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab')
                 ? 'tab'
                 : 'current';
@@ -398,7 +400,7 @@ let Grid = {
     form.addEventListener('submit', function(evt) {
       evt.preventDefault();
       let keyword = input.value || input.getAttribute('placeholder');
-      searchWithKeyword(keyword, 'search');
+      searchWithKeyword(keyword, '', 'search');
     }, false);
 
     let input = document.createElement('input');
@@ -414,7 +416,7 @@ let Grid = {
         evt.stopPropagation();
 
         let keyword = input.value || input.getAttribute('placeholder');
-        searchWithKeyword(keyword, 'search');
+        searchWithKeyword(keyword, '', 'search');
       }
     }, false);
     form.appendChild(input);
@@ -437,7 +439,8 @@ let Grid = {
         let defaultKeyword = response.default;
         input.setAttribute('placeholder', defaultKeyword);
 
-        let keywords = response.keywords;
+        let keyword_infos = response.keywords;
+        let keywords = Object.keys(keyword_infos);
         for (let i = 0, l = keywords.length; i < l; i++) {
           let keywordLi = document.createElement('li');
 
@@ -450,7 +453,7 @@ let Grid = {
             evt.stopPropagation();
 
             let keyword = evt.currentTarget.textContent;
-            searchWithKeyword(keyword, 'keyword');
+            searchWithKeyword(keyword, keyword_infos[keyword], 'keyword');
           }, false);
           keywordLi.appendChild(anchor);
 
