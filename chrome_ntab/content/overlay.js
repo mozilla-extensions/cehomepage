@@ -453,6 +453,8 @@
     ns.onContextMenuGlobal = function() {
         document.getElementById('context-ntab').hidden = !Services.prefs.getBoolPref('moa.ntab.contextMenuItem.show') || window._content.document.location.href == _url;
     };
+
+    ns.isValidURI = isValidURI;
 })();
 
 window.addEventListener("load", function() {

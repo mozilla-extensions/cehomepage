@@ -381,7 +381,10 @@ let Grid = {
   _searchElements: function Grid__searchElements(search, fid) {
     let searchWithKeyword = function(keyword, url, ref) {
       tracker.track({ type: 'quickdial', action: 'search', fid: fid, sid: ref });
-      if (!url) {
+      /* any url received through the http protocol should be presumed to be
+         malicious. search.template should be okay, as it is either shipped
+         with the extension, or comes from a signature verified json */
+      if (!url || !NTabUtils.chromeWindow.MOA.NTab.isValidURI(url)) {
         keyword = encodeURIComponent(keyword);
         url = search.template.replace('%KEYWORD%', keyword);
       }
