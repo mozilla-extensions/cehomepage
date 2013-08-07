@@ -434,7 +434,7 @@ let Grid = {
     form.appendChild(submit);
 
     let xhr = new XMLHttpRequest();
-    xhr.open('GET', search.keywords, true);
+    xhr.open('GET', search.keyword_infos, true);
     xhr.onload = function(evt) {
       try {
         let response = JSON.parse(xhr.responseText);
