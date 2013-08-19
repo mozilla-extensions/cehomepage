@@ -37,21 +37,37 @@
     }
 
     var partnerBookmark = {
+        /*
+        six entries in the _urlpairs:
+        0: old url that will be replaced, required, will create new one if empty
+        1: new url that will be replaced with, required, will delete old one if empty
+        2: new title that will be used, if present
+        3: favicon for the created new bookmark
+        4: alias of the parent folder to create the new bookmark, defaults to unfiled
+        5: index to create the new bookmark in the parent folder, defaults to appending
+        */
         _urlpairs: [
             ['http://click.union.360buy.com/JdClick/?unionId=206&siteId=1&to=http://www.360buy.com/', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com'],
             ['http://click.union.360buy.com/JdClick/?unionId=316&siteId=21946&to=http://www.360buy.com', 'http://click.union.360buy.com/JdClick/?unionId=20&siteId=439040_test_&to=http://www.360buy.com'],
             ['http://click.mz.simba.taobao.com/rd?w=mmp4ptest&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313996&k=e02915d8b8ad9603', 'http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_13466329%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_13466329'],
             ['http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997', 'http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_13466329%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_13466329'],
             ['http://weibo.com/', 'http://weibo.com/?c=spr_web_sq_firefox_weibo_t001'],
-            ['http://www.yihaodian.com/product/index.do?merchant=1&tracker_u=1787&tracker_type=1&uid=433588_test_', 'http://www.yihaodian.com?tracker_u=10977119545', '1\u53F7\u5546\u57CE']
+            ['http://www.yihaodian.com/product/index.do?merchant=1&tracker_u=1787&tracker_type=1&uid=433588_test_', 'http://www.yihaodian.com?tracker_u=10977119545', '1\u53F7\u5546\u57CE'],
+            ['', 'http://s.click.taobao.com/t_9?p=mm_28347190_2425761_13676372&l=http%3A%2F%2Fmall.taobao.com%2F', '\u5929\u732B\u5546\u57CE', 'data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AAAAAAACz/wAAuP8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALj/AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv////////////wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv////////////wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC///////////////////////////////////////////////////////8AAL//AAC//wAAs/8AALP/AAC//wAAv///////////////////////////////////////////////////////AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AALj/AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC4/wAAs/8AAAAAAACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==', 'toolbarFolder', 4]
         ],
-        _realVersion: 3,
+
+        _realVersion: 4,
         _versionPref: 'moa.partnerbookmark.migration',
 
         get bmsvc() {
             delete this.bmsvc;
             return this.bmsvc = Cc["@mozilla.org/browser/nav-bookmarks-service;1"]
                                     .getService(Ci.nsINavBookmarksService);
+        },
+        get fisvc() {
+            delete this.fisvc;
+            return this.fisvc = Cc['@mozilla.org/browser/favicon-service;1']
+                                    .getService(Ci.mozIAsyncFavicons || Ci.nsIFaviconService);
         },
         get ios() {
             delete this.ios;
@@ -77,21 +93,44 @@
                 return;
             }
             for (var i = 0, l = this._urlpairs.length; i < l; i++) {
-                var origUri = this.ios.newURI(this._urlpairs[i][0], null, null);
+                var origUri = null;
+                if (this._urlpairs[i][0]) {
+                    origUri = this.ios.newURI(this._urlpairs[i][0], null, null);
+                }
                 var newUri = null;
                 if (this._urlpairs[i][1]) {
                     newUri = this.ios.newURI(this._urlpairs[i][1], null, null);
                 }
                 var newTitle = this._urlpairs[i][2] || '';
-                var bookmarksArray = this.bmsvc.getBookmarkIdsForURI(origUri, {});
-                for (var j = 0, k = bookmarksArray.length; j < k; j++) {
-                    if (newUri) {
-                        this.bmsvc.changeBookmarkURI(bookmarksArray[j], newUri);
-                        if (newTitle) {
-                            this.bmsvc.setItemTitle(bookmarksArray[j], newTitle);
+                if (origUri) {
+                    var bookmarksArray = this.bmsvc.getBookmarkIdsForURI(origUri, {});
+                    for (var j = 0, k = bookmarksArray.length; j < k; j++) {
+                        if (newUri) {
+                            this.bmsvc.changeBookmarkURI(bookmarksArray[j], newUri);
+                            if (newTitle) {
+                                this.bmsvc.setItemTitle(bookmarksArray[j], newTitle);
+                            }
+                        } else {
+                            this.bmsvc.removeItem(bookmarksArray[j]);
                         }
-                    } else {
-                        this.bmsvc.removeItem(bookmarksArray[j]);
+                    }
+                } else {
+                    var newFavicon = this._urlpairs[i][3];
+                    var newParent = this.bmsvc[this._urlpairs[i][4] || 'unfiledBookmarksFolder'];
+                    var newIndex = this._urlpairs[i][5] || Ci.nsINavBookmarksService.DEFAULT_INDEX;
+                    var existingArray = this.bmsvc.getBookmarkIdsForURI(newUri, {});
+                    if (!existingArray.length && newUri && newTitle && newParent && newIndex) {
+                        this.bmsvc.insertBookmark(newParent, newUri, newIndex, newTitle);
+                        if (newFavicon) {
+                            let faviconUri = this.ios.newURI("fake-favicon-uri:" + this._urlpairs[i][1], null, null);
+                            if (Ci.mozIAsyncFavicons) {
+                                this.fisvc.replaceFaviconDataFromDataURL(faviconUri, newFavicon, 0);
+                                this.fisvc.setAndFetchFaviconForPage(newUri, faviconUri, false, this.fisvc.FAVICON_LOAD_NON_PRIVATE);
+                            } else {
+                                this.fisvc.setFaviconDataFromDataURL(faviconUri, newFavicon, 0);
+                                this.fisvc.setAndLoadFaviconForPage(newUri, faviconUri, false, this.fisvc.FAVICON_LOAD_NON_PRIVATE);
+                            }
+                        }
                     }
                 }
             }
