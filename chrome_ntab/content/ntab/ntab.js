@@ -1231,7 +1231,7 @@ let Launcher = {
             });
             break;
           case 'feedback':
-            NTabUtils.chromeWindow.openUILinkIn(encodeURI('http://www.huohu123.com:8080/generate/channel/feedback_i.php?subject=新标签页用户反馈'), 'tab');
+            NTabUtils.chromeWindow.openUILinkIn('http://i.firefoxchina.cn/doc/feedback/', 'tab');
             break;
         }
       }, false);
