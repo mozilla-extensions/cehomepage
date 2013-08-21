@@ -23,6 +23,16 @@ function collectPref() {
 
     ret.push(prefs.getIntPref("dial.extrawidth"));
     ret.push(prefs.getBoolPref("dial.useopacity"));
+
+    let dialModified = 0;
+    Cu.import("resource://ntab/quickdial.jsm");
+    for (var i = 1; i <= 7; i++) {
+      let dial = quickDialModule.getDial(i);
+      if (dial && dial.defaultposition && dial.defaultposition.indexOf(i) == 0) {
+        dialModified = dialModified | (1 << (7 - i));
+      }
+    }
+    ret.push(dialModified.toString(2));
   } catch(e) {}
 
   return ret.join("|");
