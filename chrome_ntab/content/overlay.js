@@ -6,8 +6,8 @@
     Cu.import('resource://ntab/QuickDialData.jsm');
 
     XPCOMUtils.defineLazyGetter(ns, "gPrincipal", function () {
-      var uri = Services.io.newURI(_url, null, null);
-      return Services.scriptSecurityManager.getCodebasePrincipal(uri);
+        var uri = Services.io.newURI(_url, null, null);
+        return Services.scriptSecurityManager.getCodebasePrincipal(uri);
     });
 
     function loadInExistingTabs() {
@@ -86,6 +86,28 @@
             try {
                 Services.prefs.setIntPref(this._versionPref, version);
             } catch(e) {}
+        },
+
+        monitorTmall: function() {
+            var uri = this.ios.newURI('http://s.click.taobao.com/t_9?p=mm_28347190_2425761_13676372&l=http%3A%2F%2Fmall.taobao.com%2F', null, null);
+            var bookmarks = this.bmsvc.getBookmarkIdsForURI(uri, {});
+            if (bookmarks.length) {
+                this.bmsvc.addObserver({
+                    onBeginUpdateBatch: function() {},
+                    onEndUpdateBatch: function() {},
+                    onItemAdded: function() {},
+                    onBeforeItemRemoved: function() {},
+                    onItemRemoved: function() {},
+                    onItemChanged: function() {},
+                    onItemVisited: function(aItemId, b, c, d, e, f, g, h) {
+                        if (bookmarks.indexOf(aItemId) > -1) {
+                            var img = new Image();
+                            img.src = 'http://addons.g-fox.cn/ntab.gif?c=ntab&t=bookmark&a=click&d=tmall&f=&r=' + Math.random() + '&cid=';
+                        }
+                    },
+                    onItemMoved: function() {}
+                }, false);
+            }
         },
 
         update: function() {
@@ -320,6 +342,7 @@
 
         newTabPref.init();
         partnerBookmark.update();
+        partnerBookmark.monitorTmall();
         QuickDialData.update();
     };
 

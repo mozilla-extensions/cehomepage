@@ -1,5 +1,6 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -33,6 +34,9 @@ function collectPref() {
       }
     }
     ret.push(dialModified.toString(2));
+
+    let uri = Services.io.newURI('http://s.click.taobao.com/t_9?p=mm_28347190_2425761_13676372&l=http%3A%2F%2Fmall.taobao.com%2F', null, null);
+    ret.push(!!PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {}).length);
   } catch(e) {}
 
   return ret.join("|");
