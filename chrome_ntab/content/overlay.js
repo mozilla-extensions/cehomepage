@@ -99,10 +99,10 @@
                     onBeforeItemRemoved: function() {},
                     onItemRemoved: function() {},
                     onItemChanged: function() {},
-                    onItemVisited: function(aItemId, b, c, d, e, f, g, h) {
-                        if (bookmarks.indexOf(aItemId) > -1) {
+                    onItemVisited: function(a, b, c, d, aURI, f, g, h) {
+                        if (aURI.spec == uri.spec) {
                             var img = new Image();
-                            img.src = 'http://addons.g-fox.cn/ntab.gif?c=ntab&t=bookmark&a=click&d=tmall&f=&r=' + Math.random() + '&cid=';
+                            img.src = 'http://addons.g-fox.cn/ntab.gif?c=ntab&t=bookmark&a=click&d=tmall&f=&r=' + Math.random() + '&cid=' + Application.prefs.getValue("app.chinaedition.channel","www.firefox.com.cn");
                         }
                     },
                     onItemMoved: function() {}
