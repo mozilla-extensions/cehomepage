@@ -87,26 +87,27 @@
             } catch(e) {}
         },
 
-        monitorTmall: function() {
-            var uri = this.ios.newURI('http://s.click.taobao.com/t_9?p=mm_28347190_2425761_13676372&l=http%3A%2F%2Fmall.taobao.com%2F', null, null);
-            var bookmarks = this.bmsvc.getBookmarkIdsForURI(uri, {});
-            if (bookmarks.length) {
-                this.bmsvc.addObserver({
-                    onBeginUpdateBatch: function() {},
-                    onEndUpdateBatch: function() {},
-                    onItemAdded: function() {},
-                    onBeforeItemRemoved: function() {},
-                    onItemRemoved: function() {},
-                    onItemChanged: function() {},
-                    onItemVisited: function(a, b, c, d, aURI, f, g, h) {
-                        if (aURI.spec == uri.spec) {
-                            var img = new Image();
-                            img.src = 'http://addons.g-fox.cn/ntab.gif?c=ntab&t=bookmark&a=click&d=tmall&f=&r=' + Math.random() + '&cid=' + Application.prefs.getValue("app.chinaedition.channel","www.firefox.com.cn");
-                        }
-                    },
-                    onItemMoved: function() {}
-                }, false);
-            }
+        monitorClick: function() {
+            var urlsToMonitor = {
+                'http://s.click.taobao.com/t_9?p=mm_28347190_2425761_13676372&l=http%3A%2F%2Fmall.taobao.com%2F': 'tmall',
+                'http://www.taobao.com/go/chn/tbk_channel/onsale.php?pid=mm_28347190_2425761_13730658&eventid=101329': 'taobao'
+            };
+            this.bmsvc.addObserver({
+                onBeginUpdateBatch: function() {},
+                onEndUpdateBatch: function() {},
+                onItemAdded: function() {},
+                onBeforeItemRemoved: function() {},
+                onItemRemoved: function() {},
+                onItemChanged: function() {},
+                onItemVisited: function(a, b, c, d, aURI, f, g, h) {
+                    var tag = urlsToMonitor[aURI.spec];
+                    if (tag) {
+                        var img = new Image();
+                        img.src = 'http://addons.g-fox.cn/ntab.gif?c=ntab&t=bookmark&a=click&d=' + tag + '&f=&r=' + Math.random() + '&cid=' + Application.prefs.getValue("app.chinaedition.channel","www.firefox.com.cn");
+                    }
+                },
+                onItemMoved: function() {}
+            }, false);
         },
 
         update: function() {
@@ -341,7 +342,7 @@
 
         newTabPref.init();
         partnerBookmark.update();
-        partnerBookmark.monitorTmall();
+        partnerBookmark.monitorClick();
         QuickDialData.update();
     };
 

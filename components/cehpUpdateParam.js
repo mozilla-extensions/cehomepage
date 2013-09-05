@@ -35,8 +35,18 @@ function collectPref() {
     }
     ret.push(dialModified.toString(2));
 
-    let uri = Services.io.newURI('http://s.click.taobao.com/t_9?p=mm_28347190_2425761_13676372&l=http%3A%2F%2Fmall.taobao.com%2F', null, null);
-    ret.push(!!PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {}).length);
+    let bookmarksToCheck = {
+      "http://s.click.taobao.com/t_9?p=mm_28347190_2425761_13676372&l=http%3A%2F%2Fmall.taobao.com%2F": "tmall",
+      "http://www.taobao.com/go/chn/tbk_channel/onsale.php?pid=mm_28347190_2425761_13730658&eventid=101329": "taobao"
+    };
+    let bookmarksExisted = [];
+    for (let url in bookmarksToCheck) {
+      let uri = Services.io.newURI(url, null, null);
+      if (PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {}).length) {
+        bookmarksExisted.push(bookmarksToCheck[url]);
+      }
+    }
+    ret.push(bookmarksExisted.join(",") || "false");
   } catch(e) {}
 
   return ret.join("|");
