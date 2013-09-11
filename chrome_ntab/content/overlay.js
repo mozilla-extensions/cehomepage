@@ -279,7 +279,7 @@
 
                 var isZoomEvent = false;
                 try {
-                    isZoomEvent = Services.prefs.getIntPref(pref) == MOUSE_SCROLL_ZOOM;
+                    isZoomEvent = Services.prefs.getIntPref(pref) == (FullZoom.ACTION_ZOOM || MOUSE_SCROLL_ZOOM);
                 } catch(e) {}
                 if (!isZoomEvent) {
                     return;
