@@ -1231,7 +1231,7 @@ let Launcher = {
             });
             break;
           case 'feedback':
-            NTabUtils.chromeWindow.openUILinkIn('http://i.firefoxchina.cn/doc/feedback/', 'tab');
+            NTabUtils.chromeWindow.openUILinkIn('http://doc.firefoxchina.cn/document/feedback/', 'tab');
             break;
         }
       }, false);
