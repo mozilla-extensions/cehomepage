@@ -102,8 +102,11 @@
                 onItemVisited: function(a, b, c, d, aURI, f, g, h) {
                     var tag = urlsToMonitor[aURI.spec];
                     if (tag) {
-                        var img = new Image();
-                        img.src = 'http://addons.g-fox.cn/ntab.gif?c=ntab&t=bookmark&a=click&d=' + tag + '&f=&r=' + Math.random() + '&cid=' + Application.prefs.getValue("app.chinaedition.channel","www.firefox.com.cn");
+                        MOA.NTab.track({
+                            type: 'bookmark',
+                            action: 'click',
+                            sid: tag
+                        });
                     }
                 },
                 onItemMoved: function() {}
@@ -517,6 +520,45 @@
     };
 
     ns.isValidURI = isValidURI;
+
+    var _trackurl = 'http://addons.g-fox.cn/ntab.gif';
+    var _extend = function (src, target) {
+        for (var key in src) {
+            target[key] = src[key];
+        }
+        return target;
+    }
+
+    ns.track = function(option) {
+        option = _extend(option, {
+            type: '',
+            action: '',
+            fid: '',
+            sid: '',
+            href: '',
+            title: ''
+        });
+
+        if (!option.type && !option.sid && !option.action)
+            return;
+
+        var image = new Image();
+        var args = [];
+        args.push('c=ntab');
+        args.push('t=' + encodeURIComponent(option.type));
+        args.push('a=' + encodeURIComponent(option.action));
+        args.push('d=' + encodeURIComponent(option.sid));
+        args.push('f=' + encodeURIComponent(option.fid));
+        if (option.title) {
+            args.push('ti=' + encodeURIComponent(option.title));
+        }
+        if (option.href) {
+            args.push('hr=' + encodeURIComponent(option.href));
+        }
+        args.push('r=' + Math.random());
+        args.push('cid=' + Application.prefs.getValue("app.chinaedition.channel","www.firefox.com.cn"));
+        image.src = _trackurl + '?' + args.join('&');
+    };
 })();
 
 window.addEventListener("load", function() {

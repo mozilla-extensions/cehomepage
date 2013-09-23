@@ -391,10 +391,7 @@ let Grid = {
       let where = NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab')
                 ? 'tab'
                 : 'current';
-      // w/o this setTimeout, tracking ping will not be sent
-      setTimeout(function() {
-        NTabUtils.chromeWindow.openUILinkIn(url, where);
-      }, 0);
+      NTabUtils.chromeWindow.openUILinkIn(url, where);
     };
 
     let keywordsUl = document.createElement('ul');
