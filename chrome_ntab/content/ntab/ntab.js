@@ -236,7 +236,12 @@ let DefaultBrowser = {
   },
   setAsDefault: function DefaultBrowser_setAsDefault() {
     if (NTabUtils.shellService) {
+      var sid = Math.random().toString();
+      tracker.track({ type: 'default', action: 'set', sid: sid });
       NTabUtils.shellService.setDefaultBrowser(true, false);
+      setTimeout(function() {
+        tracker.track({ type: 'default', action: DefaultBrowser.isDefaultBrowser ? 'pass' : 'block', sid: sid });
+      }, 1 * 1000 * 60)
       this.setDefault.setAttribute('hidden', 'true');
     }
   },
