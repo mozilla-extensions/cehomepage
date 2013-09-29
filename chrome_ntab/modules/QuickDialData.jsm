@@ -123,8 +123,8 @@ let QuickDialData = {
       let fstream = Cc['@mozilla.org/network/file-input-stream;1'].
                       createInstance(Ci.nsIFileInputStream);
       fstream.init(aFile, -1, 0, 0);
-      text = NetUtil.readInputStreamToString(fstream, fstream.available(),
-                                             { charset: 'UTF-8' });
+      text = NetUtil.readInputStreamToString(fstream, fstream.available());
+      text = gUnicodeConverter.ConvertToUnicode(text);
     }
     return text && JSON.parse(text);
   },
