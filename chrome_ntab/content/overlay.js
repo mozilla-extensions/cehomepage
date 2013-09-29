@@ -5,9 +5,14 @@
     Cu.import('resource://ntab/quickdial.jsm');
     Cu.import('resource://ntab/QuickDialData.jsm');
 
+    XPCOMUtils.defineLazyGetter(ns, "gScriptSecurityManager", function () {
+        return (Services.scriptSecurityManager ||
+                Cc["@mozilla.org/scriptsecuritymanager;1"].getService(Ci.nsIScriptSecurityManager));
+    });
+
     XPCOMUtils.defineLazyGetter(ns, "gPrincipal", function () {
         var uri = Services.io.newURI(_url, null, null);
-        return Services.scriptSecurityManager.getCodebasePrincipal(uri);
+        return ns.gScriptSecurityManager.getCodebasePrincipal(uri);
     });
 
     function loadInExistingTabs() {
@@ -390,7 +395,7 @@
 
     var isValidURI = function (aURI) {
       try {
-        Services.scriptSecurityManager.
+        ns.gScriptSecurityManager.
           checkLoadURIStrWithPrincipal(ns.gPrincipal,
             aURI,
             Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL |
