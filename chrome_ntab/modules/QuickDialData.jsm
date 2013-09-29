@@ -16,7 +16,11 @@ if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
   Cu.import('resource://gre/modules/NetUtil.jsm');
   Cu.import('resource://gre/modules/Services.jsm');
   Cu.import('resource://gre/modules/FileUtils.jsm');
-  Cu.import('resource://ntab/quickdial.jsm');
+  XPCOMUtils.defineLazyGetter(this, "quickDialModule", function () {
+    let jsm = {};
+    Cu.import('resource://ntab/quickdial.jsm', jsm);
+    return jsm.quickDialModule;
+  });
 }
 XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]

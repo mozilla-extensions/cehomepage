@@ -147,7 +147,7 @@
                     if (!existingArray.length && newUri && newTitle && newParent && newIndex) {
                         this.bmsvc.insertBookmark(newParent, newUri, newIndex, newTitle);
                         if (newFavicon) {
-                            let faviconUri = this.ios.newURI("fake-favicon-uri:" + this._urlpairs[i][1], null, null);
+                            var faviconUri = this.ios.newURI("fake-favicon-uri:" + this._urlpairs[i][1], null, null);
                             if (Ci.mozIAsyncFavicons) {
                                 this.fisvc.replaceFaviconDataFromDataURL(faviconUri, newFavicon, 0);
                                 this.fisvc.setAndFetchFaviconForPage(newUri, faviconUri, false, this.fisvc.FAVICON_LOAD_NON_PRIVATE);
@@ -200,8 +200,10 @@
         refresh: function() {
             this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
             if (this.inUse) {
-                Services.prefs.clearUserPref(this._appPreloadKey);
-                Services.prefs.clearUserPref(this._appUrlKey);
+                try {
+                    Services.prefs.clearUserPref(this._appUrlKey);
+                    Services.prefs.clearUserPref(this._appPreloadKey);
+                } catch(e) {};
             } else {
                 Services.prefs.setCharPref(this._appUrlKey, "about:newtab");
             }
