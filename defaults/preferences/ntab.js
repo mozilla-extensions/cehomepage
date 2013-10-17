@@ -41,7 +41,7 @@ pref("moa.ntab.dial.refreshhack", false);
 
 pref("moa.ntab.contextMenuItem.show", true);
 
-pref("moa.ntab.dial.branch", "master");
+pref("moa.ntab.dial.branch", "master-ii");
 
 pref("moa.ntab.display.usehotkey", false);
 
