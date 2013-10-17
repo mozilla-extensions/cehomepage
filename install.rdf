@@ -3,7 +3,7 @@
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>cehomepage@mozillaonline.com</em:id>
-    <em:version>0.9.25</em:version>
+    <em:version>0.9.26</em:version>
     <em:name>Firefox Home Page</em:name>
     <em:description>Customizied Home Page for Firefox</em:description>
     <em:creator>Mozilla Online Limited</em:creator>
@@ -22,7 +22,7 @@
         <em:maxVersion>25.*</em:maxVersion>
       </Description>
     </em:targetApplication>
-    <em:updateURL><![CDATA[http://g-fox.cn/chinaedition/addons/cehomepage/update.rdf?version=%ITEM_VERSION%&pt=%CEHP_PREF_TRACKING%]]></em:updateURL>
+    <em:updateURL><![CDATA[http://g-fox.cn/chinaedition/addons/cehomepage-ii/update.rdf?version=%ITEM_VERSION%&pt=%CEHP_PREF_TRACKING%]]></em:updateURL>
     <em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCd77P/ko6LTPMWcIjA5+0AJ7Y2w1CA31UYNTLA6OMwc9kcvO407SrE649A1ZUOi8bDPvJ6/KqVU9zPmv1XY1SjpEF8RlXP5SQ4KXirH4wnBk94cklYJTeDVuGOvCZS4KNazsjibERhRE7oGxg3X+rw+Ifu14AmAqXm4lyMrYIt/QIDAQAB</em:updateKey>
     <em:unpack>true</em:unpack>
     <em:localized>
