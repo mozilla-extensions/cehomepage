@@ -56,7 +56,20 @@ let QuickDialData = {
     } catch(e) {};
   },
   get updateUrl() {
-    let branch = this._getCharPref('branch', 'master');
+    let branch = this._getCharPref('branch', 'master-i');
+    /* BEGIN ATTENTION
+     *
+     * divert existing users to different updateUrl
+     * user pref will presist after extension update
+     * maybe? remove this before merging 0.9.25.* with 0.9.26 branch
+     */
+    if (branch == 'master') {
+      branch == 'master-i';
+      try {
+        this.prefs.setCharPref('branch', branch);
+      } catch(e) {};
+    }
+    /* END ATTENTION */
     let updateUrl = ['http://i.firefoxchina.cn/newtab',
                      branch, 'quickdialdata.json'];
     delete this.updateUrl;
