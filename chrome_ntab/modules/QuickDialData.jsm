@@ -64,7 +64,7 @@ let QuickDialData = {
      * maybe? remove this before merging 0.9.25.* with 0.9.26 branch
      */
     if (branch == 'master') {
-      branch == 'master-i';
+      branch = 'master-i';
       try {
         this.prefs.setCharPref('branch', branch);
       } catch(e) {};
