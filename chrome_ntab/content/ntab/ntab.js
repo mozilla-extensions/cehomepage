@@ -1395,6 +1395,26 @@ let DataBackup = {
   }
 };
 
+let Promo = {
+  begin: 1383886800000,
+  end: 1384221600000,
+  get promo() {
+    delete this.promo;
+    return this.promo = document.querySelector('#promo');
+  },
+
+  init: function() {
+    let epoch = Date.now();
+    if (this.begin && this.begin > epoch) {
+      return;
+    }
+    if (this.end && this.end < epoch) {
+      return;
+    }
+    this.promo.removeAttribute('hidden');
+  }
+};
+
 let NTab = {
   observer: {
     QueryInterface: function(aIID) {
@@ -1522,6 +1542,7 @@ let NTab = {
     Footer.init();
     Launcher.init();
     DefaultBrowser.init();
+    Promo.init();
   },
   uninit: function NTab_uninit() {
     this._observerUninit();

@@ -56,6 +56,20 @@ ol, ul {
   background-image: linear-gradient(to bottom, #db6e18, #f1a84a);
 }
 
+#promo {
+  background-image: url(chrome://ntab/skin/promo.png);
+  display: block;
+  height: 50px;
+  left: -moz-calc(100% * (50 / 960) + 20px);
+  position: absolute;
+  text-indent: -9999px;
+  top: 60px;
+  width: 90px;
+}
+#promo[hidden="true"] {
+  display: none;
+}
+
 #navpane {
   right: -moz-calc(100% * (50 / 960) + 20px);
 }
@@ -897,7 +911,7 @@ footer.off > #toggle {
 
 /* responsive */
 @media only screen and (max-width: 960px) {
-  #setdefault {
+  #setdefault, #promo {
     left: 70px;
   }
   #navpane {
@@ -906,7 +920,7 @@ footer.off > #toggle {
   /* #prevtab, #nexttab ... not needed with min-width on body */
 }
 @media only screen and (min-width: 1920px) {
-  #setdefault {
+  #setdefault, #promo {
     left: 120px;
   }
   #navpane {
