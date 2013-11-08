@@ -48,7 +48,10 @@ let QuickDialData = {
     return this.key = this._getCharPref('key', '');
   },
   get LastModified() {
-    return this._getCharPref('lastmodified', '');
+    let lastModified = this._latestData.exists()
+                     ? this._getCharPref('lastmodified', '')
+                     : '';
+    return lastModified;
   },
   set LastModified(lastmodified) {
     try {

@@ -27,10 +27,10 @@ function collectPref() {
 
     let dialModified = 0;
     Cu.import("resource://ntab/quickdial.jsm");
-    for (var i = 1; i <= 7; i++) {
+    for (var i = 1; i <= 8; i++) {
       let dial = quickDialModule.getDial(i);
       if (dial && dial.defaultposition && dial.defaultposition.indexOf(i) == 0) {
-        dialModified = dialModified | (1 << (7 - i));
+        dialModified = dialModified | (1 << (8 - i));
       }
     }
     ret.push(dialModified.toString(2));
