@@ -6,6 +6,8 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
   XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
     "resource://gre/modules/NetUtil.jsm");
+  XPCOMUtils.defineLazyModuleGetter(this, "OS",
+    "resource://gre/modules/osfile.jsm");
   XPCOMUtils.defineLazyModuleGetter(this, "Services",
     "resource://gre/modules/Services.jsm");
   XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
@@ -14,6 +16,9 @@ if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
     "resource://ntab/quickdial.jsm");
 } else {
   Cu.import('resource://gre/modules/NetUtil.jsm');
+  try {
+    Cu.import('resource://gre/modules/osfile.jsm');
+  } catch(e) {};
   Cu.import('resource://gre/modules/Services.jsm');
   Cu.import('resource://gre/modules/FileUtils.jsm');
   XPCOMUtils.defineLazyGetter(this, "quickDialModule", function () {
@@ -112,7 +117,9 @@ let QuickDialData = {
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open('GET', aUrl, true);
-    xhr.setRequestHeader('If-Modified-Since', aLastModified);
+    if (aLastModified) {
+      xhr.setRequestHeader('If-Modified-Since', aLastModified);
+    }
     xhr.onload = function(evt) {
       if (xhr.status == 200) {
         let data = JSON.parse(xhr.responseText);
@@ -144,14 +151,38 @@ let QuickDialData = {
     }
     return text && JSON.parse(text);
   },
-  _dumpData: function(aFile, aData) {
-    let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
-                    createInstance(Ci.nsIFileOutputStream);
-    ostream.init(aFile, -1, -1, ostream.DEFER_OPEN);
-
+  _dumpData: function(aFile, aData, aCallback) {
     aData = JSON.stringify(aData);
-    let istream = gUnicodeConverter.convertToInputStream(aData);
-    NetUtil.asyncCopy(istream, ostream, function(rc) {});
+
+    try {
+      // OS.File only available since Fx 16
+      OS.File.open(aFile.path, {
+        truncate: true
+      }).then(function(aFile) {
+        let encoder = new TextEncoder();
+        let data = encoder.encode(aData);
+        aFile.write(data).then(function() {
+          aFile.close().then(function() {
+            if (aCallback) {
+              aCallback();
+            }
+          });
+        });
+      });
+    } catch(e) {
+      let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
+                      createInstance(Ci.nsIFileOutputStream);
+      ostream.init(aFile, -1, -1, ostream.DEFER_OPEN);
+
+      let istream = gUnicodeConverter.convertToInputStream(aData);
+      NetUtil.asyncCopy(istream, ostream, function(aResult) {
+        if (Components.isSuccessCode(aResult)) {
+          if (aCallback) {
+            aCallback();
+          }
+        }
+      });
+    }
   },
 
   _legacyMigration: function(aItem) {
@@ -267,10 +298,10 @@ let QuickDialData = {
     this._fetch(this.updateUrl, this.LastModified,
                 function(aData, aLastModified) {
       if (self._validate(aData)) {
-        self._dumpData(self._latestData, JSON.parse(aData.data));
-        self.LastModified = aLastModified;
-
-        quickDialModule.refresh();
+        self._dumpData(self._latestData, JSON.parse(aData.data), function() {
+          self.LastModified = aLastModified;
+          quickDialModule.refresh();
+        });
       }
     });
 
