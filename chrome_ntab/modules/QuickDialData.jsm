@@ -54,13 +54,13 @@ let QuickDialData = {
   },
   get LastModified() {
     let lastModified = this._latestData.exists()
-                     ? this._getCharPref('lastmodified', '')
+                     ? this._getCharPref('lastmodified2', '')
                      : '';
     return lastModified;
   },
   set LastModified(lastmodified) {
     try {
-      this.prefs.setCharPref('lastmodified', lastmodified);
+      this.prefs.setCharPref('lastmodified2', lastmodified);
     } catch(e) {};
   },
   get updateUrl() {
