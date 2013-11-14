@@ -1538,6 +1538,7 @@ let NTab = {
     Launcher.init();
     DefaultBrowser.init();
     Promo.init();
+    NTabUtils.chromeWindow.QuickDialData.update();
   },
   uninit: function NTab_uninit() {
     this._observerUninit();
