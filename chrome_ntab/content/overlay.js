@@ -4,6 +4,9 @@
     var _url = 'about:ntab';
     Cu.import('resource://ntab/quickdial.jsm');
     Cu.import('resource://ntab/QuickDialData.jsm');
+    if (!window.NetUtil) {
+      Cu.import('resource://gre/modules/NetUtil.jsm');
+    }
 
     XPCOMUtils.defineLazyGetter(ns, "gScriptSecurityManager", function () {
         return (Services.scriptSecurityManager ||
@@ -40,6 +43,84 @@
             }
         }
     }
+
+    var overrideInstallation = {
+      prefKey: 'moa.ntab.oldinstalldate',
+
+      get oldInstallDate() {
+        var oldInstallDate = '';
+        try {
+          oldInstallDate = Services.prefs.getCharPref(this.prefKey);
+        } catch(e) {}
+        return oldInstallDate;
+      },
+
+      set oldInstallDate(val) {
+        try {
+          Services.prefs.setCharPref(this.prefKey, val);
+        } catch(e) {}
+      },
+
+      get installDateFile() {
+        var installDateFile = Services.dirsvc.get('XREExeF', Ci.nsILocalFile);
+        installDateFile.leafName = 'distribution';
+        installDateFile.append('myextensions');
+
+        if (!installDateFile.exists() || !installDateFile.isDirectory()) {
+          installDateFile = Services.dirsvc.get('CurProcD', Ci.nsILocalFile);
+          installDateFile.append('distribution');
+          installDateFile.append('myextensions');
+        }
+        installDateFile.append('installdate.ini');
+
+        return installDateFile;
+      },
+
+      get newInstallDate() {
+        var newInstallDate = '';
+        var installDateFile = this.installDateFile;
+        if (!installDateFile.exists() || installDateFile.isDirectory()) {
+          return '';
+        }
+
+        var iniParser = Cc['@mozilla.org/xpcom/ini-parser-factory;1'].
+                          getService(Ci.nsIINIParserFactory).
+                          createINIParser(installDateFile);
+        var sections = iniParser.getSections();
+        var section = null;
+
+        while (sections.hasMore()) {
+          section = sections.getNext();
+          try {
+            newInstallDate += iniParser.getString(section, 'dwLowDateTime');
+            newInstallDate += iniParser.getString(section, 'dwHighDateTime');
+          } catch(e) {
+            return '';
+          }
+        }
+
+        if (!newInstallDate) {
+          var fstream = Cc['@mozilla.org/network/file-input-stream;1'].
+                          createInstance(Ci.nsIFileInputStream);
+          fstream.init(installDateFile, -1, 0, 0);
+          newInstallDate = NetUtil.readInputStreamToString(fstream, fstream.available());
+        }
+
+        return newInstallDate;
+      },
+
+      get isOverride() {
+        var everSet = !!this.oldInstallDate;
+        var changed = this.oldInstallDate != this.newInstallDate;
+        if (!changed) {
+          return false;
+        }
+
+        this.oldInstallDate = this.newInstallDate;
+        // only a change with an exisiting pref count as an override
+        return everSet;
+      }
+    };
 
     var partnerBookmark = {
         /*
@@ -357,6 +438,8 @@
         partnerBookmark.update();
         partnerBookmark.monitorClick();
         QuickDialData.update();
+        /* force write the pref for future use */
+        overrideInstallation.isOverride;
     };
 
     ns.onMenuItemCommand = function(event) {
