@@ -225,7 +225,7 @@ let QuickDialData = {
   _migrateUserData: function(aDefaultData) {
     let _legacyUserData = FileUtils.getFile('ProfD',
                                             ['ntab', 'quickdial.json'], false);
-    if (_legacyUserData.exists()) {
+    if (_legacyUserData.exists() && !this._userData.exists()) {
       try {
         let reverseLookup = {};
         for (let index in aDefaultData) {
