@@ -258,7 +258,9 @@ let QuickDialData = {
         let item = userData[index];
         if (/^\d+$/.test(item)) {
           let defaultItem = defaultData[item];
-          defaultItem.defaultposition = [item, defaultItem.rev].join('r');
+          if (defaultItem) {
+            defaultItem.defaultposition = item;
+          }
           item = defaultItem;
         } else {
           item = this._itemMigration(item);
@@ -270,7 +272,7 @@ let QuickDialData = {
     } else {
       for (let index in defaultData) {
         let defaultItem = defaultData[index];
-        defaultItem.defaultposition = [index, defaultItem.rev].join('r');
+        defaultItem.defaultposition = index;
         ret[index] = defaultItem;
       }
     }
@@ -279,9 +281,7 @@ let QuickDialData = {
   persist: function(aData) {
     let data = {}
     for (let index in aData) {
-      data[index] = aData[index].defaultposition
-                  ? aData[index].defaultposition.split('r')[0]
-                  : aData[index];
+      data[index] = aData[index].defaultposition || aData[index];
     }
     this._dumpData(this._userData, data);
   },

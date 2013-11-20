@@ -350,8 +350,12 @@ let Grid = {
     }
     aLi.querySelector('a').addEventListener('click', function(evt) {
       if (evt.currentTarget.href) {
-        let fid = aLi.getAttribute('data-fid');
-        tracker.track({ type: 'quickdial', action: 'click', fid: fid, sid: index });
+        if (!aLi.getAttribute('data-fid')) {
+          return;
+        }
+
+        let href = evt.currentTarget.href;
+        tracker.track({ type: 'quickdial', action: 'click', href: href, sid: index });
       } else if (evt.currentTarget.querySelector('form')) {
         evt.currentTarget.querySelector('form > input').focus();
       } else {
@@ -378,9 +382,9 @@ let Grid = {
       quickDialModule.exchangeDial(node.getAttribute('data-index'), index);
     }, false);
   },
-  _searchElements: function Grid__searchElements(search, fid) {
+  _searchElements: function Grid__searchElements(search, href) {
     let searchWithKeyword = function(keyword, url, ref) {
-      tracker.track({ type: 'quickdial', action: 'search', fid: fid, sid: ref });
+      tracker.track({ type: 'quickdial', action: 'search', href: href, sid: ref });
       /* any url received through the http protocol should be presumed to be
          malicious. search.template should be okay, as it is either shipped
          with the extension, or comes from a signature verified json */
@@ -525,8 +529,8 @@ let Grid = {
     let span_title = document.createElement('span');
     span_title.className = 'title';
     if (dial && dial.search) {
-      let searchElements = this._searchElements(dial.search,
-                                                dial.defaultposition || '');
+      let href = dial.defaultposition && dial.url || '';
+      let searchElements = this._searchElements(dial.search, href);
       span_thumb.appendChild(searchElements[0]);
       span_title.appendChild(searchElements[1]);
       // work around the search input jumping w backspace
