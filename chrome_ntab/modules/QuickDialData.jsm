@@ -64,8 +64,8 @@ let QuickDialData = {
     } catch(e) {};
   },
   get updateUrl() {
-    let branch = this._getCharPref('branch', 'master');
-    let updateUrl = ['http://i.firefoxchina.cn/newtab',
+    let branch = this._getCharPref('branch', 'master-ii');
+    let updateUrl = ['http://ntab.firefoxchina.cn',
                      branch, 'quickdialdata.json'];
     delete this.updateUrl;
     return this.updateUrl = updateUrl.join('/');
