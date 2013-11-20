@@ -78,7 +78,7 @@ let QuickDialData = {
       } catch(e) {};
     }
     /* END ATTENTION */
-    let updateUrl = ['http://i.firefoxchina.cn/newtab',
+    let updateUrl = ['http://ntab.firefoxchina.cn',
                      branch, 'quickdialdata.json'];
     delete this.updateUrl;
     return this.updateUrl = updateUrl.join('/');
