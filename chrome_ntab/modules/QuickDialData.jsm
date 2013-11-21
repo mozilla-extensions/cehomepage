@@ -53,10 +53,8 @@ let QuickDialData = {
     return this.key = this._getCharPref('key', '');
   },
   get LastModified() {
-    let lastModified = this._latestData.exists()
-                     ? this._getCharPref('lastmodified2', '')
-                     : '';
-    return lastModified;
+    let _latestData = this._latestData.exists() && this._latestData.fileSize;
+    return _latestData ? this._getCharPref('lastmodified2', '') : '';
   },
   set LastModified(lastmodified) {
     try {
@@ -94,7 +92,8 @@ let QuickDialData = {
                                         'latest.json'], false);
   },
   get _defaultData() {
-    return this._latestData.exists() ? this._latestData : this._bundleData;
+    let _latestData = this._latestData.exists() && this._latestData.fileSize;
+    return _latestData ? this._latestData : this._bundleData;
   },
 
   get _userData() {
@@ -142,7 +141,7 @@ let QuickDialData = {
 
   _loadData: function(aFile) {
     let text = null;
-    if (aFile.exists()) {
+    if (aFile.exists() && aFile.fileSize) {
       let fstream = Cc['@mozilla.org/network/file-input-stream;1'].
                       createInstance(Ci.nsIFileInputStream);
       fstream.init(aFile, -1, 0, 0);
