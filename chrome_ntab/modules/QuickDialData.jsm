@@ -224,6 +224,7 @@ let QuickDialData = {
   _migrateUserData: function(aDefaultData) {
     let _legacyUserData = FileUtils.getFile('ProfD',
                                             ['ntab', 'quickdial.json'], false);
+    let legacyUserData = null;
     if (_legacyUserData.exists() && !this._userData.exists()) {
       try {
         let reverseLookup = {};
@@ -231,7 +232,7 @@ let QuickDialData = {
           reverseLookup[aDefaultData[index].url] = index;
         }
 
-        let legacyUserData = this._loadData(_legacyUserData);
+        legacyUserData = this._loadData(_legacyUserData);
         for (let index in legacyUserData) {
           let item = this._legacyMigration(legacyUserData[index]);
           legacyUserData[index] = reverseLookup[item.url] || item;
@@ -243,13 +244,14 @@ let QuickDialData = {
         LOG('Oops, migration failed: ' + e);
       }
     }
+    return legacyUserData;
   },
 
   read: function() {
     let defaultData = this._loadData(this._defaultData);
 
-    this._migrateUserData(defaultData);
-    let userData = this._loadData(this._userData);
+    let userData = this._migrateUserData(defaultData) ||
+                   this._loadData(this._userData);
 
     let ret = {};
     if (userData) {
