@@ -199,8 +199,8 @@ let QuickDialData = {
   },
   _itemMigration: function(aItem) {
     switch(aItem.url) {
-      case "http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_9313997%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_9313997":
-        aItem.url = "http://redirect.simba.taobao.com/rd?c=un&w=channel&f=http%3A%2F%2Fwww.taobao.com%2Fgo%2Fchn%2Ftbk_channel%2Fonsale.php%3Fpid%3Dmm_28347190_2425761_13466329%26unid%3D&k=e02915d8b8ad9603&p=mm_28347190_2425761_13466329";
+      case "http://count.chanet.com.cn/click.cgi?a=498315&d=365155&u=&e=&url=http%3A%2F%2Fwww.jd.com":
+        aItem.url = "http://www.jd.com/";
         break;
       default:
         break;
