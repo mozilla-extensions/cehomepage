@@ -113,14 +113,218 @@
         var everSet = !!this.oldInstallDate;
         var changed = this.oldInstallDate != this.newInstallDate;
         if (!changed) {
-          return false;
+          delete this.isOverride;
+          return this.isOverride = false;
         }
 
         this.oldInstallDate = this.newInstallDate;
         // only a change with an exisiting pref count as an override
-        return everSet;
+        delete this.isOverride;
+        return this.isOverride = everSet;
       }
     };
+
+    var homepageReset = {
+      prefKeyHomepage: "browser.startup.homepage",
+      prefKeyOtherNav: "moa.homepagereset.othernav.latestcheck",
+      prefKeyPotentialHijack: "moa.homepagereset.potentialhijack.",
+
+      notificationKey: "mo-reset-cehome",
+
+      NO_REASON: 0,
+      REASON_OVERRIDE_INSTALL: 1,
+      REASON_OTHER_NAV: 2,
+      REASON_POTENTIAL_HIJACK: 3,
+
+      defaultHomepage: "about:cehome",
+      defaultHomepages: [
+        /^about:cehome$/,
+        /^http:\/\/[a-z]+\.firefoxchina\.cn/
+      ],
+
+      otherNavs: [
+        /^http:\/\/www\.hao123\.com/,
+        /^http:\/\/www\.2345\.com/
+      ],
+      firstOtherNavUrl: null,
+
+      get homepage() {
+        var homepages = [this.defaultHomepage];
+        try {
+          homepages = Services.prefs.getComplexValue(this.prefKeyHomepage,
+            Ci.nsIPrefLocalizedString).data.split("|");
+        } catch(e) {}
+        return homepages;
+      },
+
+      set homepage(homepage) {
+        var defaultHomepages = [homepage];
+        try {
+          defaultHomepages = Services.prefs.getDefaultBranch("").
+            getComplexValue(this.prefKeyHomepage,
+              Ci.nsIPrefLocalizedString).data.split("|");
+        } catch(e) {};
+
+        var defaultHomepageIsCEHome =
+          defaultHomepages.some(function(defaultHomepage) {
+            return homepage == defaultHomepage;
+          });
+
+        if (defaultHomepageIsCEHome) {
+          Services.prefs.clearUserPref(this.prefKeyHomepage);
+        } else {
+          try {
+            Services.prefs.setCharPref(this.prefKeyHomepage, homepage);
+          } catch(e) {}
+        }
+      },
+
+      // for comparison, using int instead of string
+      currentCheck: 20131129,
+
+      get latestCheck() {
+        var latestCheck = 0;
+        try {
+          latestCheck = Services.prefs.getIntPref(this.prefKeyOtherNav);
+        } catch(e) {}
+        return latestCheck;
+      },
+
+      set latestCheck(day) {
+        try {
+          Services.prefs.setIntPref(this.prefKeyOtherNav, day);
+        } catch(e) {}
+      },
+
+      shouldNotify: function() {
+        var homepages = this.homepage;
+        var usingCEHome = this.defaultHomepages.some(function(regex) {
+          return homepages.some(function(homepage) {
+            return regex.test(homepage);
+          });
+        });
+
+        if (usingCEHome) {
+          return this.NO_REASON;
+        }
+
+        if (overrideInstallation.isOverride) {
+          return this.REASON_OVERRIDE_INSTALL;
+        }
+
+        var firstOtherNav = "";
+        var usingOtherNav = this.otherNavs.some(function(regex) {
+          return homepages.some(function(homepage) {
+            var match = regex.test(homepage);
+            if (match) {
+              firstOtherNav = homepage;
+            }
+            return match;
+          });
+        });
+
+        if (!usingOtherNav) {
+          return this.NO_REASON;
+        }
+
+        this.firstOtherNavUrl = Services.io.newURI(firstOtherNav, null, null)
+                                        .QueryInterface(Ci.nsIURL);
+        if (this.firstOtherNavUrl.query) {
+          var latestCheck = 0;
+          try {
+            var prefKey = this.prefKeyPotentialHijack + this.firstOtherNavUrl.asciiHost;
+            latestCheck = Services.prefs.getIntPref(prefKey);
+          } catch(e) {}
+          if (latestCheck < this.currentCheck) {
+            return this.REASON_POTENTIAL_HIJACK;
+          } else {
+            return this.NO_REASON;
+          }
+        } else {
+          if (this.latestCheck < this.currentCheck) {
+            return this.REASON_OTHER_NAV;
+          } else {
+            return this.NO_REASON;
+          }
+        }
+      },
+
+      markShown: function() {
+        this.latestCheck = this.currentCheck;
+      },
+
+      markNomore: function() {
+        var prefKey = this.prefKeyPotentialHijack + this.firstOtherNavUrl.asciiHost;
+        try {
+          Services.prefs.setIntPref(prefKey, this.currentCheck);
+        } catch(e) {}
+      },
+
+      check: function() {
+        var reason = this.shouldNotify();
+        var shownCallback = this.markShown.bind(this);
+        var nomoreCallback = this.markNomore.bind(this);
+
+        switch (reason) {
+          case this.REASON_OVERRIDE_INSTALL:
+            this.notify();
+            break;
+          case this.REASON_OTHER_NAV:
+            this.notify(shownCallback);
+            break;
+          case this.REASON_POTENTIAL_HIJACK:
+            this.notify(shownCallback, nomoreCallback);
+            break;
+          default:
+            break;
+        }
+      },
+
+      notify: function(aShownCallback, aNomoreCallback) {
+        var stringBundle = document.getElementById('ntab-strings');
+
+        var message = stringBundle.getString("homepagereset.notification.message");
+        var resetText = stringBundle.getString("homepagereset.notification.reset");
+        var noText = stringBundle.getString("homepagereset.notification.no");
+        var nomoreText = stringBundle.getString("homepagereset.notification.nomore");
+
+        var self = this;
+        var buttons = [{
+          label: resetText,
+          accessKey: "R",
+          callback: function() {
+            self.reset();
+          }
+        }, {
+          label: noText,
+          accessKey: "N",
+          callback: function() {}
+        }];
+
+        if (aNomoreCallback) {
+          buttons.push({
+            label: nomoreText,
+            accessKey: "D",
+            callback: function() {
+              aNomoreCallback();
+            }
+          });
+        }
+
+        var notificationBox = gBrowser.getNotificationBox();
+        var notificationBar =
+          notificationBox.appendNotification(message, this.notificationKey, "",
+            notificationBox.PRIORITY_INFO_MEDIUM, buttons);
+        if (aShownCallback) {
+          aShownCallback();
+        }
+        notificationBar.persistence = -1;
+      },
+
+      reset: function() {
+        this.homepage = this.defaultHomepage;
+      }
+    }
 
     var partnerBookmark = {
         /*
@@ -439,8 +643,7 @@
         partnerBookmark.update();
         partnerBookmark.monitorClick();
         QuickDialData.update();
-        /* force write the pref for future use */
-        overrideInstallation.isOverride;
+        homepageReset.check();
     };
 
     ns.onMenuItemCommand = function(event) {
