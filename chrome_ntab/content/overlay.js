@@ -265,6 +265,10 @@
         var shownCallback = this.markShown.bind(this);
         var nomoreCallback = this.markNomore.bind(this);
 
+        if (reason == this.NO_REASON) {
+          return;
+        }
+
         switch (reason) {
           case this.REASON_OVERRIDE_INSTALL:
             this.notify();
@@ -278,6 +282,12 @@
           default:
             break;
         }
+
+        MOA.NTab.track({
+          type: "homepagereset",
+          action: "notify",
+          sid: reason
+        });
       },
 
       notify: function(aShownCallback, aNomoreCallback) {
@@ -294,11 +304,23 @@
           accessKey: "R",
           callback: function() {
             self.reset();
+
+            MOA.NTab.track({
+              type: "homepagereset",
+              action: "click",
+              sid: "yes"
+            });
           }
         }, {
           label: noText,
           accessKey: "N",
-          callback: function() {}
+          callback: function() {
+            MOA.NTab.track({
+              type: "homepagereset",
+              action: "click",
+              sid: "no"
+            });
+          }
         }];
 
         if (aNomoreCallback) {
@@ -307,6 +329,12 @@
             accessKey: "D",
             callback: function() {
               aNomoreCallback();
+
+              MOA.NTab.track({
+                type: "homepagereset",
+                action: "click",
+                sid: "nomore"
+              });
             }
           });
         }
