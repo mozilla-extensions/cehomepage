@@ -286,7 +286,8 @@
         MOA.NTab.track({
           type: "homepagereset",
           action: "notify",
-          sid: reason
+          sid: reason,
+          href: (this.firstOtherNavUrl && this.firstOtherNavUrl.spec)
         });
       },
 
