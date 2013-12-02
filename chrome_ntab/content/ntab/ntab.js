@@ -392,9 +392,9 @@ let Grid = {
         keyword = encodeURIComponent(keyword);
         url = search.template.replace('%KEYWORD%', keyword);
       }
-      let where = NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab')
-                ? 'tab'
-                : 'current';
+      let where = NTabUtils.prefs.getBoolPref('moa.ntab.openLinkInNewTab') ?
+        'tab' :
+        'current';
       NTabUtils.chromeWindow.openUILinkIn(url, where);
     };
 
@@ -475,12 +475,12 @@ let Grid = {
     let li = document.createElement('li');
     li.setAttribute('draggable', dial ? 'true' : 'false');
     li.setAttribute('data-index', aIndex);
-    li.setAttribute('data-fid', dial
-                              ? dial.defaultposition || ''
-                              : '');
-    li.setAttribute('title', dial
-                           ? dial.title || ''
-                           : _('ntab.dial.label.clicktoadddial'));
+    li.setAttribute('data-fid', dial ?
+      dial.defaultposition || '' :
+      '');
+    li.setAttribute('title', dial ?
+      dial.title || '' :
+      _('ntab.dial.label.clicktoadddial'));
 
     if (dial) {
       let edit = document.createElement('button');

@@ -208,9 +208,9 @@
           return this.NO_REASON;
         }
 
-        if (overrideInstallation.isOverride) {
-          return this.REASON_OVERRIDE_INSTALL;
-        }
+        var ret = overrideInstallation.isOverride ?
+          this.REASON_OVERRIDE_INSTALL :
+          this.NO_REASON;
 
         var firstOtherNav = "";
         var usingOtherNav = this.otherNavs.some(function(regex) {
@@ -224,7 +224,7 @@
         });
 
         if (!usingOtherNav) {
-          return this.NO_REASON;
+          return ret;
         }
 
         this.firstOtherNavUrl = Services.io.newURI(firstOtherNav, null, null)
@@ -238,13 +238,13 @@
           if (latestCheck < this.currentCheck) {
             return this.REASON_POTENTIAL_HIJACK;
           } else {
-            return this.NO_REASON;
+            return ret;
           }
         } else {
           if (this.latestCheck < this.currentCheck) {
             return this.REASON_OTHER_NAV;
           } else {
-            return this.NO_REASON;
+            return ret;
           }
         }
       },
