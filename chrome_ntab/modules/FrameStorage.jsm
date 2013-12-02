@@ -94,9 +94,9 @@ let FrameStorage = {
   },
 
   frames: function(aFilename) {
-    let file = this._profFrame(aFilename).exists()
-             ? this._profFrame(aFilename)
-             : this._bundleFrame(aFilename);
+    let file = this._profFrame(aFilename).exists() ?
+      this._profFrame(aFilename) :
+      this._bundleFrame(aFilename);
     return Services.io.newFileURI(file).spec;
   },
   notify: function() {
