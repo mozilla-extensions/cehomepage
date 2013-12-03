@@ -271,13 +271,13 @@
 
         switch (reason) {
           case this.REASON_OVERRIDE_INSTALL:
-            this.notify();
+            this.notify(reason);
             break;
           case this.REASON_OTHER_NAV:
-            this.notify(shownCallback);
+            this.notify(reason, shownCallback);
             break;
           case this.REASON_POTENTIAL_HIJACK:
-            this.notify(shownCallback, nomoreCallback);
+            this.notify(reason, shownCallback, nomoreCallback);
             break;
           default:
             break;
@@ -291,10 +291,13 @@
         });
       },
 
-      notify: function(aShownCallback, aNomoreCallback) {
+      notify: function(aReason, aShownCallback, aNomoreCallback) {
         var stringBundle = document.getElementById('ntab-strings');
 
         var message = stringBundle.getString("homepagereset.notification.message");
+        if (aReason == this.REASON_POTENTIAL_HIJACK) {
+          message = stringBundle.getString("homepagereset.notification.message_alt");
+        }
         var resetText = stringBundle.getString("homepagereset.notification.reset");
         var noText = stringBundle.getString("homepagereset.notification.no");
         var nomoreText = stringBundle.getString("homepagereset.notification.nomore");
