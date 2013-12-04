@@ -1,3 +1,6 @@
+let Cu = Components.utils;
+Cu.import('resource://ntab/Tracking.jsm');
+
 var tracker = (function() {
   function _trace_link(link) {
     if (!link.href || (link.href.indexOf('http://') != 0 && link.href.indexOf('https://') != 0))
@@ -32,7 +35,7 @@ var tracker = (function() {
 
   return {
     track: function(option) {
-      NTabUtils.chromeWindow.MOA.NTab.track(option);
+      Tracking.track(option);
     },
 
     onclick: function(event) {

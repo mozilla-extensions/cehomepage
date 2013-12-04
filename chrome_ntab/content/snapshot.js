@@ -1,14 +1,14 @@
 (function() {
     // Initial global object
     // This object can be access by: MOA.NTab.Snapshot
-    var snapshot = MOA.ns('NTab.Snapshot');
+    var ns = MOA.ns('NTab.Snapshot');
 
     var Cc = Components.classes;
     var Ci = Components.interfaces;
 
-    Components.utils['import']('resource://ntab/utils.jsm');
-    Components.utils['import']('resource://ntab/quickdial.jsm');
-    Components.utils['import']('resource://ntab/hash.jsm');
+    Components.utils['import']('resource://ntab/utils.jsm', ns);
+    Components.utils['import']('resource://ntab/quickdial.jsm', ns);
+    Components.utils['import']('resource://ntab/hash.jsm', ns);
 
     /**
      * Tell snapshot module to create a snapshot for a given url.
@@ -20,9 +20,9 @@
      *         no return.
      *         Snapshot module should call function back: MOA.NTab.TabLoader.snapshotDone()
      */
-    snapshot.createSnapshot = function(url) {
+    ns.createSnapshot = function(url) {
         // Add url to global hash, indicate that the url is under processing.
-        hashModule.add(url, true);
+        ns.hashModule.add(url, true);
         queue.push(url);
         processQueue();
     };
@@ -62,8 +62,8 @@
 
         MOA.debug('Refresh dial related: ' + snapshot.url);
         // Remove url from global hash, indicate that the snapshot work has been done.
-        hashModule.remove(snapshot.url);
-        quickDialModule.snapshotDone(snapshot.url);
+        ns.hashModule.remove(snapshot.url);
+        ns.quickDialModule.snapshotDone(snapshot.url);
     }
 
     var NTSnapshot = function(url) {
@@ -158,7 +158,7 @@
                     var data = canvas.toDataURL('image/png');
                     var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
                     var uri = ioService.newURI(data, 'UTF8', null);
-                    utils.saveURIToProFile(['ntab', 'cache', [utils.md5(self.url), 'png'].join('.')], uri, function() {
+                    ns.utils.saveURIToProFile(['ntab', 'cache', [ns.utils.md5(self.url), 'png'].join('.')], uri, function() {
                         MOA.debug('Snapshot image has been saved: ' + self.url);
                         _snapshotDone(self);
                         self.destroy();
@@ -172,7 +172,7 @@
             var wnd = this.browser.contentWindow;
             var doc = wnd.document;
             // update title and favicon
-            quickDialModule.updateTitleIfEmpty(this.url, doc.title);
+            ns.quickDialModule.updateTitleIfEmpty(this.url, doc.title);
 
             // Settimeout to draw thumbnail, make sure that whole page is complete rendered.
             var self = this;
@@ -195,7 +195,7 @@
                     var data = canvas.toDataURL('image/png');
                     var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
                     var uri = ioService.newURI(data, 'UTF8', null);
-                    utils.saveURIToProFile(['ntab', 'cache', [utils.md5(self.url), 'png'].join('.')], uri, function() {
+                    ns.utils.saveURIToProFile(['ntab', 'cache', [ns.utils.md5(self.url), 'png'].join('.')], uri, function() {
                         MOA.debug('Snapshot image has been saved: ' + self.url);
                         _snapshotDone(self);
                         self.destroy();
@@ -214,7 +214,7 @@
                     var data = canvas.toDataURL('image/png');
                     var ioService = Cc['@mozilla.org/network/io-service;1'].getService(Ci.nsIIOService);
                     var uri = ioService.newURI(data, 'UTF8', null);
-                    utils.saveURIToProFile(['ntab', 'cache', [utils.md5(self.url), 'png'].join('.')], uri, function() {
+                    ns.utils.saveURIToProFile(['ntab', 'cache', [ns.utils.md5(self.url), 'png'].join('.')], uri, function() {
                         MOA.debug('Snapshot image has been saved: ' + self.url);
                         _snapshotDone(self);
                         self.destroy();
@@ -240,8 +240,8 @@
     window.addEventListener('unload', function(event) {
         while (snapshots.length > 0) {
             var snapshot = snapshots.shift();
-            hashModule.remove(snapshot.url);
-            snapshot.destroy();
+            ns.hashModule.remove(snapshot.url);
+            ns.destroy();
         }
     }, false);
 })();
