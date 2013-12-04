@@ -1564,7 +1564,8 @@ let NTab = {
     Launcher.init();
     DefaultBrowser.init();
     Promo.init();
-    NTabUtils.chromeWindow.QuickDialData.update();
+    NTabUtils.chromeWindow.MOA.NTab.QuickDialData.update();
+    NTabUtils.chromeWindow.MOA.NTab.PartnerBookmark.update();
   },
   uninit: function NTab_uninit() {
     this._observerUninit();

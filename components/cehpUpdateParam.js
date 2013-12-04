@@ -3,6 +3,7 @@ const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.import("resource://ntab/PartnerBookmarks.jsm");
 
 function collectPref() {
   let prefs = Services.prefs.getBranch("moa.ntab.");
@@ -35,18 +36,8 @@ function collectPref() {
     }
     ret.push(dialModified.toString(2));
 
-    let bookmarksToCheck = {
-      "http://s.click.taobao.com/t?e=m%3D2%26s%3DHLQ0nwFAGAUcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMfTDcs3PiqZXlovu%2FCElQOtoVxuUFnM6iJG6UkagZE085UoOeRlV%2BcG%2Bh63zuUZMYYgaseAKBk0cLdkr8YvWKT4%3D": "tmall6",
-      "http://www.taobao.com/go/chn/tbk_channel/onsale.php?pid=mm_28347190_2425761_13730658&eventid=101329": "taobao"
-    };
-    let bookmarksExisted = [];
-    for (let url in bookmarksToCheck) {
-      let uri = Services.io.newURI(url, null, null);
-      if (PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {}).length) {
-        bookmarksExisted.push(bookmarksToCheck[url]);
-      }
-    }
-    ret.push(bookmarksExisted.join(",") || "false");
+    // this array should be manually updated, at least for now
+    ret.push(PartnerBookmarks.getUpdateTracking(['taobao', 'tmall']));
   } catch(e) {}
 
   return ret.join("|");

@@ -45,7 +45,7 @@ let QuickDialData = {
   get verifier() {
     delete this.verifier;
     return this.verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
-      getService(Ci.nsIDataSignatureVerifier);;
+      getService(Ci.nsIDataSignatureVerifier);
   },
 
   get key() {
