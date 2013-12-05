@@ -286,8 +286,7 @@
         MOA.NTab.track({
           type: "homepagereset",
           action: "notify",
-          sid: reason,
-          href: (this.firstOtherNavUrl && this.firstOtherNavUrl.spec)
+          sid: reason
         });
       },
 
@@ -881,9 +880,6 @@
         args.push('f=' + encodeURIComponent(option.fid));
         if (option.title) {
             args.push('ti=' + encodeURIComponent(option.title).substr(0, 200));
-        }
-        if (option.href) {
-            args.push('hr=' + encodeURIComponent(option.href).substr(0, 200));
         }
         args.push('r=' + Math.random());
         args.push('cid=' + Application.prefs.getValue("app.chinaedition.channel","www.firefox.com.cn"));
