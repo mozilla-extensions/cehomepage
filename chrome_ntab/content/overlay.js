@@ -641,6 +641,21 @@
         }
     };
 
+    var searchEngines = {
+        removeLegacyAmazon: function() {
+            var amazondotcn = {
+                legacy: Services.search.getEngineByName('\u5353\u8d8a\u4e9a\u9a6c\u900a'),
+                update: Services.search.getEngineByName('\u4e9a\u9a6c\u900a')
+            };
+            if (amazondotcn.legacy && amazondotcn.update) {
+                if (Services.search.currentEngine == amazondotcn.legacy) {
+                    Services.search.currentEngine = amazondotcn.update;
+                }
+                Services.search.removeEngine(amazondotcn.legacy);
+            }
+        }
+    };
+
     ns.onLoad = function() {
         // load ntab page in existing empty tabs.
         // Under Firefox5, this function will open "about:ntab" in the blank page in which
@@ -676,6 +691,7 @@
         partnerBookmark.monitorClick();
         QuickDialData.update();
         homepageReset.check();
+        searchEngines.removeLegacyAmazon();
     };
 
     ns.onMenuItemCommand = function(event) {
