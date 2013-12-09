@@ -56,18 +56,6 @@ ol, ul {
   background-image: linear-gradient(to bottom, #db6e18, #f1a84a);
 }
 
-#promo {
-  color: #3c3c3c;
-  display: block;
-  left: -moz-calc(50% + 320px);
-  position: absolute;
-  text-decoration: none;
-  top: 60px;
-}
-#promo[hidden="true"] {
-  display: none;
-}
-
 #navpane {
   right: -moz-calc(100% * (50 / 960) + 20px);
 }
@@ -110,6 +98,21 @@ ol, ul {
 #navpane > a[data-pane="blank"]:active,
 #navpane > a[data-pane="blank"]:hover {
   background-position: -149px 0;
+}
+
+#promo {
+  display: none;
+}
+.quickdial > #promo {
+  color: #3c3c3c;
+  display: block;
+  left: -moz-calc(50% + 320px);
+  position: absolute;
+  text-decoration: none;
+  top: 60px;
+}
+.quickdial > #promo[hidden="true"] {
+  display: none;
 }
 
 /* view switcher */
@@ -909,8 +912,12 @@ footer.off > #toggle {
 
 /* responsive */
 @media only screen and (max-width: 960px) {
-  #setdefault, #promo {
+  #setdefault {
     left: 70px;
+  }
+  .quickdial > #promo {
+    left: 800px;
+    white-space: nowrap;
   }
   #navpane {
     right: 70px;
@@ -918,7 +925,7 @@ footer.off > #toggle {
   /* #prevtab, #nexttab ... not needed with min-width on body */
 }
 @media only screen and (min-width: 1920px) {
-  #setdefault, #promo {
+  #setdefault {
     left: 120px;
   }
   #navpane {

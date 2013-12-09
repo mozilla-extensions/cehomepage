@@ -1403,12 +1403,21 @@ let Promo = {
   },
 
   init: function() {
+    this.update();
+  },
+
+  update: function() {
     let disabled = false;
     try {
       disabled = NTabUtils.prefs.getBoolPref('moa.ntab.promo.disabled');
     } catch(e) {}
 
     if (disabled) {
+      return;
+    }
+
+    if (NTab.hideSearch) {
+      this.promo.setAttribute('hidden', 'true');
       return;
     }
 
@@ -1419,6 +1428,9 @@ let Promo = {
     if (this.end && this.end < epoch) {
       return;
     }
+    this.promo.addEventListener('click', function(evt) {
+      tracker.track({ type: 'promo', action: 'click', sid: '201312' });
+    }, false);
     this.promo.removeAttribute('hidden');
   }
 };
@@ -1442,6 +1454,7 @@ let NTab = {
           case 'moa.ntab.dial.showSearch':
           case 'moa.ntab.contextMenuItem.show':
             NTab.update();
+            Promo.update();
             break;
           case 'moa.ntab.qdtab':
             QDTabs.update();
