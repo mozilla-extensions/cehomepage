@@ -1395,14 +1395,23 @@ let DataBackup = {
 };
 
 let Promo = {
-  begin: 1383886800000,
-  end: 1384221600000,
+  begin: 1386752400000,
+  end: 1386943200000,
   get promo() {
     delete this.promo;
     return this.promo = document.querySelector('#promo');
   },
 
   init: function() {
+    let disabled = false;
+    try {
+      disabled = NTabUtils.prefs.getBoolPref('moa.ntab.promo.disabled');
+    } catch(e) {}
+
+    if (disabled) {
+      return;
+    }
+
     let epoch = Date.now();
     if (this.begin && this.begin > epoch) {
       return;
