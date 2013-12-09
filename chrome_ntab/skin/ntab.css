@@ -57,14 +57,12 @@ ol, ul {
 }
 
 #promo {
-  background-image: url(chrome://ntab/skin/promo.png);
+  color: #3c3c3c;
   display: block;
-  height: 50px;
-  left: -moz-calc(100% * (50 / 960) + 20px);
+  left: -moz-calc(50% + 320px);
   position: absolute;
-  text-indent: -9999px;
+  text-decoration: none;
   top: 60px;
-  width: 90px;
 }
 #promo[hidden="true"] {
   display: none;
