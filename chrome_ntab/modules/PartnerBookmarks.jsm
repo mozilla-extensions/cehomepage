@@ -244,7 +244,8 @@ let PartnerBookmarks = {
     let ret = [];
 
     aSlugs.forEach(function(aSlug) {
-      let uri = PlacesUtils.bookmarks.getURIForKeyword('mozcn:toolbar:');
+      let keyword = 'mozcn:toolbar:' + aSlug;
+      let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
       if (!uri) {
         return;
       }
