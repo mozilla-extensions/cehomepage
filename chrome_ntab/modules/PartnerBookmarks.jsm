@@ -44,7 +44,7 @@ let PartnerBookmarks = {
 
   get updateUrl() {
     delete this.updateUrl;
-    return this.updateUrl = 'http://i.firefoxchina.cn/bookmarks/updates.json';
+    return this.updateUrl = 'http://bookmarks.firefoxchina.cn/bookmarks/updates.json';
   },
 
   _getCharPref: function(aPrefKey, aDefault) {
