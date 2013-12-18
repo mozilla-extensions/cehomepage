@@ -70,18 +70,24 @@
             MOA.debug(['injected']);
             return;
         }
-        var hosts = prefs.get('extensions.cehomepage.allowed_domains', '').split(',');
-        var length = host.length;
-        while (true) {
-            if (hosts.length == 0) {
-                MOA.debug(['cehomepage deny', host]);
-                return;
-            }
-            var ahost = hosts.shift().trim().toLowerCase();
-            if (host.lastIndexOf(ahost) == length - ahost.length) {
-                break;
-            }
+        var allowed_domains = prefs.get('extensions.cehomepage.allowed_domains', '').split(',');
+
+        // Polyfill from http://mzl.la/1hiG2Iv
+        function endsWith(fullString, searchString, position) {
+            position = position || fullString.length;
+            position = position - searchString.length;
+            var lastIndex = fullString.lastIndexOf(searchString);
+            return lastIndex !== -1 && lastIndex === position;
         }
+
+        if (!allowed_domains.some(function(allowed_domain) {
+            allowed_domain = allowed_domain.trim().toLowerCase();
+            return (allowed_domain[0] === '.') && endsWith(host, allowed_domain);
+        })) {
+            MOA.debug(['cehomepage deny', host]);
+            return;
+        }
+
         MOA.debug(['cehomepage inject', host]);
         var cehomepage = {};
         homepage.init(cehomepage);
