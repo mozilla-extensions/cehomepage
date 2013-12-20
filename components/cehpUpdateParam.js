@@ -1,9 +1,14 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/PlacesUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://ntab/PartnerBookmarks.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PartnerBookmarks",
+  "resource://ntab/PartnerBookmarks.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
+  "resource://ntab/NTabDB.jsm");
 
 function collectPref() {
   let tracker = Cc["@mozilla.com.cn/tracking;1"];
@@ -11,40 +16,32 @@ function collectPref() {
     return "";
   }
 
-  let prefs = Services.prefs.getBranch("moa.ntab.");
   let ret = [];
 
   try {
-    ret.push(prefs.getCharPref("view"));
-    ret.push(prefs.getCharPref("qdtab"));
-    ret.push(prefs.getBoolPref("qdtab.used"));
+    ret.push(NTabDB.getPref("moa.ntab.view", "quickdial"));
+    ret.push(NTabDB.getPref("moa.ntab.qdtab", "grid"));
+    ret.push(NTabDB.getPref("moa.ntab.qdtab.used", false));
 
-    let col = prefs.getIntPref("dial.column");
-    let row = prefs.getIntPref("dial.row");
+    let col = NTabDB.getPref("moa.ntab.dial.column", 4);
+    let row = NTabDB.getPref("moa.ntab.dial.row", 2);
     ret.push([col, row].join(","));
 
-    let bgimage = prefs.prefHasUserValue("backgroundimage");
-    let bgcolor = encodeURIComponent(prefs.getCharPref("backgroundcolor"));
-    let bgimagestyle = prefs.getCharPref("backgroundimagestyle");
-    ret.push(bgimage ? bgimagestyle : bgcolor);
+    // bgimage will require async indexedDB
+    let bgcolor = NTabDB.getPref("moa.ntab.backgroundcolor", "transparent");
+    ret.push(encodeURIComponent(bgcolor));
 
-    ret.push(prefs.getIntPref("dial.extrawidth"));
-    ret.push(prefs.getBoolPref("dial.useopacity"));
+    // moa.ntab.dial.extrawidth not supported any more
+    ret.push("NA");
+    ret.push(NTabDB.getPref("moa.ntab.dial.useopacity", false));
 
-    let dialModified = 0;
-    Cu.import("resource://ntab/quickdial.jsm");
-    for (var i = 1; i <= 8; i++) {
-      let dial = quickDialModule.getDial(i);
-      if (dial && dial.defaultposition && dial.defaultposition.indexOf(i) == 0) {
-        dialModified = dialModified | (1 << (8 - i));
-      }
-    }
-    ret.push(dialModified.toString(2));
+    // dialModified will require async indexedDB
+    ret.push("NA");
 
     // this array should be manually updated, at least for now
     ret.push(PartnerBookmarks.getUpdateTracking(["taobao", "tmall"]));
 
-    ret.push(prefs.getBoolPref("display.usehotkey"));
+    ret.push(Services.prefs.getBoolPref("moa.ntab.display.usehotkey"));
   } catch(e) {}
 
   return ret.join("|");

@@ -1,0 +1,5 @@
+CACHE MANIFEST
+# version: fake-initial
+
+FALLBACK:
+/ /static/offlintab.html

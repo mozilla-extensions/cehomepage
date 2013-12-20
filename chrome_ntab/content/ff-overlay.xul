@@ -4,7 +4,6 @@
 <overlay id="ntab-overlay" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script src="moa.js"/>
   <script src="overlay.js"/>
-  <script type="application/x-javascript" src="snapshot.js"/>
   <script src="sendlink.js"/>
 
   <stringbundleset id="stringbundleset">
@@ -21,42 +20,4 @@
               insertafter="context-stop"
               oncommand="MOA.NTab.onMenuItemCommand(event)"/>
   </popup>
-
-  <hbox style="overflow:hidden; height: 0;">
-    <vbox id="nt-hidden-box"></vbox>
-  </hbox>
-
-  <window id="main-window">
-      <menupopup id="nt-menu"  oncommand="MOA.NTab.onContextCommand(event, event.target.id);">
-        <menuitem id="nt-edit"
-            accesskey="&ntab.contextmenu.edit.accesskey;"
-            label="&ntab.contextmenu.edit;" />
-        <menuitem id="nt-refresh"
-            accesskey="&ntab.contextmenu.refresh.accesskey;"
-            label="&ntab.contextmenu.refresh;" />
-        <menuitem id="nt-refreshall"
-            accesskey="&ntab.contextmenu.refreshall.accesskey;"
-            label="&ntab.contextmenu.refreshall;" />
-        <menuseparator/>
-        <menuitem id="nt-useopacity"
-            accesskey="&ntab.contextmenu.useopacity.accesskey;"
-            label="&ntab.contextmenu.useopacity;"
-            persist="checked" type="checkbox"/>
-        <!-- defaults to unchecked, so not affected by bug 15232 -->
-        <menuitem id="nt-moreoptions"
-            accesskey="&ntab.contextmenu.moreoptions.accesskey;"
-            label="&ntab.contextmenu.moreoptions;"/>
-        <menuseparator/>
-        <menuitem id="nt-export"
-            accesskey="&ntab.contextmenu.export.accesskey;"
-            label="&ntab.contextmenu.export;"/>
-        <menuitem id="nt-import"
-            accesskey="&ntab.contextmenu.import.accesskey;"
-            label="&ntab.contextmenu.import;"/>
-        <menuseparator/>
-        <menuitem id="nt-reset"
-            accesskey="&ntab.contextmenu.reset.accesskey;"
-            label="&ntab.contextmenu.reset;"/>
-      </menupopup>
-  </window>
 </overlay>

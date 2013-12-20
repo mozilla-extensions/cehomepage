@@ -1,6 +1,9 @@
 pref("browser.newtab.preload", false);
-pref("browser.newtab.url", "about:ntab");
+pref("browser.newtab.url", "http://offlintab.firefoxchina.cn/");
 
+pref("moa.ntab.web.url", "http://offlintab.firefoxchina.cn/");
+
+// keep these defaults until we don't need to migrate pref to localStorage
 pref("moa.ntab.view", "quickdial");
 pref("moa.ntab.qdtab", "grid");
 pref("moa.ntab.qdtab.used", false);
@@ -9,10 +12,6 @@ pref("moa.ntab.dial.column", 4);
 pref("moa.ntab.dial.row", 2);
 
 pref("moa.ntab.displayfooter", true);
-
-pref("moa.ntab.dial.key", "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDbjn89QtfQeDfU1KDdHsy7dWEZxixJSvaAOGX05NOvLbh7Uo6tlMKFJyYZ7unxlfMAsewZBOCaMxEYgU4h5J0PAgUs+zTg3MzCnDA0Ku1zQrvoa1iaTsVxzpHTFeOK29HSGX2qC4sVUP+ZRqa11oaBaIjpuJ3szo9nGy4CWvHMLQIDAQAB");
-pref("moa.ntab.dial.lastmodified2", "");
-pref("moa.ntab.dial.url", "");
 
 pref("moa.ntab.view.firefoxchina.url", "http://i.firefoxchina.cn/?from=ntab_bottom");
 

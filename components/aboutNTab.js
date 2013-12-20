@@ -1,7 +1,10 @@
 const { interfaces: Ci, utils: Cu } = Components;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-Cu.import('resource://gre/modules/Services.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
+  "resource://ntab/NTabDB.jsm");
 
 function AboutNTab() {}
 AboutNTab.prototype = {
@@ -11,12 +14,13 @@ AboutNTab.prototype = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
 
   getURIFlags: function(aURI) {
-    return Ci.nsIAboutModule.ALLOW_SCRIPT;
+    return (Ci.nsIAboutModule.ALLOW_SCRIPT |
+            Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT);
   },
 
   newChannel: function(aURI) {
-    var home = 'chrome://ntab/content/ntab.xhtml';
-    var channel = Services.io.newChannel(home, null, null);
+    var channel = Services.io.newChannel(NTabDB.spec, null, null);
+    channel.loadFlags = channel.loadFlags | channel.LOAD_REPLACE;
     channel.originalURI = aURI;
     return channel;
   }

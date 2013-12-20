@@ -57,6 +57,9 @@ let Tracking = {
     if (option.title) {
       args.push('ti=' + encodeURIComponent(option.title).substr(0, 200));
     }
+    if (option.href) {
+      args.push('hr=' + encodeURIComponent(option.href).substr(0, 200));
+    }
     args.push('r=' + Math.random());
     args.push('cid=' + this.cid);
 
