@@ -143,6 +143,7 @@ let QuickDialData = {
     try {
       // OS.File only available since Fx 16
       OS.File.open(aFile.path, {
+        append: false,
         truncate: true
       }).then(function(aFile) {
         let encoder = new TextEncoder();
