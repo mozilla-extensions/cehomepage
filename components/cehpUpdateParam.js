@@ -6,6 +6,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://ntab/PartnerBookmarks.jsm");
 
 function collectPref() {
+  let tracker = Cc["@mozilla.com.cn/tracking;1"];
+  if (!tracker || !tracker.getService().wrappedJSObject.ude) {
+    return "";
+  }
+
   let prefs = Services.prefs.getBranch("moa.ntab.");
   let ret = [];
 

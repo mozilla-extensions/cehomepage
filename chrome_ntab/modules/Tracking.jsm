@@ -30,6 +30,11 @@ let Tracking = {
   },
 
   track: function(option) {
+    let tracker = Cc["@mozilla.com.cn/tracking;1"];
+    if (!tracker || !tracker.getService().wrappedJSObject.ude) {
+      return;
+    }
+
     option = _extend(option, {
       type: '',
       action: '',
