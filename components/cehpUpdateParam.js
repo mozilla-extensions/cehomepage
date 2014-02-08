@@ -42,7 +42,9 @@ function collectPref() {
     ret.push(dialModified.toString(2));
 
     // this array should be manually updated, at least for now
-    ret.push(PartnerBookmarks.getUpdateTracking(['taobao', 'tmall']));
+    ret.push(PartnerBookmarks.getUpdateTracking(["taobao", "tmall"]));
+
+    ret.push(prefs.getBoolPref("display.usehotkey"));
   } catch(e) {}
 
   return ret.join("|");
