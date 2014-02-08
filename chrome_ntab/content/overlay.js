@@ -578,6 +578,12 @@
             title = window._content.document.title;
         }
 
+        ns.Tracking.track({
+            type: 'context-menu',
+            action: 'add-to-qd',
+            sid: 'attempt'
+        });
+
         var stringBundle = document.getElementById('ntab-strings');
 
         if (!isValidURI(url)) {
@@ -596,6 +602,12 @@
             Services.prompt.alert(null,
               stringBundle.getString('ntab.contextmenu.title'),
               stringBundle.getFormattedString('ntab.contextmenu.addedtodial', [index]));
+
+            ns.Tracking.track({
+                type: 'context-menu',
+                action: 'add-to-qd',
+                sid: 'success'
+            });
         } else {
             Services.prompt.alert(null,
               stringBundle.getString('ntab.contextmenu.title'),
@@ -713,6 +725,13 @@
         if (//selectedDocument.URL == _url &&
             Services.prefs.getBoolPref('moa.ntab.display.usehotkey') &&
             evt.ctrlKey && 48 < evt.keyCode && evt.keyCode <= 57) {
+
+            ns.Tracking.track({
+                type: 'shortcut',
+                action: 'open-qd',
+                sid: 'attempt'
+            });
+
             evt.preventDefault();
             evt.stopPropagation();
             var index = evt.keyCode - 48 || 10;
@@ -728,6 +747,12 @@
             var dial = ns.quickDialModule.getDial(index);
             if(dial && dial.url) {
                 openUILinkIn(dial.url, 'tab');
+
+                ns.Tracking.track({
+                    type: 'shortcut',
+                    action: 'open-qd',
+                    sid: 'success'
+                });
             }
         }
     };
