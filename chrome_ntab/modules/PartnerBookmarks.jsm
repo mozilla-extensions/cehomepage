@@ -138,7 +138,7 @@ let PartnerBookmarks = {
       }
     });
 
-    this.prefs.setBoolPref('backfillversion', this._backfillVersion);
+    this.prefs.setIntPref('backfillversion', this._backfillVersion);
     this.prefs.clearUserPref('migration');
   },
 
@@ -160,34 +160,35 @@ let PartnerBookmarks = {
       let bookmarks = PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {});
       for (let i = 0, l = bookmarks.length; i < l; i++) {
         let id = bookmarks[i];
+        if (PlacesUtils.bookmarks.getKeywordForBookmark(id) == aKeyword) {
+          if (item.uri) {
+            let newUri = Services.io.newURI(item.uri, null, null);
+            PlacesUtils.bookmarks.changeBookmarkURI(id, newUri);
 
-        if (item.uri) {
-          let newUri = Services.io.newURI(item.uri, null, null);
-          PlacesUtils.bookmarks.changeBookmarkURI(id, newUri);
-
-          if (item.title) {
-            PlacesUtils.bookmarks.setItemTitle(id, item.title);
+            if (item.title) {
+              PlacesUtils.bookmarks.setItemTitle(id, item.title);
+            }
+            if (item.favicon) {
+              let faviconUri = Services.io.
+                newURI("fake-favicon-uri:" + item.uri, null, null);
+              let faviconDataFromDataURL = Ci.mozIAsyncFavicons ?
+                'replaceFaviconDataFromDataURL' :
+                'setFaviconDataFromDataURL';
+              let setFaviconForPage = Ci.mozIAsyncFavicons ?
+                'setAndFetchFaviconForPage' :
+                'setAndLoadFaviconForPage';
+              self.fisvc[faviconDataFromDataURL](faviconUri, item.favicon, 0);
+              self.fisvc[setFaviconForPage](newUri, faviconUri, false,
+                self.fisvc.FAVICON_LOAD_NON_PRIVATE);
+            }
+            if (item.keyword) {
+              PlacesUtils.bookmarks.setKeywordForBookmark(id, item.keyword);
+            }
+          } else {
+            /* an empty object could be used to remove bookmarks:
+               ... "mozcn:***:***": {}, ... */
+            PlacesUtils.bookmarks.removeItem(id);
           }
-          if (item.favicon) {
-            let faviconUri = Services.io.newURI("fake-favicon-uri:" + item.uri,
-              null, null);
-            let faviconDataFromDataURL = Ci.mozIAsyncFavicons ?
-              'replaceFaviconDataFromDataURL' :
-              'setFaviconDataFromDataURL';
-            let setFaviconForPage = Ci.mozIAsyncFavicons ?
-              'setAndFetchFaviconForPage' :
-              'setAndLoadFaviconForPage';
-            self.fisvc[faviconDataFromDataURL](faviconUri, item.favicon, 0);
-            self.fisvc[setFaviconForPage](newUri, faviconUri, false,
-              self.fisvc.FAVICON_LOAD_NON_PRIVATE);
-          }
-          if (item.keyword) {
-            PlacesUtils.bookmarks.setKeywordForBookmark(id, item.keyword);
-          }
-        } else {
-          /* an empty object could be used to remove bookmarks:
-             ... "mozcn:***:***": {}, ... */
-          PlacesUtils.bookmarks.removeItem(id);
         }
       }
     });
@@ -216,7 +217,14 @@ let PartnerBookmarks = {
 
     let backfillVersion = 0;
     try {
-      backfillVersion = this.prefs.getIntPref('backfillversion');
+      // backfillversion was incorrectly set as bool pref in bug 1091
+      if (this.prefs.getPrefType('backfillversion') == this.prefs.PREF_BOOL) {
+        backfillVersion = this.prefs.getBoolPref('backfillversion') ? 1 : 0;
+        this.prefs.clearUserPref('backfillversion');
+        this.prefs.setIntPref('backfillversion', backfillVersion);
+      } else {
+        backfillVersion = this.prefs.getIntPref('backfillversion');
+      }
     } catch(e) {}
 
     if (backfillVersion < this._backfillVersion) {
