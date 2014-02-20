@@ -181,6 +181,13 @@ let PartnerBookmarks = {
             self.fisvc[setFaviconForPage](newUri, faviconUri, false,
               self.fisvc.FAVICON_LOAD_NON_PRIVATE);
           }
+          if (item.keyword) {
+            PlacesUtils.bookmarks.setKeywordForBookmark(id, item.keyword);
+          }
+        } else {
+          /* an empty object could be used to remove bookmarks:
+             ... "mozcn:***:***": {}, ... */
+          PlacesUtils.bookmarks.removeItem(id);
         }
       }
     });
