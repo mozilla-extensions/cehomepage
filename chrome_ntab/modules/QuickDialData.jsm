@@ -154,13 +154,22 @@ let QuickDialData = {
          * Only backup after a successful reading,
          * to avoid creating corrupt backup by repeated writing.
          */
-        aFile.copyTo(null, backup.leafName);
+        try {
+          if (backup.exists()) {
+            backup.remove(false);
+          }
+          aFile.copyTo(null, backup.leafName);
+        } catch(e) {
+          Cu.reportError(e);
+        }
       } else {
         text = this._loadData(backup, false);
         if (text) {
           try {
             backup.copyTo(null, aFile.leafName);
-          } catch(e) {};
+          } catch(e) {
+            Cu.reportError(e);
+          };
         }
       }
     }
