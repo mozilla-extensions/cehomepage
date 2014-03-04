@@ -313,6 +313,12 @@ let QuickDialData = {
     this._dumpData(this._userFile, data);
   },
   reset: function() {
+    let backup = this._userFile.clone();
+    backup.leafName += '.bak';
+    if (backup.exists()) {
+      backup.remove(false);
+    }
+
     if (this._userFile.exists()) {
       this._userFile.remove(false);
 
