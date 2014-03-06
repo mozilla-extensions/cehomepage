@@ -52,15 +52,6 @@ let QuickDialData = {
     delete this.key;
     return this.key = this._getCharPref('key', '');
   },
-  get LastModified() {
-    let _latestData = this._latestData.exists() && this._latestData.fileSize;
-    return _latestData ? this._getCharPref('lastmodified2', '') : '';
-  },
-  set LastModified(lastmodified) {
-    try {
-      this.prefs.setCharPref('lastmodified2', lastmodified);
-    } catch(e) {};
-  },
   get updateUrl() {
     let branch = this._getCharPref('branch', 'master-ii');
     let updateUrl = ['http://ntab.firefoxchina.cn',
@@ -69,21 +60,21 @@ let QuickDialData = {
     return this.updateUrl = updateUrl.join('/');
   },
 
-  get _bundleData() {
+  get _bundleFile() {
     let uri = Services.io.newURI('resource://ntab/quickdialdata.json',
       null, null);
     return uri.QueryInterface(Ci.nsIFileURL).file;
   },
-  get _latestData() {
+  get _latestFile() {
     return FileUtils.getFile('ProfLD', ['ntab', 'quickdialdata',
                                         'latest.json'], false);
   },
   get _defaultData() {
-    let _latestData = this._latestData.exists() && this._latestData.fileSize;
-    return _latestData ? this._latestData : this._bundleData;
+    return this._loadData(this._latestFile, true) ||
+           this._loadData(this._bundleFile, false);
   },
 
-  get _userData() {
+  get _userFile() {
     return FileUtils.getFile('ProfD', ['ntab', 'quickdialdata',
                                        'user.json'], false);
   },
@@ -96,20 +87,17 @@ let QuickDialData = {
     return ret;
   },
 
-  _fetch: function(aUrl, aLastModified, aCallback) {
+  _fetch: function(aUrl, aCallback) {
     if (!aUrl) {
       return;
     }
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                 .createInstance(Ci.nsIXMLHttpRequest);
     xhr.open('GET', aUrl, true);
-    if (aLastModified) {
-      xhr.setRequestHeader('If-Modified-Since', aLastModified);
-    }
     xhr.onload = function(evt) {
       if (xhr.status == 200) {
         let data = JSON.parse(xhr.responseText);
-        aCallback(data, xhr.getResponseHeader('Last-Modified') || '');
+        aCallback(data);
       }
     };
     xhr.onerror = function(evt) {};
@@ -126,16 +114,53 @@ let QuickDialData = {
     }
   },
 
-  _loadData: function(aFile) {
+  _loadData: function(aFile, aFindBackup) {
     let text = null;
     if (aFile.exists() && aFile.fileSize) {
       let fstream = Cc['@mozilla.org/network/file-input-stream;1'].
                       createInstance(Ci.nsIFileInputStream);
       fstream.init(aFile, -1, 0, 0);
       text = NetUtil.readInputStreamToString(fstream, fstream.available());
+      fstream.close();
       text = gUnicodeConverter.ConvertToUnicode(text);
     }
-    return text && JSON.parse(text);
+    try {
+      text = JSON.parse(text);
+    } catch(e) {
+      text = null;
+      try {
+        aFile.remove(false);
+      } catch(e) {};
+    }
+
+    if (aFindBackup) {
+      let backup = aFile.clone();
+      backup.leafName += '.bak';
+      if (text) {
+        /*
+         * Only backup after a successful reading,
+         * to avoid creating corrupt backup by repeated writing.
+         */
+        try {
+          if (backup.exists()) {
+            backup.remove(false);
+          }
+          aFile.copyTo(null, backup.leafName);
+        } catch(e) {
+          Cu.reportError(e);
+        }
+      } else {
+        text = this._loadData(backup, false);
+        if (text) {
+          try {
+            backup.copyTo(null, aFile.leafName);
+          } catch(e) {
+            Cu.reportError(e);
+          };
+        }
+      }
+    }
+    return text;
   },
   _dumpData: function(aFile, aData, aCallback) {
     aData = JSON.stringify(aData);
@@ -155,7 +180,7 @@ let QuickDialData = {
             }
           });
         });
-      });
+      }).then(null, Cu.reportError);
     } catch(e) {
       let ostream = Cc["@mozilla.org/network/safe-file-output-stream;1"].
                       createInstance(Ci.nsIFileOutputStream);
@@ -210,24 +235,24 @@ let QuickDialData = {
     return aItem;
   },
   _migrateUserData: function(aDefaultData) {
-    let _legacyUserData = FileUtils.getFile('ProfD',
+    let _legacyUserFile = FileUtils.getFile('ProfD',
                                             ['ntab', 'quickdial.json'], false);
     let legacyUserData = null;
-    if (_legacyUserData.exists() && !this._userData.exists()) {
+    if (_legacyUserFile.exists() && !this._userFile.exists()) {
       try {
         let reverseLookup = {};
         for (let index in aDefaultData) {
           reverseLookup[aDefaultData[index].url] = index;
         }
 
-        legacyUserData = this._loadData(_legacyUserData);
+        legacyUserData = this._loadData(_legacyUserFile, false);
         for (let index in legacyUserData) {
           let item = this._legacyMigration(legacyUserData[index]);
           legacyUserData[index] = reverseLookup[item.url] || item;
         }
 
-        this._dumpData(this._userData, legacyUserData);
-        _legacyUserData.remove(false);
+        this._dumpData(this._userFile, legacyUserData);
+        _legacyUserFile.remove(false);
       } catch(e) {
         LOG('Oops, migration failed: ' + e);
       }
@@ -236,10 +261,10 @@ let QuickDialData = {
   },
 
   read: function() {
-    let defaultData = this._loadData(this._defaultData);
+    let defaultData = this._defaultData;
 
     let userData = this._migrateUserData(defaultData) ||
-                   this._loadData(this._userData);
+                   this._loadData(this._userFile, true);
 
     let ret = {};
     if (userData) {
@@ -257,7 +282,7 @@ let QuickDialData = {
         }
         ret[index] = item;
       }
-      this._dumpData(this._userData, userData);
+      this._dumpData(this._userFile, userData);
     } else {
       for (let index in defaultData) {
         let defaultItem = defaultData[index];
@@ -272,11 +297,17 @@ let QuickDialData = {
     for (let index in aData) {
       data[index] = aData[index].defaultposition || aData[index];
     }
-    this._dumpData(this._userData, data);
+    this._dumpData(this._userFile, data);
   },
   reset: function() {
-    if (this._userData.exists()) {
-      this._userData.remove(false);
+    let backup = this._userFile.clone();
+    backup.leafName += '.bak';
+    if (backup.exists()) {
+      backup.remove(false);
+    }
+
+    if (this._userFile.exists()) {
+      this._userFile.remove(false);
 
       quickDialModule.refresh();
     }
@@ -284,11 +315,9 @@ let QuickDialData = {
 
   update: function() {
     let self = this;
-    this._fetch(this.updateUrl, this.LastModified,
-                function(aData, aLastModified) {
+    this._fetch(this.updateUrl, function(aData) {
       if (self._validate(aData)) {
-        self._dumpData(self._latestData, JSON.parse(aData.data), function() {
-          self.LastModified = aLastModified;
+        self._dumpData(self._latestFile, JSON.parse(aData.data), function() {
           quickDialModule.refresh();
         });
       }
