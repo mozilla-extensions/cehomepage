@@ -10,8 +10,6 @@ let Cc = Components.classes;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbsStorage",
@@ -123,7 +121,7 @@ mozCNUtils.prototype = {
   // before we can fix the OfflineCacheInstaller ?
   initProgressListener: function MCU_initProgressListener(aSubject) {
     let w = aSubject;
-    let fallbackURL = "resource://ntab/offlintab-cache/static/offlintab.html";
+    let fallbackURL = "about:blank";
     w.gBrowser.addTabsProgressListener({
       onLocationChange: function(aBrowser, b, aRequest, aLocation, aFlags) {
         if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
@@ -138,9 +136,6 @@ mozCNUtils.prototype = {
   injectMozCNUtils: function MCU_injectMozCNUtils(aSubject) {
     try {
       let w = aSubject.defaultView;
-      if (!w || PrivateBrowsingUtils.isWindowPrivate(w)) {
-        return;
-      }
 
       this.attachToWindow(w);
     } catch(e) {}

@@ -238,7 +238,7 @@ let NTabDB = {
         let doc = frame.document;
         let browser = doc.createElementNS(xulNS, "browser");
         browser.setAttribute("type", "content");
-        browser.setAttribute("src", self.spec);
+        browser.setAttribute("src", self.spec + "static/preload.html");
         doc.getElementById("win").appendChild(browser);
       } else {
         frame.location = xulPage;
