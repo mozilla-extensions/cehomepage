@@ -392,14 +392,20 @@
         } catch(e) {};
       } else {
         if (!Services.prefs.prefHasUserValue(this._appUrlKey)) {
-          Services.prefs.setCharPref(this._appUrlKey, "about:newtab");
+          /*
+           * set to "about:newtab" on default branch to make sure
+           * about:privatebrowsing will be opened in pb mode. see
+           * http://dxr.mozilla.org/mozilla-central/search?q=getNewTabPageURL
+           */
+          Services.prefs.getDefaultBranch("").
+            setCharPref(this._appUrlKey, "about:newtab");
         }
       }
     }
   };
 
   ns.browserOpenTab = function(event) {
-    if (newTabPref.inUse) {
+    if (newTabPref.inUse && !PrivateBrowsingUtils.isWindowPrivate(window)) {
       openUILinkIn(_url, 'tab');
 
       // for Fx 12 and older versions
