@@ -109,7 +109,7 @@ ol, ul {
   cursor: pointer;
   display: block;
   height: 34px;
-  left: -moz-calc(50% - 25% * (910 / 960) - 175px);
+  left: -moz-calc(50% - 460px);
   position: absolute;
   text-decoration: none;
   text-indent: -9999px;
@@ -921,7 +921,7 @@ footer.off > #toggle {
     left: 70px;
   }
   .quickdial > #promo {
-    left: 77.5px;
+    left: 20px;
     white-space: nowrap;
   }
   #navpane {
