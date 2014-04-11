@@ -104,12 +104,17 @@ ol, ul {
   display: none;
 }
 .quickdial > #promo {
+  background-image: url(chrome://ntab/skin/promo-201404.png);
   color: #3c3c3c;
+  cursor: pointer;
   display: block;
-  left: -moz-calc(50% + 320px);
+  height: 34px;
+  left: -moz-calc(50% - 25% * (910 / 960) - 175px);
   position: absolute;
   text-decoration: none;
-  top: 60px;
+  text-indent: -9999px;
+  top: 55px;
+  width: 153px;
 }
 .quickdial > #promo[hidden="true"] {
   display: none;
@@ -916,7 +921,7 @@ footer.off > #toggle {
     left: 70px;
   }
   .quickdial > #promo {
-    left: 800px;
+    left: 77.5px;
     white-space: nowrap;
   }
   #navpane {

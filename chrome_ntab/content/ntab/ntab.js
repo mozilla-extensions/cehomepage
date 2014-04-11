@@ -1395,8 +1395,8 @@ let DataBackup = {
 };
 
 let Promo = {
-  begin: 1386752400000,
-  end: 1386943200000,
+  begin: 1397610000000, // 2014-04-16T01:00:00.000Z
+  end: 1397815200000, // 2014-04-18T10:00:00.000Z
   get promo() {
     delete this.promo;
     return this.promo = document.querySelector('#promo');
@@ -1429,7 +1429,7 @@ let Promo = {
       return;
     }
     this.promo.addEventListener('click', function(evt) {
-      tracker.track({ type: 'promo', action: 'click', sid: '201312' });
+      tracker.track({ type: 'promo', action: 'click', sid: '201404' });
     }, false);
     this.promo.removeAttribute('hidden');
   }
