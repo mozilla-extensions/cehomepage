@@ -65,7 +65,7 @@ let Tracking = {
 
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
                 createInstance(Ci.nsIXMLHttpRequest);
-    xhr.open('GET', (url + '?' + args.join('&')), true);
+    xhr.open('GET', ((option.altBase || url) + '?' + args.join('&')), true);
     xhr.send();
   }
 };

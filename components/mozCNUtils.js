@@ -75,7 +75,7 @@ mozCNUtils.prototype = {
       case "http-on-examine-response":
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
-        this.trackOfflintabStatus(aSubject, aTopic);
+        this.trackHTTPStatus(aSubject, aTopic);
         break;
       case "document-element-inserted":
         this.injectMozCNUtils(aSubject);
@@ -83,20 +83,26 @@ mozCNUtils.prototype = {
     }
   },
 
-  trackOfflintabStatus: function MCU_trackOfflintabStatus(aSubject, aTopic) {
+  trackHTTPStatus: function MCU_trackHTTPStatus(aSubject, aTopic) {
     let channel = aSubject;
     channel.QueryInterface(Ci.nsIHttpChannel);
 
-    if (!channel.originalURI.equals(NTabDB.uri) ||
+    if ([
+      NTabDB.uri.prePath,
+      "http://i.g-fox.cn",
+      "http://i.firefoxchina.cn"
+    ].indexOf(channel.URI.prePath) == -1 ||
         !(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI)) {
       return;
     }
 
-    if ([200, 304].indexOf(channel.responseStatus) == -1) {
+    if ([200, 302, 304].indexOf(channel.responseStatus) == -1) {
       Tracking.track({
-        type: "on-http-status",
+        type: "http-status",
         sid: channel.responseStatus,
-        action: aTopic
+        action: aTopic,
+        href: channel.URI.spec,
+        altBase: "http://robust.g-fox.cn/ntab.gif"
       });
     }
   },
