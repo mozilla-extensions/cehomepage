@@ -63,15 +63,41 @@ mozCNUtils.prototype = {
       case "profile-after-change":
         Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
         Services.obs.addObserver(this, "document-element-inserted", false);
+        Services.obs.addObserver(this, "http-on-examine-response", false);
+        Services.obs.addObserver(this, "http-on-examine-cached-response", false);
+        Services.obs.addObserver(this, "http-on-examine-merged-response", false);
         NTabDB.migrateNTabData();
         this.initMessageListener();
         break;
       case "browser-delayed-startup-finished":
         this.initProgressListener(aSubject);
         break;
+      case "http-on-examine-response":
+      case "http-on-examine-cached-response":
+      case "http-on-examine-merged-response":
+        this.trackOfflintabStatus(aSubject, aTopic);
+        break;
       case "document-element-inserted":
         this.injectMozCNUtils(aSubject);
         break;
+    }
+  },
+
+  trackOfflintabStatus: function MCU_trackOfflintabStatus(aSubject, aTopic) {
+    let channel = aSubject;
+    channel.QueryInterface(Ci.nsIHttpChannel);
+
+    if (!channel.originalURI.equals(NTabDB.uri) ||
+        !(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI)) {
+      return;
+    }
+
+    if ([200, 304].indexOf(channel.responseStatus) == -1) {
+      Tracking.track({
+        type: "on-http-status",
+        sid: channel.responseStatus,
+        action: aTopic
+      });
     }
   },
 
