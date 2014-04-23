@@ -8,7 +8,8 @@
     Cu.import('resource://gre/modules/NetUtil.jsm');
   }
 
-  var _url = ns.NTabDB.spec;
+  var _url = PrivateBrowsingUtils.permanentPrivateBrowsing ?
+             "about:blank" : ns.NTabDB.spec;
 
   function loadInExistingTabs() {
     if (!Services.prefs.getBoolPref("moa.ntab.loadInExistingTabs")) {
@@ -385,31 +386,144 @@
     },
     refresh: function() {
       this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
+      /*
+       * set browser.newtab.url on default branch to make sure
+       * about:privatebrowsing will be opened in (non-permanent) pb mode.
+       *
+       * see http://dxr.mozilla.org/mozilla-central/search?q=getNewTabPageURL
+       */
       if (this.inUse) {
+        Services.prefs.getDefaultBranch("").
+          setCharPref(this._appUrlKey, _url);
+        Services.prefs.getDefaultBranch("").
+          setBoolPref(this._appPreloadKey, false);
         try {
           Services.prefs.clearUserPref(this._appUrlKey);
           Services.prefs.clearUserPref(this._appPreloadKey);
         } catch(e) {};
       } else {
         if (!Services.prefs.prefHasUserValue(this._appUrlKey)) {
-          /*
-           * set to "about:newtab" on default branch to make sure
-           * about:privatebrowsing will be opened in pb mode. see
-           * http://dxr.mozilla.org/mozilla-central/search?q=getNewTabPageURL
-           */
           Services.prefs.getDefaultBranch("").
             setCharPref(this._appUrlKey, "about:newtab");
+          Services.prefs.getDefaultBranch("").
+            setBoolPref(this._appPreloadKey, true);
+        }
+      }
+    }
+  };
+
+  var permanentPB = {
+    prefKey: "moa.permanent-pb.notify",
+    notificationKey: "mo-permanent-pb",
+
+    get shouldNotify() {
+      var shouldNotify = true;
+      try {
+        shouldNotify = Services.prefs.getBoolPref(this.prefKey);
+      } catch(e) {}
+      return shouldNotify;
+    },
+
+    set shouldNotify(aShouldNotify) {
+      try {
+        Services.prefs.setBoolPref(this.prefKey, !!aShouldNotify);
+      } catch(e) {}
+    },
+
+    notify: function() {
+      if (!this.shouldNotify) {
+        return;
+      }
+
+      var stringBundle = document.getElementById('ntab-strings');
+
+      var message = stringBundle.getString("permanent-pb.notification.message");
+      var yesText = stringBundle.getString("permanent-pb.notification.yes");
+      var moreText = stringBundle.getString("permanent-pb.notification.more");
+
+      var self = this;
+      var buttons = [{
+        label: yesText,
+        accessKey: "Y",
+        callback: function() {
+          self.disablePBAutoStart();
+
+          self.shouldNotify = false;
+          ns.Tracking.track({
+            type: "permanent-pb",
+            action: "click",
+            sid: "yes"
+          });
+        }
+      }, {
+        label: moreText,
+        accessKey: "M",
+        callback: function() {
+          window.openPreferences("panePrivacy");
+
+          self.shouldNotify = false;
+          ns.Tracking.track({
+            type: "permanent-pb",
+            action: "click",
+            sid: "more"
+          });
+        }
+      }];
+
+      var notificationBox = gBrowser.getNotificationBox();
+      var notificationBar =
+        notificationBox.appendNotification(message, this.notificationKey,
+          "chrome://browser/skin/Privacy-16.png",
+          notificationBox.PRIORITY_INFO_MEDIUM, buttons);
+
+      ns.Tracking.track({
+        type: "permanent-pb",
+        action: "notify",
+        sid: "shown"
+      });
+    },
+
+    disablePBAutoStart: function() {
+      Services.prefs.setBoolPref("browser.privatebrowsing.autostart", false);
+
+      var brandName = document.getElementById("bundle_brand").
+                               getString("brandShortName");
+      var bundle = Services.strings.createBundle(
+        "chrome://browser/locale/preferences/preferences.properties");
+      var msg = bundle.formatStringFromName("featureDisableRequiresRestart",
+                                            [brandName], 1);
+      var title = bundle.formatStringFromName("shouldRestartTitle",
+                                              [brandName], 1);
+      var shouldProceed = Services.prompt.confirm(window, title, msg)
+      if (shouldProceed) {
+        var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
+                           createInstance(Ci.nsISupportsPRBool);
+        Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
+                                     "restart");
+        shouldProceed = !cancelQuit.data;
+
+        if (shouldProceed) {
+          let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
+                             getService(Ci.nsIAppStartup);
+          appStartup.quit(Ci.nsIAppStartup.eAttemptQuit |
+                          Ci.nsIAppStartup.eRestart);
         }
       }
     }
   };
 
   ns.browserOpenTab = function(event) {
-    if (newTabPref.inUse && !PrivateBrowsingUtils.isWindowPrivate(window)) {
-      openUILinkIn(_url, 'tab');
-
-      // for Fx 12 and older versions
-      focusAndSelectUrlBar();
+    if (newTabPref.inUse) {
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+          openUILinkIn(_url, 'tab');
+          permanentPB.notify();
+        } else {
+          window.originalBrowserOpenTab(event);
+        }
+      } else {
+        openUILinkIn(_url, 'tab');
+      }
     } else {
       window.originalBrowserOpenTab(event);
     }
