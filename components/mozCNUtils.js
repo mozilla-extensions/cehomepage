@@ -181,7 +181,8 @@ mozCNUtils.prototype = {
       return;
     }
 
-    if (docURI.equals(NTabDB.uri)) {
+    if (docURI.equals(NTabDB.uri) ||
+        docURI.equals(NTabDB.privateUri)) {
       let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
                       getInterface(Ci.nsIWebNavigation).
                       QueryInterface(Ci.nsIDocShell).

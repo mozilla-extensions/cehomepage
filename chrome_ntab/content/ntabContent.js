@@ -20,6 +20,10 @@ let DefaultBrowser = {
     return this.shellService = shellService;
   },
   init: function DefaultBrowser_init() {
+    if (!this.setDefault) {
+      return;
+    }
+
     if (!this.shellService || this.shellService.isDefaultBrowser(true)) {
       return;
     }
@@ -48,6 +52,10 @@ let Launcher = {
     return this.tools = document.querySelector('li[data-menu="tools"]');
   },
   init: function Launcher_init() {
+    if (!this.tools) {
+      return;
+    }
+
     this.tools.removeAttribute('hidden');
 
     let self = this;

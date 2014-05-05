@@ -8,8 +8,8 @@
     Cu.import('resource://gre/modules/NetUtil.jsm');
   }
 
-  var _url = PrivateBrowsingUtils.permanentPrivateBrowsing ?
-             "about:blank" : ns.NTabDB.spec;
+  var _url = PrivateBrowsingUtils.isWindowPrivate(window) ?
+             ns.NTabDB.privateSpec : ns.NTabDB.spec;
 
   function loadInExistingTabs() {
     if (!Services.prefs.getBoolPref("moa.ntab.loadInExistingTabs")) {
@@ -475,6 +475,8 @@
         notificationBox.appendNotification(message, this.notificationKey,
           "chrome://browser/skin/Privacy-16.png",
           notificationBox.PRIORITY_INFO_MEDIUM, buttons);
+      // persist across the about:blank -> _url change
+      notificationBar.persistence = 1;
 
       ns.Tracking.track({
         type: "permanent-pb",
@@ -514,15 +516,10 @@
 
   ns.browserOpenTab = function(event) {
     if (newTabPref.inUse) {
-      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-        if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
-          openUILinkIn(_url, 'tab');
-          permanentPB.notify();
-        } else {
-          window.originalBrowserOpenTab(event);
-        }
-      } else {
-        openUILinkIn(_url, 'tab');
+      openUILinkIn(_url, 'tab');
+      if (PrivateBrowsingUtils.isWindowPrivate(window) &&
+          PrivateBrowsingUtils.permanentPrivateBrowsing) {
+        permanentPB.notify();
       }
     } else {
       window.originalBrowserOpenTab(event);
@@ -671,7 +668,9 @@
   };
 
   ns.onContextMenuGlobal = function() {
-    document.getElementById('context-ntab').hidden = !Services.prefs.getBoolPref('moa.ntab.contextMenuItem.show') || window._content.document.location.href == _url;
+    document.getElementById('context-ntab').hidden = !Services.prefs.getBoolPref('moa.ntab.contextMenuItem.show') ||
+                                                     window._content.document.location.href == _url ||
+                                                     PrivateBrowsingUtils.isWindowPrivate(window._content);
   };
 
   ns.isValidURI = isValidURI;

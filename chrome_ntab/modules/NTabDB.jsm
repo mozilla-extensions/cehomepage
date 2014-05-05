@@ -34,9 +34,17 @@ let NTabDB = {
     delete this.spec;
     return this.spec = spec;
   },
+  get privateSpec() {
+    delete this.privateSpec;
+    return this.privateSpec = this.spec + "private.html";
+  },
   get uri() {
     delete this.uri;
     return this.uri = Services.io.newURI(this.spec, null, null);
+  },
+  get privateUri() {
+    delete this.privateUri;
+    return this.privateUri = Services.io.newURI(this.privateSpec, null, null);
   },
   get principal() {
     delete this.principal;
