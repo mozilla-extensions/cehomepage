@@ -387,6 +387,12 @@
     refresh: function() {
       this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
       /*
+       * if using offlintab (different urls for pb/non-pb window):
+       * set browser.newtab.url to ns.NTabDB.spec instead of _url to prevent
+       * updating BROWSER_NEW_TAB_URL in every window based on the most recently
+       * opened window.
+       *
+       * if not using offlintab:
        * set browser.newtab.url on default branch to make sure
        * about:privatebrowsing will be opened in (non-permanent) pb mode.
        *
@@ -394,7 +400,7 @@
        */
       if (this.inUse) {
         Services.prefs.getDefaultBranch("").
-          setCharPref(this._appUrlKey, _url);
+          setCharPref(this._appUrlKey, ns.NTabDB.spec);
         Services.prefs.getDefaultBranch("").
           setBoolPref(this._appPreloadKey, false);
         try {
@@ -517,9 +523,15 @@
   ns.browserOpenTab = function(event) {
     if (newTabPref.inUse) {
       openUILinkIn(_url, 'tab');
-      if (PrivateBrowsingUtils.isWindowPrivate(window) &&
-          PrivateBrowsingUtils.permanentPrivateBrowsing) {
-        permanentPB.notify();
+      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
+        /*
+         * BROWSER_NEW_TAB_URL is always ns.NTabDB.spec, openUILinkIn will not
+         * focus automatically.
+         */
+        focusAndSelectUrlBar();
+        if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
+          permanentPB.notify();
+        }
       }
     } else {
       window.originalBrowserOpenTab(event);
