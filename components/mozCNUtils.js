@@ -67,7 +67,6 @@ mozCNUtils.prototype = {
         Services.obs.addObserver(this, "http-on-examine-cached-response", false);
         Services.obs.addObserver(this, "http-on-examine-merged-response", false);
         NTabDB.migrateNTabData();
-        this.initConsoleListener();
         this.initMessageListener();
         break;
       case "browser-delayed-startup-finished":
@@ -132,36 +131,6 @@ mozCNUtils.prototype = {
         w.openPreferences();
         break;
     }
-  },
-
-  _consoleListener: {
-    observe: function(aMsg) {
-      /*
-       * see IDB_ENSURE_SUCCESS => IDB_REPORT_INTERNAL_ERR =>
-       * mozilla::dom::indexedDB::ReportInternalError, cannot tell if an
-       * indexedDB error comes from offlintab, so capture all
-       */
-      if (aMsg instanceof Ci.nsIScriptError) {
-        let prefix = "IndexedDB UnknownErr: ";
-        if (aMsg.category == "indexedDB" &&
-            aMsg.errorMessage.startsWith(prefix)) {
-          let message = aMsg.errorMessage.slice(prefix.length);
-          Tracking.track({
-            type: "error",
-            action: "_UnknownError",
-            sid: message.split(":", 2)[1] || "0",
-            fid: Services.appinfo.version,
-            title: message
-          });
-        }
-      }
-    },
-    QueryInterface: XPCOMUtils.generateQI([
-      Ci.nsIConsoleListener
-    ])
-  },
-  initConsoleListener: function MCU_initConsoleListener() {
-    Services.console.registerListener(this._consoleListener);
   },
 
   MESSAGES: [
