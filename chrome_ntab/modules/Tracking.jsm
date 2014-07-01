@@ -41,26 +41,40 @@ let Tracking = {
       fid: '',
       sid: '',
       href: '',
-      title: ''
+      title: '',
+      altBase: ''
     });
 
-    if (!option.type && !option.sid && !option.action) {
-      return;
+    let args = [];
+
+    // alternative format used by newtab.firefoxchina.cn
+    if (option.altBase == 'http://i.firefoxchina.cn/img/trace.gif') {
+      if (!option.sid || !option.title || !option.href) {
+        return;
+      }
+
+      args.push('c=' + encodeURIComponent(option.sid));
+      args.push('t=' + encodeURIComponent(option.title));
+      args.push('u=' + encodeURIComponent(option.href));
+    } else {
+      if (!option.type || !option.sid || !option.action) {
+        return;
+      }
+
+      args.push('c=ntab');
+      args.push('t=' + encodeURIComponent(option.type));
+      args.push('a=' + encodeURIComponent(option.action));
+      args.push('d=' + encodeURIComponent(option.sid));
+      args.push('f=' + encodeURIComponent(option.fid));
+      if (option.title) {
+        args.push('ti=' + encodeURIComponent(option.title).substr(0, 200));
+      }
+      if (option.href) {
+        args.push('hr=' + encodeURIComponent(option.href).substr(0, 200));
+      }
+      args.push('r=' + Math.random());
     }
 
-    let args = [];
-    args.push('c=ntab');
-    args.push('t=' + encodeURIComponent(option.type));
-    args.push('a=' + encodeURIComponent(option.action));
-    args.push('d=' + encodeURIComponent(option.sid));
-    args.push('f=' + encodeURIComponent(option.fid));
-    if (option.title) {
-      args.push('ti=' + encodeURIComponent(option.title).substr(0, 200));
-    }
-    if (option.href) {
-      args.push('hr=' + encodeURIComponent(option.href).substr(0, 200));
-    }
-    args.push('r=' + Math.random());
     args.push('cid=' + this.cid);
 
     let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
