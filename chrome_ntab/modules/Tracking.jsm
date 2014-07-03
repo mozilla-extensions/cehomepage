@@ -48,7 +48,7 @@ let Tracking = {
     let args = [];
 
     // alternative format used by newtab.firefoxchina.cn
-    if (option.altBase == 'http://i.firefoxchina.cn/img/trace.gif') {
+    if (option.altBase == 'http://newtab.firefoxchina.cn/img/trace.gif') {
       if (!option.sid || !option.title || !option.href) {
         return;
       }

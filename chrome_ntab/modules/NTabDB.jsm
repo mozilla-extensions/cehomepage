@@ -51,6 +51,18 @@ let NTabDB = {
     return this.principal = Services.scriptSecurityManager.
       getNoAppCodebasePrincipal(this.uri);
   },
+  get extraPrincipals() {
+    let extraPrincipals = [];
+    [
+      "http://newtab.firefoxchina.cn/"
+    ].forEach(function(aSpec) {
+      extraPrincipals.push(Services.scriptSecurityManager.
+        getNoAppCodebasePrincipal(Services.io.newURI(aSpec, null, null)));
+    });
+    delete this.extraPrincipals;
+    return this.extraPrincipals = extraPrincipals;
+  },
+
   get localStorage() {
     this.storageManager.precacheStorage(this.principal);
     let localStorage = this.storageManager.getStorage(this.principal);
@@ -76,13 +88,21 @@ let NTabDB = {
     Services.prefs.setIntPref(this._dbVersionKey, aVer);
   },
 
-  _addPermission: function NTabDB__addPermission() {
+  _addPermission: function NTabDB__addPermission(aPrincipal) {
+    let principal = aPrincipal || this.principal;
     let self = this;
     [
       Ci.nsIPermissionManager.ALLOW_ACTION,
       Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN
     ].forEach(function(aPerm) {
-      Services.perms.addFromPrincipal(self.principal, "offline-app", aPerm);
+      Services.perms.addFromPrincipal(principal, "offline-app", aPerm);
+    });
+  },
+
+  _addExtraPermission: function NTabDB__addExtraPermission() {
+    let self = this;
+    this.extraPrincipals.forEach(function(aPrincipal) {
+      self._addPermission(aPrincipal);
     });
   },
 
@@ -343,6 +363,7 @@ let NTabDB = {
 
   migrateNTabData: function NTabDB_migrateNTabData() {
     this._openDB();
+    this._addExtraPermission();
   },
 
   getPref: function NTabDB_getPref(aKey, aDefault) {
