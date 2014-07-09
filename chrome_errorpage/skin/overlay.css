@@ -93,6 +93,7 @@ html
   box-shadow: none;
   text-shadow: none;
   border-radius: 0;
+  cursor: pointer;
 }
 
 #errorPageContainer button::-moz-focus-inner
