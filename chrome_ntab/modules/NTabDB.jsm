@@ -38,6 +38,10 @@ let NTabDB = {
     delete this.privateSpec;
     return this.privateSpec = this.spec + "private.html";
   },
+  get readOnlySpec() {
+    delete this.readOnlySpec;
+    return this.readOnlySpec = this.spec + "readonly.html";
+  },
   get uri() {
     delete this.uri;
     return this.uri = Services.io.newURI(this.spec, null, null);
@@ -45,6 +49,10 @@ let NTabDB = {
   get privateUri() {
     delete this.privateUri;
     return this.privateUri = Services.io.newURI(this.privateSpec, null, null);
+  },
+  get readOnlyUri() {
+    delete this.readOnlyUri;
+    return this.readOnlyUri = Services.io.newURI(this.readOnlySpec, null, null);
   },
   get principal() {
     delete this.principal;

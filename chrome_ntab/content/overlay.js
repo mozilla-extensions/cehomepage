@@ -533,12 +533,43 @@
           permanentPB.notify();
         }
       }
+
+      ns.Tracking.track({
+        type: "opentab",
+        action: "click",
+        sid: "ntab"
+      });
     } else {
       window.originalBrowserOpenTab(event);
+
+      ns.Tracking.track({
+        type: "opentab",
+        action: "click",
+        sid: "newtab"
+      });
     }
   };
 
   var searchEngines = {
+    expected: "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
+
+    reportUnexpected: function(aKey, aEngine) {
+      var url = "NA";
+      try {
+        url = aEngine.getSubmission("TEST").uri.asciiSpec;
+      } catch(e) {}
+
+      var isExpected = this.expected == url;
+
+      ns.Tracking.track({
+        type: "search-engine",
+        action: "detect",
+        sid: aKey,
+        fid: isExpected,
+        href: (!isExpected && url)
+      });
+    },
+
     removeLegacyAmazon: function() {
       var amazondotcn = {
         legacy: Services.search.getEngineByName('\u5353\u8d8a\u4e9a\u9a6c\u900a'),
@@ -550,6 +581,16 @@
         }
         Services.search.removeEngine(amazondotcn.legacy);
       }
+    },
+
+    init: function() {
+      var self = this;
+
+      Services.search.init(function() {
+        self.reportUnexpected("current", Services.search.currentEngine);
+        self.reportUnexpected("baidu", Services.search.getEngineByName("\u767e\u5ea6"));
+        self.removeLegacyAmazon();
+      });
     }
   };
 
@@ -583,7 +624,7 @@
 
     newTabPref.init();
     homepageReset.check();
-    searchEngines.removeLegacyAmazon();
+    searchEngines.init();
 
     ns.PartnerBookmarks.init();
   };
