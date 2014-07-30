@@ -153,13 +153,13 @@ mozCNUtils.prototype = {
   // before we can fix the OfflineCacheInstaller ?
   initProgressListener: function MCU_initProgressListener(aSubject) {
     let w = aSubject;
+    let fallbackURL = "about:blank";
     w.gBrowser.addTabsProgressListener({
       onLocationChange: function(aBrowser, b, aRequest, aLocation, aFlags) {
         if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
             aLocation.equals(NTabDB.uri)) {
           aRequest.cancel(Cr.NS_BINDING_ABORTED);
-          aBrowser.webNavigation.loadURI(NTabDB.readOnlySpec,
-            null, null, null, null);
+          aBrowser.webNavigation.loadURI(fallbackURL, null, null, null, null);
         }
       }
     });
