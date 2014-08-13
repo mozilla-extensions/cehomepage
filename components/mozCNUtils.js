@@ -56,6 +56,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
 let delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
   delay: 10e3,
+  knownStatus: [Cr.NS_ERROR_NET_RESET, Cr.NS_ERROR_NET_TIMEOUT],
   notificationKey: "mozcn-delayed-suggest-baidu",
   prefKey: "moa.delayedsuggest.baidu",
   version: 1, // bump this to ignore existing nomore
@@ -93,7 +94,7 @@ let delayedSuggestBaidu = {
   },
 
   attach: function(aBrowser, aRequest) {
-    this.remove(aBrowser);
+    this.remove(aBrowser, aRequest);
     if (!this.enabled) {
       return;
     }
@@ -104,11 +105,21 @@ let delayedSuggestBaidu = {
     aBrowser.setAttribute(this.attribute, timeoutId);
   },
 
-  remove: function(aBrowser) {
+  remove: function(aBrowser, aRequest) {
     if (aBrowser.hasAttribute(this.attribute)) {
       let timeoutId = aBrowser.getAttribute(this.attribute);
       aBrowser.removeAttribute(this.attribute);
       clearTimeout(parseInt(timeoutId, 10));
+    }
+
+    if (this.knownStatus.indexOf(aRequest.status) < 0) {
+      let gBrowser = aBrowser.ownerGlobal.gBrowser;
+      let notificationBox = gBrowser.getNotificationBox(aBrowser);
+      let notification = notificationBox.
+        getNotificationWithValue(this.notificationKey);
+      if (notification) {
+        notificationBox.removeNotification(notification);
+      }
     }
   },
 
@@ -156,7 +167,7 @@ let delayedSuggestBaidu = {
       notificationBox.PRIORITY_INFO_HIGH,
       [{
         label: positive,
-        accessKey: "B",
+        accessKey: "Y",
         callback: function() {
           self.searchAndSwitchEngine(aBrowser, keyword);
         }
@@ -167,6 +178,7 @@ let delayedSuggestBaidu = {
           self.markNomore()
         }
       }]);
+    notificationBar.persistence = 1;
     Tracking.track({
       type: "delayedsuggestbaidu",
       action: "notify",
@@ -321,22 +333,33 @@ mozCNUtils.prototype = {
     let fallbackURL = "about:blank";
     aSubject.gBrowser.addTabsProgressListener({
       onStateChange: function(aBrowser, b, aRequest, aStateFlags, aStatus) {
-        let baseDomain = "";
-        try {
-          baseDomain = Services.eTLD.getBaseDomain(aRequest.URI, 1);
-        } catch(e) {
-          return;
-        }
+        if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+          let isStart = aStateFlags & Ci.nsIWebProgressListener.STATE_START;
+          let isStop = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
+          if (!isStart && !isStop) {
+            return;
+          }
 
-        if (baseDomain.startsWith("www.google.") &&
-            (aRequest.URI.path == "/" ||
-             aRequest.URI.path.startsWith("/search?"))) {
-          if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
-            if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+          try {
+            let publicSuffix = Services.eTLD.getPublicSuffix(aRequest.URI);
+            let hostMatch = ["google.", "www.google."].some(function(aPrefix) {
+              return (aPrefix + publicSuffix) == aRequest.asciiHost;
+            });
+
+            if (!hostMatch) {
+              return;
+            }
+          } catch(e) {
+            return;
+          }
+
+          if (aRequest.URI.path == "/" ||
+              aRequest.URI.path.startsWith("/search?")) {
+            if (isStart) {
               delayedSuggestBaidu.attach(aBrowser, aRequest);
             }
-            if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-              delayedSuggestBaidu.remove(aBrowser);
+            if (isStop) {
+              delayedSuggestBaidu.remove(aBrowser, aRequest);
             }
           }
         }
