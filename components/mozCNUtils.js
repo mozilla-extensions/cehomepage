@@ -8,6 +8,10 @@ let Ci = Components.interfaces;
 let Cc = Components.classes;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
+  "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
+  "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
@@ -49,6 +53,168 @@ XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
   "@mozilla.org/browser/sessionstore;1",
   "nsISessionStore");
 
+let delayedSuggestBaidu = {
+  attribute: "mozCNDelayedSuggestBaidu",
+  delay: 10e3,
+  notificationKey: "mozcn-delayed-suggest-baidu",
+  prefKey: "moa.delayedsuggest.baidu",
+  version: 1, // bump this to ignore existing nomore
+
+  get baidu() {
+    delete this.baidu;
+    return this.baidu = Services.search.getEngineByName("\u767e\u5ea6");
+  },
+
+  get bundle() {
+    let url = "chrome://ntab/locale/overlay.properties";
+    delete this.bundle;
+    return this.bundle = Services.strings.createBundle(url);
+  },
+
+  get enabled() {
+    let currentVersion = 0;
+    try {
+      currentVersion = Services.prefs.getIntPref(this.prefKey);
+    } catch(e) {}
+    return (currentVersion < this.version) && this.baidu;
+  },
+
+  get icon() {
+    let icon = "";
+    try {
+      icon = this.baidu.getIconURLBySize(16, 16);
+    } catch(e) {};
+    delete this.icon;
+    return this.icon = icon;
+  },
+
+  init: function() {
+    Services.search.init();
+  },
+
+  attach: function(aBrowser, aRequest) {
+    this.remove(aBrowser);
+    if (!this.enabled) {
+      return;
+    }
+
+    let timeoutId = setTimeout((function() {
+      this.notify(aBrowser, aRequest);
+    }).bind(this), this.delay);
+    aBrowser.setAttribute(this.attribute, timeoutId);
+  },
+
+  remove: function(aBrowser) {
+    if (aBrowser.hasAttribute(this.attribute)) {
+      let timeoutId = aBrowser.getAttribute(this.attribute);
+      aBrowser.removeAttribute(this.attribute);
+      clearTimeout(parseInt(timeoutId, 10));
+    }
+  },
+
+  extractKeyword: function(aRequest) {
+    let keyword = "";
+
+    try {
+      let query = aRequest.URI.QueryInterface(Ci.nsIURL).query;
+
+      if (query) {
+        query.split("&").some(function(aChunk) {
+          let pair = aChunk.split("=");
+
+          let match = pair[0] == "q";
+          if (match) {
+            keyword = decodeURIComponent(pair[1]).replace(/\+/g, " ");
+          }
+          return match;
+        })
+      }
+    } catch(e) {}
+
+    return keyword;
+  },
+
+  notify: function(aBrowser, aRequest) {
+    if (!this.enabled) {
+      return;
+    }
+
+    let keyword = this.extractKeyword(aRequest);
+
+    let gBrowser = aBrowser.ownerGlobal.gBrowser;
+    let notificationBox = gBrowser.getNotificationBox(aBrowser);
+
+    let self = this;
+    let prefix = "delayedsuggestbaidu.notification.";
+    let message = this.bundle.GetStringFromName(prefix + "message");
+    let positive = this.bundle.GetStringFromName(prefix + "positive");
+    let negative = this.bundle.GetStringFromName(prefix + "negative");
+
+    let notificationBar = notificationBox.appendNotification(message,
+      this.notificationKey,
+      this.icon,
+      notificationBox.PRIORITY_INFO_HIGH,
+      [{
+        label: positive,
+        accessKey: "B",
+        callback: function() {
+          self.searchAndSwitchEngine(aBrowser, keyword);
+        }
+      }, {
+        label: negative,
+        accessKey: "N",
+        callback: function() {
+          self.markNomore()
+        }
+      }]);
+    Tracking.track({
+      type: "delayedsuggestbaidu",
+      action: "notify",
+      sid: "dummy"
+    });
+  },
+
+  searchAndSwitchEngine: function(aBrowser, aKeyword) {
+    let w = aBrowser.ownerGlobal;
+    if (aKeyword) {
+      let submission = this.baidu.getSubmission(aKeyword);
+      // always replace in the current tab
+      w.openUILinkIn(submission.uri.spec, "current", null, submission.postData);
+    } else {
+      w.openUILinkIn(this.baidu.searchForm, "current");
+    }
+
+    if (Services.search.currentEngine.name == "Google") {
+      this.baidu.hidden = false;
+      Services.search.currentEngine = this.baidu;
+
+      Tracking.track({
+        type: "delayedsuggestbaidu",
+        action: "click",
+        sid: "switch"
+      });
+    }
+
+    Tracking.track({
+      type: "delayedsuggestbaidu",
+      action: "click",
+      sid: "search"
+    });
+  },
+
+  markNomore: function() {
+    try {
+      Services.prefs.setIntPref(this.prefKey, this.version);
+    } catch(e) {}
+
+    Tracking.track({
+      type: "delayedsuggestbaidu",
+      action: "click",
+      sid: "nomore"
+    });
+  }
+};
+
 function mozCNUtils() {}
 
 mozCNUtils.prototype = {
@@ -68,6 +234,7 @@ mozCNUtils.prototype = {
         Services.obs.addObserver(this, "http-on-examine-merged-response", false);
         NTabDB.migrateNTabData();
         this.initMessageListener();
+        delayedSuggestBaidu.init();
         break;
       case "browser-delayed-startup-finished":
         this.initProgressListener(aSubject);
@@ -150,11 +317,32 @@ mozCNUtils.prototype = {
     }
   },
 
-  // before we can fix the OfflineCacheInstaller ?
   initProgressListener: function MCU_initProgressListener(aSubject) {
-    let w = aSubject;
     let fallbackURL = "about:blank";
-    w.gBrowser.addTabsProgressListener({
+    aSubject.gBrowser.addTabsProgressListener({
+      onStateChange: function(aBrowser, b, aRequest, aStateFlags, aStatus) {
+        let baseDomain = "";
+        try {
+          baseDomain = Services.eTLD.getBaseDomain(aRequest.URI, 1);
+        } catch(e) {
+          return;
+        }
+
+        if (baseDomain.startsWith("www.google.") &&
+            (aRequest.URI.path == "/" ||
+             aRequest.URI.path.startsWith("/search?"))) {
+          if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+            if (aStateFlags & Ci.nsIWebProgressListener.STATE_START) {
+              delayedSuggestBaidu.attach(aBrowser, aRequest);
+            }
+            if (aStateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
+              delayedSuggestBaidu.remove(aBrowser);
+            }
+          }
+        }
+      },
+
+      // before we can fix the OfflineCacheInstaller ?
       onLocationChange: function(aBrowser, b, aRequest, aLocation, aFlags) {
         if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
             aLocation.equals(NTabDB.uri)) {
