@@ -56,6 +56,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
 let delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
   delay: 10e3,
+  icon: "chrome://ntab/skin/delayed-suggest-baidu.png",
   knownStatus: [Cr.NS_ERROR_NET_RESET, Cr.NS_ERROR_NET_TIMEOUT],
   notificationKey: "mozcn-delayed-suggest-baidu",
   prefKey: "moa.delayedsuggest.baidu",
@@ -78,15 +79,6 @@ let delayedSuggestBaidu = {
       currentVersion = Services.prefs.getIntPref(this.prefKey);
     } catch(e) {}
     return (currentVersion < this.version) && this.baidu;
-  },
-
-  get icon() {
-    let icon = "";
-    try {
-      icon = this.baidu.getIconURLBySize(16, 16);
-    } catch(e) {};
-    delete this.icon;
-    return this.icon = icon;
   },
 
   init: function() {
@@ -343,7 +335,7 @@ mozCNUtils.prototype = {
           try {
             let publicSuffix = Services.eTLD.getPublicSuffix(aRequest.URI);
             let hostMatch = ["google.", "www.google."].some(function(aPrefix) {
-              return (aPrefix + publicSuffix) == aRequest.asciiHost;
+              return (aPrefix + publicSuffix) == aRequest.URI.asciiHost;
             });
 
             if (!hostMatch) {
