@@ -85,6 +85,23 @@ let delayedSuggestBaidu = {
     Services.search.init();
   },
 
+  isGoogleSearch: function(aURI) {
+    try {
+      let publicSuffix = Services.eTLD.getPublicSuffix(aURI);
+      let hostMatch = ["google.", "www.google."].some(function(aPrefix) {
+        return (aPrefix + publicSuffix) == aURI.asciiHost;
+      });
+
+      if (!hostMatch) {
+        return false;
+      }
+    } catch(e) {
+      return false;
+    }
+
+    return (aURI.path == "/" || aURI.path.startsWith("/search?"));
+  },
+
   attach: function(aBrowser, aRequest) {
     this.remove(aBrowser, aRequest);
     if (!this.enabled) {
@@ -115,11 +132,11 @@ let delayedSuggestBaidu = {
     }
   },
 
-  extractKeyword: function(aRequest) {
+  extractKeyword: function(aURI) {
     let keyword = "";
 
     try {
-      let query = aRequest.URI.QueryInterface(Ci.nsIURL).query;
+      let query = aURI.QueryInterface(Ci.nsIURL).query;
 
       if (query) {
         query.split("&").some(function(aChunk) {
@@ -142,7 +159,7 @@ let delayedSuggestBaidu = {
       return;
     }
 
-    let keyword = this.extractKeyword(aRequest);
+    let keyword = this.extractKeyword(aRequest.URI);
 
     let gBrowser = aBrowser.ownerGlobal.gBrowser;
     let notificationBox = gBrowser.getNotificationBox(aBrowser);
@@ -321,51 +338,40 @@ mozCNUtils.prototype = {
     }
   },
 
-  initProgressListener: function MCU_initProgressListener(aSubject) {
-    let fallbackURL = "about:blank";
-    aSubject.gBrowser.addTabsProgressListener({
-      onStateChange: function(aBrowser, b, aRequest, aStateFlags, aStatus) {
-        if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
-          let isStart = aStateFlags & Ci.nsIWebProgressListener.STATE_START;
-          let isStop = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
-          if (!isStart && !isStop) {
-            return;
-          }
+  // TabsProgressListener variant of nsIWebProgressListener
+  onStateChange:
+  function MCU_onStateChange(aBrowser, b, aRequest, aStateFlags, aStatus) {
+    if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
+      let isStart = aStateFlags & Ci.nsIWebProgressListener.STATE_START;
+      let isStop = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
+      if (!isStart && !isStop) {
+        return;
+      }
 
-          try {
-            let publicSuffix = Services.eTLD.getPublicSuffix(aRequest.URI);
-            let hostMatch = ["google.", "www.google."].some(function(aPrefix) {
-              return (aPrefix + publicSuffix) == aRequest.URI.asciiHost;
-            });
-
-            if (!hostMatch) {
-              return;
-            }
-          } catch(e) {
-            return;
-          }
-
-          if (aRequest.URI.path == "/" ||
-              aRequest.URI.path.startsWith("/search?")) {
-            if (isStart) {
-              delayedSuggestBaidu.attach(aBrowser, aRequest);
-            }
-            if (isStop) {
-              delayedSuggestBaidu.remove(aBrowser, aRequest);
-            }
-          }
+      if (delayedSuggestBaidu.isGoogleSearch(aRequest.URI)) {
+        if (isStart) {
+          delayedSuggestBaidu.attach(aBrowser, aRequest);
         }
-      },
-
-      // before we can fix the OfflineCacheInstaller ?
-      onLocationChange: function(aBrowser, b, aRequest, aLocation, aFlags) {
-        if ((aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) &&
-            aLocation.equals(NTabDB.uri)) {
-          aRequest.cancel(Cr.NS_BINDING_ABORTED);
-          aBrowser.webNavigation.loadURI(fallbackURL, null, null, null, null);
+        if (isStop) {
+          delayedSuggestBaidu.remove(aBrowser, aRequest);
         }
       }
-    });
+    }
+  },
+
+  onLocationChange:
+  function MCU_onLocationChange(aBrowser, b, aRequest, aLocation, aFlags) {
+    if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
+      // before we can fix the OfflineCacheInstaller ?
+      if (aLocation.equals(NTabDB.uri)) {
+        aRequest.cancel(Cr.NS_BINDING_ABORTED);
+        aBrowser.webNavigation.loadURI("about:blank", null, null, null, null);
+      }
+    }
+  },
+
+  initProgressListener: function MCU_initProgressListener(aSubject) {
+    aSubject.gBrowser.addTabsProgressListener(this);
   },
 
   injectMozCNUtils: function MCU_injectMozCNUtils(aSubject) {
@@ -384,13 +390,14 @@ mozCNUtils.prototype = {
       return;
     }
 
+    let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
+                    getInterface(Ci.nsIWebNavigation).
+                    QueryInterface(Ci.nsIDocShell).
+                    chromeEventHandler;
+
     if (docURI.equals(NTabDB.uri) ||
         docURI.equals(NTabDB.privateUri) ||
         docURI.equals(NTabDB.readOnlyUri)) {
-      let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-                      getInterface(Ci.nsIWebNavigation).
-                      QueryInterface(Ci.nsIDocShell).
-                      chromeEventHandler;
       let contentScript = "chrome://ntab/content/ntabContent.js";
       browser.messageManager.loadFrameScript(contentScript, false);
 
@@ -603,6 +610,46 @@ mozCNUtils.prototype = {
           },
           __exposedProps__: {
             channel: "r"
+          }
+        }
+      },
+
+      searchEngine: {
+        enumerable: false,
+        configurable: false,
+        writable: false,
+        value: {
+          maybeEnableSwitchToBaidu: function(aForm, aText, aCheckbox) {
+            if (!aForm || !aText || !aCheckbox) {
+              return;
+            }
+
+            try {
+              if (delayedSuggestBaidu.baidu &&
+                  Services.search.currentEngine != delayedSuggestBaidu.baidu) {
+                aCheckbox.hidden = false;
+                aForm.addEventListener("submit", function() {
+                  if (!aCheckbox.hidden && aCheckbox.checked) {
+                    delayedSuggestBaidu.baidu.hidden = false;
+                    Services.search.currentEngine = delayedSuggestBaidu.baidu;
+
+                    Tracking.track({
+                      type: "delayedsuggestbaidu",
+                      action: "submit",
+                      sid: "switch"
+                    });
+                  }
+                }, false, /** wantsUntrusted */false);
+              }
+
+              let topURI = browser.currentURI;
+              if (delayedSuggestBaidu.isGoogleSearch(topURI)) {
+                aText.value = delayedSuggestBaidu.extractKeyword(topURI);
+              }
+            } catch(e) {}
+          },
+          __exposedProps__: {
+            maybeEnableSwitchToBaidu: "r"
           }
         }
       }
