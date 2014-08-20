@@ -619,17 +619,19 @@ mozCNUtils.prototype = {
         configurable: false,
         writable: false,
         value: {
-          maybeEnableSwitchToBaidu: function(aForm, aText, aCheckbox) {
-            if (!aForm || !aText || !aCheckbox) {
+          maybeEnableSwitchToBaidu: function(aForm, aText, aCheck) {
+            let checkbox = aCheck &&
+              aCheck.querySelector('input[type="checkbox"]');
+            if (!aForm || !aText || !checkbox) {
               return;
             }
 
             try {
               if (delayedSuggestBaidu.baidu &&
                   Services.search.currentEngine != delayedSuggestBaidu.baidu) {
-                aCheckbox.hidden = false;
+                aCheck.hidden = false;
                 aForm.addEventListener("submit", function() {
-                  if (!aCheckbox.hidden && aCheckbox.checked) {
+                  if (!aCheck.hidden && checkbox.checked) {
                     delayedSuggestBaidu.baidu.hidden = false;
                     Services.search.currentEngine = delayedSuggestBaidu.baidu;
 
