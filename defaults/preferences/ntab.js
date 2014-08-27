@@ -1,5 +1,6 @@
 pref("browser.newtab.preload", false);
 pref("browser.newtab.url", "http://offlintab.firefoxchina.cn/");
+pref("services.sync.engine.mozcn.ntab", false);
 
 pref("moa.ntab.web.url", "http://offlintab.firefoxchina.cn/");
 

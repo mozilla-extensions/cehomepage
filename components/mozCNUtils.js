@@ -46,6 +46,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Session",
   "resource://ntab/History.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
+  "resource://ntab/NTabSync.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
@@ -321,6 +323,57 @@ let searchEngines = {
   }
 };
 
+let fxAccountsProxy = {
+  messageName: "mozCNUtils:FxAccounts",
+  mutationConfig: {
+    attributes: true,
+    attributeFilter: [
+      "disabled",
+      "failed",
+      "hidden",
+      "label",
+      "signedin",
+      "status",
+      "tooltiptext"
+    ]
+  },
+  maybeRegisterMutationObserver: function(aWindow) {
+    let gFxAccounts = aWindow.gFxAccounts;
+    let windowMM = aWindow.messageManager;
+
+    if (!gFxAccounts || !gFxAccounts.button || !windowMM) {
+      return;
+    }
+
+    let self = this;
+    let config = this.mutationConfig;
+    let observer = new aWindow.MutationObserver(function(mutations) {
+      mutations.forEach(function(mutation) {
+        if (mutation.type != "attributes" ||
+            mutation.target != gFxAccounts.button ||
+            config.attributeFilter.indexOf(mutation.attributeName) < 0) {
+          return;
+        }
+
+        windowMM.broadcastAsyncMessage(self.messageName, "mutation", mutation);
+      });
+    });
+
+    observer.observe(gFxAccounts.button, config);
+  },
+  maybeInitContentButton: function(aBrowser) {
+    let gFxAccounts = aBrowser.ownerGlobal &&
+                      aBrowser.ownerGlobal.gFxAccounts;
+    let browserMM = aBrowser.messageManager;
+
+    if (!gFxAccounts || !gFxAccounts.button || !browserMM) {
+      return;
+    }
+
+    browserMM.sendAsyncMessage(this.messageName, "init", gFxAccounts.button);
+  }
+};
+
 let appcacheTempFix = {
   attribute: "mozCNAppcacheTempFix",
   delay: 3e3,
@@ -397,11 +450,13 @@ mozCNUtils.prototype = {
         this.initMessageListener();
         delayedSuggestBaidu.init();
         searchEngines.init();
+        NTabSync.init();
         Promo.init();
         break;
       case "browser-delayed-startup-finished":
         this.initProgressListener(aSubject);
         searchEngines.patchBrowserSearch(aSubject);
+        fxAccountsProxy.maybeRegisterMutationObserver(aSubject);
         break;
       case "http-on-examine-response":
       case "http-on-examine-cached-response":
@@ -443,37 +498,46 @@ mozCNUtils.prototype = {
 
   // nsIMessageListener
   receiveMessage: function MCU_receiveMessage(aMessage) {
-    let w = aMessage.target.ownerDocument.defaultView;
+    if (this.MESSAGES.indexOf(aMessage.name) < 0 ||
+        !aMessage.target.currentURI.equals(NTabDB.uri)) {
+      return;
+    }
+
+    let w = aMessage.target.ownerGlobal;
 
     switch (aMessage.name) {
-      case "AboutNTab:downloads":
-        w.BrowserDownloadsUI();
+      case "mozCNUtils:FxAccounts":
+        w.gFxAccounts.onMenuPanelCommand(aMessage.objects)
         break;
-      case "AboutNTab:bookmarks":
-        w.PlacesCommandHook.showPlacesOrganizer("AllBookmarks");
-        break;
-      case "AboutNTab:history":
-        w.PlacesCommandHook.showPlacesOrganizer("History");
-        break;
-      case "AboutNTab:addons":
-        w.BrowserOpenAddonsMgr();
-        break;
-      case "AboutNTab:sync":
-        w.openPreferences("paneSync");
-        break;
-      case "AboutNTab:settings":
-        w.openPreferences();
+      case "mozCNUtils:Tools":
+        switch (aMessage.data) {
+          case "downloads":
+            w.BrowserDownloadsUI();
+            break;
+          case "bookmarks":
+            w.PlacesCommandHook.showPlacesOrganizer("AllBookmarks");
+            break;
+          case "history":
+            w.PlacesCommandHook.showPlacesOrganizer("History");
+            break;
+          case "addons":
+            w.BrowserOpenAddonsMgr();
+            break;
+          case "sync":
+            // FIXME
+            w.openPreferences("paneSync");
+            break;
+          case "settings":
+            w.openPreferences();
+            break;
+        }
         break;
     }
   },
 
   MESSAGES: [
-    "AboutNTab:downloads",
-    "AboutNTab:bookmarks",
-    "AboutNTab:history",
-    "AboutNTab:addons",
-    "AboutNTab:sync",
-    "AboutNTab:settings"
+    "mozCNUtils:FxAccounts",
+    "mozCNUtils:Tools"
   ],
   initMessageListener: function MCU_initMessageListener() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].
@@ -555,10 +619,7 @@ mozCNUtils.prototype = {
         docURI.equals(NTabDB.readOnlyUri)) {
       let contentScript = "chrome://ntab/content/ntabContent.js";
       browser.messageManager.loadFrameScript(contentScript, false);
-
-      aWindow.addEventListener("mozCNUtils:Tracking", function(aEvt) {
-        Tracking.track(aEvt.detail);
-      });
+      fxAccountsProxy.maybeInitContentButton(browser);
     }
 
     /*

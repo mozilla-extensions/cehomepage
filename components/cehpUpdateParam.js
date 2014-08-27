@@ -43,6 +43,8 @@ function collectPref() {
     ret.push(PartnerBookmarks.getUpdateTracking(slugs));
 
     ret.push(Services.prefs.getBoolPref("moa.ntab.display.usehotkey"));
+
+    ret.push(Services.prefs.getBoolPref("services.sync.engine.mozcn.ntab"));
   } catch(e) {}
 
   return ret.join("|");
