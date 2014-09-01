@@ -553,27 +553,53 @@
   var searchEngines = {
     expected: "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
 
-    reportUnexpected: function(aKey, aEngine) {
+    reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
       var url = "NA";
       try {
         url = aEngine.getSubmission("TEST").uri.asciiSpec;
       } catch(e) {}
 
       var isExpected = this.expected == url;
+      var href = "";
+      if (!isExpected && !!aIncludeURL) {
+        href = url;
+      }
 
       ns.Tracking.track({
         type: "search-engine",
-        action: "detect",
+        action: aAction,
         sid: aKey,
         fid: isExpected,
-        href: (!isExpected && url)
+        href: href
       });
+    },
+
+    patchSearchBar: function() {
+      var searchBar = BrowserSearch && BrowserSearch.searchBar;
+      if (!searchBar) {
+        return;
+      }
+
+      var origDoSearch = searchBar.doSearch;
+      var self = this;
+      searchBar.doSearch = function() {
+        origDoSearch.apply(searchBar, [].slice.call(arguments));
+
+        try {
+          var currentEngine = Services.search.currentEngine;
+          var key = {
+            "\u767e\u5ea6": "baidu"
+          }[currentEngine.name] || "other";
+
+          self.reportUnexpected(key, "searchbar", currentEngine, false);
+        } catch(e) {};
+      };
     },
 
     removeLegacyAmazon: function() {
       var amazondotcn = {
-        legacy: Services.search.getEngineByName('\u5353\u8d8a\u4e9a\u9a6c\u900a'),
-        update: Services.search.getEngineByName('\u4e9a\u9a6c\u900a')
+        legacy: Services.search.getEngineByName("\u5353\u8d8a\u4e9a\u9a6c\u900a"),
+        update: Services.search.getEngineByName("\u4e9a\u9a6c\u900a")
       };
       if (amazondotcn.legacy && amazondotcn.update) {
         if (Services.search.currentEngine == amazondotcn.legacy) {
@@ -587,8 +613,9 @@
       var self = this;
 
       Services.search.init(function() {
-        self.reportUnexpected("current", Services.search.currentEngine);
-        self.reportUnexpected("baidu", Services.search.getEngineByName("\u767e\u5ea6"));
+        self.reportUnexpected("current", "detect", Services.search.currentEngine, true);
+        self.reportUnexpected("baidu", "detect", Services.search.getEngineByName("\u767e\u5ea6"), true);
+        self.patchSearchBar();
         self.removeLegacyAmazon();
       });
     }
