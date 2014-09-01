@@ -22,7 +22,7 @@
     var fromQuery = /^\?from=(\w+)/.exec(query);
     if (fromQuery) {
       if (src.contains("?")) {
-        src.replace("?", (fromQuery[0] + "&amp;"));
+        src = src.replace("?", (fromQuery[0] + "&amp;"));
       } else {
         src += fromQuery[0];
       }
