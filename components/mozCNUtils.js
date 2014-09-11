@@ -405,6 +405,88 @@ let nxDomainHijack = {
   }
 };
 
+let searchEngines = {
+  expected: "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
+
+  reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
+    let url = "NA";
+    try {
+      url = aEngine.getSubmission("TEST").uri.asciiSpec;
+    } catch(e) {}
+
+    let isExpected = this.expected == url;
+    let href = "";
+    if (!isExpected && !!aIncludeURL) {
+      href = url;
+    }
+
+    Tracking.track({
+      type: "search-engine",
+      action: aAction,
+      sid: aKey,
+      fid: isExpected,
+      href: href
+    });
+  },
+
+  patchBrowserSearch: function(aWindow) {
+    let BrowserSearch = aWindow.BrowserSearch;
+
+    if (!BrowserSearch || !BrowserSearch.recordSearchInHealthReport) {
+      return;
+    }
+
+    let origRSIHR = BrowserSearch.recordSearchInHealthReport;
+    let self = this;
+    BrowserSearch.recordSearchInHealthReport = function(aEngine, aSource) {
+      origRSIHR.apply(BrowserSearch, [].slice.call(arguments));
+
+      self.trackUsage(aEngine, aSource);
+    };
+  },
+
+  trackUsage: function(aEngine, aSource) {
+    try {
+      if (!(aEngine instanceof Ci.nsISearchEngine) ||
+          typeof(aSource) != "string") {
+        return;
+      }
+
+      let key = {
+        "\u767e\u5ea6": "baidu"
+      }[aEngine.name] || "other";
+
+      this.reportUnexpected(key, aSource, aEngine, false);
+    } catch(e) {};
+  },
+
+  removeLegacyAmazon: function() {
+    let amazondotcn = {
+      legacy: Services.search.getEngineByName("\u5353\u8d8a\u4e9a\u9a6c\u900a"),
+      update: Services.search.getEngineByName("\u4e9a\u9a6c\u900a")
+    };
+    if ((amazondotcn.legacy && !amazondotcn.legacy.hidden) &&
+        (amazondotcn.update && !amazondotcn.update.hidden)) {
+      if (Services.search.currentEngine == amazondotcn.legacy) {
+        Services.search.currentEngine = amazondotcn.update;
+      }
+      Services.search.removeEngine(amazondotcn.legacy);
+    }
+  },
+
+  init: function() {
+    let self = this;
+
+    Services.search.init(function() {
+      let current = Services.search.currentEngine,
+          baidu = Services.search.getEngineByName("\u767e\u5ea6");
+      self.reportUnexpected("current", "detect", current, true);
+      self.reportUnexpected("baidu", "detect", baidu, true);
+      self.removeLegacyAmazon();
+    });
+  }
+};
+
 function mozCNUtils() {}
 
 mozCNUtils.prototype = {
@@ -422,13 +504,16 @@ mozCNUtils.prototype = {
         Services.obs.addObserver(this, "http-on-examine-response", false);
         Services.obs.addObserver(this, "http-on-examine-cached-response", false);
         Services.obs.addObserver(this, "http-on-examine-merged-response", false);
+        Services.obs.addObserver(this, "keyword-search", false);
         NTabDB.migrateNTabData();
         this.initMessageListener();
         delayedSuggestBaidu.init();
         nxDomainHijack.init();
+        searchEngines.init();
         break;
       case "browser-delayed-startup-finished":
         this.initProgressListener(aSubject);
+        searchEngines.patchBrowserSearch(aSubject);
         break;
       case "http-on-examine-response":
         nxDomainHijack.detect(aSubject);
@@ -439,6 +524,9 @@ mozCNUtils.prototype = {
         break;
       case "document-element-inserted":
         this.injectMozCNUtils(aSubject);
+        break;
+      case "keyword-search":
+        searchEngines.trackUsage(aSubject, "urlbar");
         break;
     }
   },
