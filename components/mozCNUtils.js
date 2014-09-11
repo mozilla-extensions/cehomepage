@@ -421,7 +421,7 @@ let searchEngines = {
     }
 
     Tracking.track({
-      type: "search-engine",
+      type: "searchplugins",
       action: aAction,
       sid: aKey,
       fid: isExpected,
