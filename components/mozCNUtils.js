@@ -52,11 +52,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
 XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
   "@mozilla.org/browser/sessionstore;1",
   "nsISessionStore");
-XPCOMUtils.defineLazyGetter(this, "CETracking", function() {
-  try {
-    return Cc["@mozilla.com.cn/tracking;1"].getService().wrappedJSObject;
-  } catch(e) {};
-});
 
 let delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
@@ -241,170 +236,6 @@ let delayedSuggestBaidu = {
   }
 };
 
-let nxDomainHijack = {
-  _cachedIPs: {},
-  _TLDs: ["com", "org", "net", "int", "edu"],
-
-  get dnsService() {
-    delete this.dnsService;
-    return this.dnsService = Cc["@mozilla.org/network/dns-service;1"].
-      getService(Ci.nsIDNSService);
-  },
-
-  get dnsResolveFlag() {
-    delete this.dnsResolveFlag;
-    return this.dnsResolveFlag = (this.dnsService.RESOLVE_BYPASS_CACHE |
-      this.dnsService.RESOLVE_CANONICAL_NAME |
-      this.dnsService.RESOLVE_PRIORITY_MEDIUM |
-      this.dnsService.RESOLVE_DISABLE_IPV6);
-  },
-
-  get httpPort() {
-    delete this.httpPort;
-    return this.httpPort = Cc["@mozilla.org/network/protocol;1?name=http"].
-      getService(Ci.nsIHttpProtocolHandler).defaultPort;
-  },
-
-  _generateRandomHost: function(aTLD) {
-    let ret = [aTLD];
-    let choices = "abcdefghijklmnopqrstuvwxyz0123456789";
-    let parts = 1 + Math.floor(Math.random() * 2);
-    for (let i = 0; i < parts; i++) {
-      let l = 12 + Math.round(4 * Math.cos(Math.PI * Math.random()));
-      let tmp = "";
-      for (let j = 0; j < l; j++) {
-        tmp += choices[Math.floor(choices.length * Math.random())];
-      }
-      ret.unshift(tmp);
-    }
-    return ret.join(".");
-  },
-
-  init: function() {
-    let self = this;
-    this._TLDs.forEach(function(aTLD) {
-      self.dnsService.asyncResolve(self._generateRandomHost(aTLD),
-        self.dnsResolveFlag, self, Services.tm.mainThread);
-    });
-  },
-
-  /**
-   * swap32, ntohl, htonl, stringToIP from /dom/system/gonk/systemlibs.js
-   * see http://mzl.la/1CPFXYl#>>>_(Zero-fill_right_shift) for use of ">>>"
-   */
-  swap32: function(n) {
-    return ((((n >>> 24) & 0xFF) <<  0) |
-            (((n >>> 16) & 0xFF) <<  8) |
-            (((n >>>  8) & 0xFF) << 16) |
-            (((n >>>  0) & 0xFF) << 24)) >>> 0;
-  },
-
-  ntohl: function(n) {
-    return this.swap32(n);
-  },
-
-  htonl: function(n) {
-    return this.swap32(n);
-  },
-
-  stringToIP: function(string) {
-    if (!string) {
-      return null;
-    }
-    let ip = 0;
-    let start, end = -1;
-    for (let i = 0; i < 4; i++) {
-      start = end + 1;
-      end = string.indexOf(".", start);
-      if (end == -1) {
-        end = string.length;
-      }
-      let num = parseInt(string.slice(start, end), 10);
-      if (isNaN(num)) {
-        return null;
-      }
-      ip |= num << (i * 8);
-    }
-    return (ip >>> 0);
-  },
-
-  // isLoopBackAddress, isIPAddrLocal (IPv4 only) from /network/dns/DNS.cpp
-  isLoopBackAddress: function(aNetAddr) {
-    if (aNetAddr.family == aNetAddr.FAMILY_INET) {
-      return (this.stringToIP(aNetAddr.address) == this.htonl(0x7f000001));
-    }
-
-    return false;
-  },
-
-  isIPAddrLocal: function(aNetAddr) {
-    if (aNetAddr.family == aNetAddr.FAMILY_INET) {
-      let addr32 = this.ntohl(this.stringToIP(aNetAddr.address));
-      if (addr32 >>> 24 == 0x0A ||    // 10/8 prefix (RFC 1918).
-          addr32 >>> 20 == 0xAC1 ||   // 172.16/12 prefix (RFC 1918).
-          addr32 >>> 16 == 0xC0A8 ||  // 192.168/16 prefix (RFC 1918).
-          addr32 >>> 16 == 0xA9FE) {  // 169.254/16 prefix (Link Local).
-        return true;
-      }
-    }
-
-    return false;
-  },
-
-  onLookupComplete: function(aRequest, aRecord, aStatus) {
-    if (!aRecord) {
-      switch(aStatus) {
-        case Cr.NS_ERROR_UNKNOWN_HOST:
-          // no nxdomain hijack, hooray!
-          break;
-        case Cr.NS_ERROR_DNS_LOOKUP_QUEUE_FULL:
-          try {
-            CETracking.track("nxdomain-dns-queue");
-          } catch(e) {};
-          break;
-        default:
-          Services.console.logStringMessage(aStatus);
-      }
-      return;
-    }
-
-    while (aRecord.hasMore()) {
-      let netAddr = aRecord.getScriptableNextAddr(this.httpPort);
-      if (this.isLoopBackAddress(netAddr) || this.isIPAddrLocal(netAddr)) {
-        continue;
-      }
-
-      let addr = netAddr.address;
-      this._cachedIPs[addr] = (this._cachedIPs[addr] || 0) + 1;
-    }
-  },
-
-  isSuspiciousAddr: function(aAddr) {
-    return (this._cachedIPs[aAddr] || 0) >= Math.ceil(this._TLDs.length / 2);
-  },
-
-  detect: function(aSubject) {
-    let channel = aSubject;
-    channel.QueryInterface(Ci.nsIHttpChannel);
-
-    if (channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI) {
-      try {
-        channel.QueryInterface(Ci.nsIHttpChannelInternal);
-        if (!this.isSuspiciousAddr(channel.remoteAddress)) {
-          return;
-        }
-
-        let ip = this.ntohl(this.stringToIP(channel.remoteAddress));
-        try {
-          CETracking.track("nxdomain-" + ip.toString(16));
-        } catch(e) {};
-      } catch (e) {
-        Services.console.logStringMessage(channel.URI.prePath + ": " + e);
-      }
-    }
-  }
-};
-
 let searchEngines = {
   expected: "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
 
@@ -508,7 +339,6 @@ mozCNUtils.prototype = {
         NTabDB.migrateNTabData();
         this.initMessageListener();
         delayedSuggestBaidu.init();
-        nxDomainHijack.init();
         searchEngines.init();
         break;
       case "browser-delayed-startup-finished":
@@ -516,8 +346,6 @@ mozCNUtils.prototype = {
         searchEngines.patchBrowserSearch(aSubject);
         break;
       case "http-on-examine-response":
-        nxDomainHijack.detect(aSubject);
-        // intentionally no break;
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
         this.trackHTTPStatus(aSubject, aTopic);
