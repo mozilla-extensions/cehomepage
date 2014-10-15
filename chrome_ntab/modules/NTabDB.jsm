@@ -96,7 +96,35 @@ let NTabDB = {
     Services.prefs.setIntPref(this._dbVersionKey, aVer);
   },
 
-  _addPermission: function NTabDB__addPermission(aPrincipal) {
+  _backupAndRestoreLocalStorage: function() {
+    let temp = new Map();
+    let self = this;
+    for (let i = 0, l = this.localStorage.length; i < l; i++) {
+      let key = this.localStorage.key(i);
+      temp.set(key, this.localStorage.getItem(key));
+    }
+
+    // use |_executeSoon| to make this run after nsIDOMStorageManager's observe
+    this._executeSoon(function() {
+      temp.forEach(function(aValue, aKey) {
+        self.localStorage.setItem(aKey, aValue);
+      });
+    });
+  },
+
+  _executeSoon: function (callback) {
+    if (!callback)
+      return;
+    Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+  },
+
+  // only for null:cookie-changed:cleared for now
+  _keepLocalStorageOnClearingCookie: function () {
+    Services.obs.addObserver(this, "cookie-changed", false);
+    // Services.obs.addObserver(this, "browser:purge-domain-data", false);
+  },
+
+  _addPermission: function (aPrincipal) {
     let principal = aPrincipal || this.principal;
     let self = this;
     [
@@ -107,14 +135,14 @@ let NTabDB = {
     });
   },
 
-  _addExtraPermission: function NTabDB__addExtraPermission() {
+  _addExtraPermission: function () {
     let self = this;
     this.extraPrincipals.forEach(function(aPrincipal) {
       self._addPermission(aPrincipal);
     });
   },
 
-  _migrateQuickDialData: function NTabDB__migrateQuickDialData() {
+  _migrateQuickDialData: function () {
     let data = QuickDialData.read();
     let self = this;
     Object.keys(data).forEach(function(aIndex) {
@@ -169,7 +197,7 @@ let NTabDB = {
     "moa.ntab.dial.rowlimit"
   ],
 
-  _migratePrefToLocalStorage: function NTabDB__migratePrefToLocalStorage() {
+  _migratePrefToLocalStorage: function () {
     if (!this.localStorage) {
       this.localStorage = this.storageManager.
         createStorage(this.principal, this.spec);
@@ -235,7 +263,7 @@ let NTabDB = {
     }).then(null, Cu.reportError);
   },
 
-  _prePopulateSite: function NTabDB__prePopulateSite() {
+  _prePopulateSite: function () {
     let path = "resource://ntab/offlintab-cache/data/sites.json";
     path = Services.io.newURI(path, null, null).
       QueryInterface(Ci.nsIFileURL).file.path;
@@ -255,7 +283,7 @@ let NTabDB = {
     }).then(null, Cu.reportError);
   },
 
-  _preloadOnce: function NTabDB__preloadOnce() {
+  _preloadOnce: function () {
     /* from resource:///modules/BrowserNewTabPreloader.jsm */
     let doc = Services.appShell.hiddenDOMWindow.document;
     if (doc.readyState !== "complete") {
@@ -284,14 +312,14 @@ let NTabDB = {
     doc.documentElement.appendChild(frame);
   },
 
-  _purgeObsoletedData: function NTabDB__purgeObsoletedData() {
+  _purgeObsoletedData: function () {
     /*
      * files, prefs
      * async purge after successfully migrated
      */
   },
 
-  _migrateData: function NTabDB__migrateData() {
+  _migrateData: function () {
     this._addPermission();
     this._migrateQuickDialData();
     this._migratePrefToLocalStorage();
@@ -299,7 +327,7 @@ let NTabDB = {
     this._preloadOnce();
   },
 
-  _initSchema: function NTabDB__initSchema(aEvt) {
+  _initSchema: function (aEvt) {
     if (aEvt.oldVersion) {
       return;
     }
@@ -329,7 +357,7 @@ let NTabDB = {
   },
 
   _extraSuccessCb: null,
-  _onSuccess: function NTabDB__onSuccess(aEvt) {
+  _onSuccess: function (aEvt) {
     let self = this;
     this._db = aEvt.target.result;
     this._db.onversionchange = function() {
@@ -340,14 +368,14 @@ let NTabDB = {
       this._extraSuccessCb();
     }
   },
-  _onError: function NTabDB__onError(aEvt) {
+  _onError: function (aEvt) {
     if (aEvt.target.error.name == "VersionError") {
       this.dbVersion = this.dbVersion + 1;
       this._openDB();
     }
   },
 
-  _openDB: function NTabDB__openDB() {
+  _openDB: function () {
     let version = this.dbVersion;
     let request = indexedDB.
       openForPrincipal(this.principal, "offlintab", version);
@@ -356,7 +384,7 @@ let NTabDB = {
     request.onerror = this._onError.bind(this);
   },
 
-  _ensureDB: function NTabDB__ensureDB(aCallback) {
+  _ensureDB: function (aCallback) {
     if (this._db) {
       aCallback();
     } else {
@@ -369,12 +397,13 @@ let NTabDB = {
     }
   },
 
-  migrateNTabData: function NTabDB_migrateNTabData() {
+  migrateNTabData: function () {
     this._openDB();
     this._addExtraPermission();
+    this._keepLocalStorageOnClearingCookie();
   },
 
-  getPref: function NTabDB_getPref(aKey, aDefault) {
+  getPref: function (aKey, aDefault) {
     try {
       let item = this.localStorage.getItem(aKey);
       if (typeof(item) === "string") {
@@ -388,7 +417,7 @@ let NTabDB = {
     }
   },
 
-  getDial: function NTabDB_getDial(aIndex, aOnSuccess) {
+  getDial: function (aIndex, aOnSuccess) {
     if (typeof(aIndex) == "number") {
       aIndex = aIndex.toString();
     }
@@ -400,7 +429,7 @@ let NTabDB = {
     });
   },
 
-  fillBlankDial: function NTabDB_fillBlankDial(aDial, aOnEnd) {
+  fillBlankDial: function (aDial, aOnEnd) {
     let self = this;
     this._ensureDB(function () {
       let col = self.getPref("moa.ntab.dial.column", 4);
@@ -433,4 +462,27 @@ let NTabDB = {
       maybeFillDial();
     });
   },
+
+  /**
+   * nsIDOMStorageManager will asynchronously clear the data on receiving
+   * these notifications, so we have the chance to back them up here.
+   */
+  observe: function (aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case "cookie-changed":
+        if (aData != "cleared") {
+          break;
+        }
+
+        this._backupAndRestoreLocalStorage();
+        break;
+      case "browser:purge-domain-data":
+        if (aData != this.uri.host) {
+          break;
+        }
+
+        this._backupAndRestoreLocalStorage();
+        break;
+    }
+  }
 };
