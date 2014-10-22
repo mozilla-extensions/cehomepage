@@ -142,6 +142,56 @@ let PartnerBookmarks = {
     this.prefs.clearUserPref('migration');
   },
 
+  _tempFix: function() {
+    let keyword = 'mozcn:toolbar:tmall11nov';
+    let item = {
+      favicon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAQElEQVQ4jWNgYGBg2MzA8J8czADTvIOB4f9+EvEOmCGbydAMwxgGEAtoZwA6RtdA0AujBgxLA4hOyhRlJkqzMwCOOAUjv7eE+gAAAABJRU5ErkJggg==',
+      index: 4,
+      parent: PlacesUtils.bookmarks.toolbarFolder,
+      title: '\u5929\u732b\u53cc11',
+      uri: 'http://s.click.taobao.com/t?e=m%3D2%26s%3DsAZDzur3fxEcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMdC729gxgs%2Bi1aH1Hk3GeOhoVxuUFnM6iMUjUj9sJ%2FOjxctsWvavBZ6hMMc65kB68aUuZxIcp9pfUIgVEmFmgnbDX0%2BHH2IEVeOhxeU7PAMffjxl6AIniNq2NuRO0YvGxWDg6Uw6J4%2Fplpa1ptKO5BKn1GHnsRyADB8mVZkeJZr6Ke66u3HlzztBug3u65UROKJn5AyUbPoV'
+    };
+
+    let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
+    let newUri = Services.io.newURI(item.uri, null, null);
+
+    let bookmarks = [];
+    if (uri) {
+      bookmarks = PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {});
+      // see comments in this._realUpdate
+      bookmarks = bookmarks.filter(function(aId) {
+        return PlacesUtils.bookmarks.getKeywordForBookmark(aId) == keyword;
+      }).filter(function(aId) {
+        return PlacesUtils.bookmarks.getFolderIdForItem(aId) == item.parent;
+      });
+    }
+
+    if (!bookmarks.length) {
+      let id = PlacesUtils.bookmarks.insertBookmark(
+        item.parent, newUri, item.index, item.title);
+      PlacesUtils.bookmarks.setKeywordForBookmark(id, keyword);
+      bookmarks.push(id);
+    }
+
+    for (let i = 0, l = bookmarks.length; i < l; i++) {
+      let id = bookmarks[i];
+      PlacesUtils.bookmarks.changeBookmarkURI(id, newUri);
+
+      if (item.title) {
+        PlacesUtils.bookmarks.setItemTitle(id, item.title);
+      }
+      if (item.favicon) {
+        let faviconUri = Services.io.
+          newURI("fake-favicon-uri:" + item.uri, null, null);
+        this.fisvc.replaceFaviconDataFromDataURL(faviconUri, item.favicon, 0);
+        this.fisvc.setAndFetchFaviconForPage(newUri, faviconUri, false,
+          this.fisvc.FAVICON_LOAD_NON_PRIVATE);
+      }
+    }
+
+    this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+  },
+
   _realUpdate: function(aUpdates, aSignature) {
     if (this._getCharPref('signature', '') == aSignature) {
       return;
@@ -160,6 +210,7 @@ let PartnerBookmarks = {
       let bookmarks = PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {});
       for (let i = 0, l = bookmarks.length; i < l; i++) {
         let id = bookmarks[i];
+        // DO NOT change bookmark with matched url but not expected keyword
         if (PlacesUtils.bookmarks.getKeywordForBookmark(id) == aKeyword) {
           if (item.uri) {
             let newUri = Services.io.newURI(item.uri, null, null);
@@ -171,14 +222,9 @@ let PartnerBookmarks = {
             if (item.favicon) {
               let faviconUri = Services.io.
                 newURI("fake-favicon-uri:" + item.uri, null, null);
-              let faviconDataFromDataURL = Ci.mozIAsyncFavicons ?
-                'replaceFaviconDataFromDataURL' :
-                'setFaviconDataFromDataURL';
-              let setFaviconForPage = Ci.mozIAsyncFavicons ?
-                'setAndFetchFaviconForPage' :
-                'setAndLoadFaviconForPage';
-              self.fisvc[faviconDataFromDataURL](faviconUri, item.favicon, 0);
-              self.fisvc[setFaviconForPage](newUri, faviconUri, false,
+              self.fisvc.replaceFaviconDataFromDataURL(faviconUri,
+                item.favicon, 0);
+              self.fisvc.setAndFetchFaviconForPage(newUri, faviconUri, false,
                 self.fisvc.FAVICON_LOAD_NON_PRIVATE);
             }
             if (item.keyword) {
@@ -209,6 +255,8 @@ let PartnerBookmarks = {
 
   _backfillVersion: 1,
 
+  _tempFixVersion: 1,
+
   init: function() {
     if (this._inited) {
       return;
@@ -229,6 +277,15 @@ let PartnerBookmarks = {
 
     if (backfillVersion < this._backfillVersion) {
       this._backfillKeywords();
+    }
+
+    let tempFixVersion = 0;
+    try {
+      tempFixVersion = this.prefs.getIntPref('tempFixVersion');
+    } catch(e) {}
+
+    if (tempFixVersion < this._tempFixVersion) {
+      this._tempFix();
     }
 
     this.update();
