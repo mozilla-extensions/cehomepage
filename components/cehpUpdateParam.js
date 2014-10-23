@@ -39,7 +39,8 @@ function collectPref() {
     ret.push("NA");
 
     // this array should be manually updated, at least for now
-    ret.push(PartnerBookmarks.getUpdateTracking(["taobao", "tmall"]));
+    let slugs = ["taobao", "tmall", "tmall11nov"];
+    ret.push(PartnerBookmarks.getUpdateTracking(slugs));
 
     ret.push(Services.prefs.getBoolPref("moa.ntab.display.usehotkey"));
   } catch(e) {}
