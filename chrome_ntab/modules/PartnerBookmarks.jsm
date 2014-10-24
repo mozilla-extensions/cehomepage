@@ -281,7 +281,7 @@ let PartnerBookmarks = {
 
     let tempFixVersion = 0;
     try {
-      tempFixVersion = this.prefs.getIntPref('tempFixVersion');
+      tempFixVersion = this.prefs.getIntPref('tempfixversion');
     } catch(e) {}
 
     if (tempFixVersion < this._tempFixVersion) {
