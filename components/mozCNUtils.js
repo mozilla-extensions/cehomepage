@@ -49,6 +49,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Promo",
+  "resource://cehp-promo/Promo.jsm");
+
 XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
   "@mozilla.org/browser/sessionstore;1",
   "nsISessionStore");
@@ -340,6 +343,7 @@ mozCNUtils.prototype = {
         this.initMessageListener();
         delayedSuggestBaidu.init();
         searchEngines.init();
+        Promo.init();
         break;
       case "browser-delayed-startup-finished":
         this.initProgressListener(aSubject);

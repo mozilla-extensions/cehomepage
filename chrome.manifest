@@ -23,6 +23,16 @@ overlay   chrome://browser/content/browser.xul chrome://ntab/content/ff-overlay.
 override  chrome://global/content/backgroundPageThumbsContent.js chrome://ntab/content/backgroundPageThumbsContent.js appversion>=27.0
 
 
+content     cehp-promo                  chrome_promo/content/
+locale      cehp-promo    en-US         chrome_promo/locale/en-US/
+locale      cehp-promo    zh-CN         chrome_promo/locale/zh-CN/
+resource    cehp-promo                  chrome_promo/modules/
+skin        cehp-promo    classic/1.0   chrome_promo/skin/
+
+overlay chrome://browser/content/browser.xul        chrome://cehp-promo/content/browser-overlay.xul
+overlay chrome://global/content/alerts/alert.xul    chrome://cehp-promo/content/alert-overlay.xul
+
+
 component {3ce0f801-b121-4a20-9188-3b92b13e9809} components/aboutNTab.js
 contract @mozilla.org/network/protocol/about;1?what=ntab {3ce0f801-b121-4a20-9188-3b92b13e9809}
 
