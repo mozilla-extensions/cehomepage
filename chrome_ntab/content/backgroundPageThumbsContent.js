@@ -6,7 +6,16 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/PageThumbs.jsm");
+// MO changes, compatible with older Fx release
+try {
+  Cu.importGlobalProperties(['Blob']);
+} catch(e) {};
+try {
+  Cu.import("resource://gre/modules/PageThumbUtils.jsm");
+} catch(e) {
+  Cu.import("resource://gre/modules/PageThumbs.jsm");
+}
+
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -50,7 +59,7 @@ const backgroundPageThumbsContent = {
     // in the parent (eg, auth) aren't prevented, but alert() etc are.
     // disableDialogs only works on the current inner window, so it has
     // to be called every page load, but before scripts run.
-    if (subj == content.document) {
+    if (content && subj == content.document) {
       // MO changes, compatible with older Fx release
       let utils = content.
         QueryInterface(Ci.nsIInterfaceRequestor).
@@ -161,15 +170,33 @@ const backgroundPageThumbsContent = {
     capture.finalURL = this._webNav.currentURI.spec;
     capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
 
-    // MO changes, _createCanvas was renamed in <https://bugzil.la/1058237>
+    let canvasDrawDate = new Date();
+    // MO changes, for <https://bugzil.la/1058237>
     let canvas = PageThumbs.createCanvas ?
       PageThumbs.createCanvas(content) : PageThumbs._createCanvas(content);
-    let canvasDrawDate = new Date();
-    PageThumbs._captureToCanvas(content, canvas);
+    // MO changes, for <https://bugzil.la/698371>
+    try {
+      let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
+
+      let ctx = canvas.getContext("2d");
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.drawWindow(content, 0, 0, sw, sh,
+                     PageThumbUtils.THUMBNAIL_BG_COLOR,
+                     ctx.DRAWWINDOW_DO_NOT_FLUSH);
+      ctx.restore();
+    } catch(e) {
+      PageThumbs._captureToCanvas(content, canvas);
+    }
     capture.canvasDrawTime = new Date() - canvasDrawDate;
 
     canvas.toBlob(blob => {
-      capture.imageBlob = blob;
+      // MO changes, for <https://bugzil.la/1047483>
+      try {
+        capture.imageBlob = new Blob([blob]);
+      } catch(e) {
+        capture.imageBlob = blob;
+      }
       // Load about:blank to finish the capture and wait for onStateChange.
       this._loadAboutBlank();
     });

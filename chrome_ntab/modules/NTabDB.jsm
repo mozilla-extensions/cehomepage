@@ -73,7 +73,17 @@ let NTabDB = {
 
   get localStorage() {
     this.storageManager.precacheStorage(this.principal);
-    let localStorage = this.storageManager.getStorage(this.principal);
+    let localStorage;
+    try {
+      localStorage = this.storageManager.getStorage(this.principal);
+    } catch(e) {
+      // extra window or null required since Fx 34 <https://bugzil.la/660237>
+      if (e.result == Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS) {
+        localStorage = this.storageManager.getStorage(null, this.principal);
+      } else {
+        throw e;
+      }
+    }
     delete this.localStorage;
     return this.localStorage = localStorage;
   },
@@ -199,8 +209,18 @@ let NTabDB = {
 
   _migratePrefToLocalStorage: function () {
     if (!this.localStorage) {
-      this.localStorage = this.storageManager.
-        createStorage(this.principal, this.spec);
+      try {
+        this.localStorage = this.storageManager.
+          createStorage(this.principal, this.spec);
+      } catch(e) {
+        // extra window or null required since Fx 34 <https://bugzil.la/660237>
+        if (e.result == Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS) {
+          this.localStorage = this.storageManager.
+            createStorage(null, this.principal, this.spec);
+        } else {
+          throw e;
+        }
+      }
     }
 
     let self = this;
