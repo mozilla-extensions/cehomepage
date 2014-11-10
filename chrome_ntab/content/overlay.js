@@ -382,7 +382,9 @@
       Services.prefs.addObserver(this.extPrefKey, this._observer, true);
       this.refresh();
 
-      gInitialPages.push(_url);
+      gInitialPages = gInitialPages.concat([
+        ns.NTabDB.spec, ns.NTabDB.privateSpec, ns.NTabDB.readOnlySpec
+      ]);
     },
     refresh: function() {
       this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
