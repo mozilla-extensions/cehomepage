@@ -321,6 +321,60 @@ let searchEngines = {
   }
 };
 
+let appcacheTempFix = {
+  attribute: "mozCNAppcacheTempFix",
+  delay: 3e3,
+  fixApplied: false,
+
+  get appCacheService() {
+    delete this.appCacheService;
+    return this.appCacheService =
+      Cc["@mozilla.org/network/application-cache-service;1"].
+        getService(Ci.nsIApplicationCacheService);
+  },
+
+  clear: function(aHost) {
+    let groups = this.appCacheService.getGroups();
+    for (let i = 0; i < groups.length; i++) {
+      let uri = Services.io.newURI(groups[i], null, null);
+      if (uri.asciiHost == aHost) {
+        let cache = this.appCacheService.getActiveCache(groups[i]);
+        cache.discard();
+      }
+    }
+    this.fixApplied = true;
+
+    Tracking.track({
+      type: "appcache",
+      action: "clear",
+      sid: "dummy"
+    });
+  },
+
+  attach: function(aBrowser, aRequest) {
+    this.remove(aBrowser, aRequest);
+    if (this.fixApplied) {
+      return;
+    }
+
+    let timeoutId = setTimeout((function() {
+      this.clear(aRequest.URI.asciiHost);
+
+      aRequest.cancel(Cr.NS_BINDING_ABORTED);
+      aBrowser.webNavigation.loadURI(aRequest.URI.spec, null, null, null, null);
+    }).bind(this), this.delay);
+    aBrowser.setAttribute(this.attribute, timeoutId);
+  },
+
+  remove: function(aBrowser, aRequest) {
+    if (aBrowser.hasAttribute(this.attribute)) {
+      let timeoutId = aBrowser.getAttribute(this.attribute);
+      aBrowser.removeAttribute(this.attribute);
+      clearTimeout(parseInt(timeoutId, 10));
+    }
+  }
+}
+
 function mozCNUtils() {}
 
 mozCNUtils.prototype = {
@@ -438,6 +492,15 @@ mozCNUtils.prototype = {
       let isStop = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
       if (!isStart && !isStop) {
         return;
+      }
+
+      if (NTabDB.uri.equals(aRequest.URI)) {
+        if (isStart) {
+          appcacheTempFix.attach(aBrowser, aRequest);
+        }
+        if (isStop) {
+          appcacheTempFix.remove(aBrowser, aRequest);
+        }
       }
 
       if (delayedSuggestBaidu.isGoogleSearch(aRequest.URI)) {
