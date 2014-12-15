@@ -143,52 +143,6 @@ let PartnerBookmarks = {
   },
 
   _tempFix: function() {
-    let keyword = 'mozcn:toolbar:taobao12dec';
-    let item = {
-      favicon: 'data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAD///8A////AP///wD///8AL2n//////wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AC9p//8PTOv/////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wCrw///D0zr/w9M6/8vaf//L2n//w9M6/8PTOv/D0zr/w9M6/8PTOv/D0zr/w9M6/8PTOv/q8P//////wCrw///D0zr/y9p//8vaf//L2n//y9p//8vaf//L2n//y9p//8vaf//L2n//y9p//8vaf//L2n//w9M6/+rw///VoX/////////////L2n//y9p//8vaf//L2n//y9p//8vaf//////////////////mLX//y9p//8vaf//D0zr/1aF//////////////////8vaf//mLX//////////////////y9p//8vaf////////////+Ytf//L2n//w9M6/9Whf//L2n/////////////NG3///////80bf///////////////////////zRt/////////////y9p//8PTOv/VoX//y9p//8vaf///////zRt////////NG3/////////////NG3///////80bf////////////8vaf//D0zr/1aF//8vaf//L2n//5i1////////NG3//zRt/////////////zRt//80bf//NG3/////////////L2n//w9M6/9Whf//L2n//y9p//+Ytf///////////////////////////////////////zRt/////////////y9p//8PTOv/VoX//y9p/////////////zRt////////NG3/////////////NG3//zRt//80bf////////////8vaf//D0zr/1aF//8vaf////////////80bf//NG3/////////////////////////////NG3/////////////L2n//w9M6/9Whf//L2n//zRt//80bf///////5i1/////////////zRt//80bf//NG3//zRt////////mLX//y9p//8PTOv/VoX//y9p///+/////////zRt/////////////zRt////////////////////////mLX//zRt//8vaf//D0zr/6vD//9Whf////////////8vaf////////////8vaf//L2n//y9p//8vaf//L2n//y9p//8vaf//D0zr/6vD//////8Aq8P//1aF//9Whf//VoX//1aF//9Whf//VoX//1aF//9Whf//VoX//1aF//9Whf//VoX//6vD//////8A9/8AAPP/AACAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAA==',
-      index: 4,
-      parent: PlacesUtils.bookmarks.toolbarFolder,
-      title: '\u6dd8\u5b9d12.12',
-      uri: 'http://s.click.taobao.com/t?e=m%3D2%26s%3DhkJsyfzx7P8cQipKwQzePCperVdZeJviLKpWJ%2Bin0XJRAdhuF14FMS21Q93XuuALlovu%2FCElQOtoVxuUFnM6iMUjUj9sJ%2FOjkPiKwSWyD2b8vekcD5j4y7g5kJpUiIWcbYbSbVjnPd7DX0%2BHH2IEVaDF6DfW5eWK47FHjfsActnyHL0%2Bek76ZzDO87dqi5eMAXjyQFO6uHT2PLMoiA4ugudjKlT%2BM6flAFeBK6%2FtK%2FvakL1xFYC69A%3D%3D'
-    };
-
-    let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
-    let newUri = Services.io.newURI(item.uri, null, null);
-
-    let bookmarks = [];
-    if (uri) {
-      bookmarks = PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {});
-      // see comments in this._realUpdate
-      bookmarks = bookmarks.filter(function(aId) {
-        return PlacesUtils.bookmarks.getKeywordForBookmark(aId) == keyword;
-      }).filter(function(aId) {
-        return PlacesUtils.bookmarks.getFolderIdForItem(aId) == item.parent;
-      });
-    }
-
-    if (!bookmarks.length) {
-      let id = PlacesUtils.bookmarks.insertBookmark(
-        item.parent, newUri, item.index, item.title);
-      PlacesUtils.bookmarks.setKeywordForBookmark(id, keyword);
-      bookmarks.push(id);
-    }
-
-    for (let i = 0, l = bookmarks.length; i < l; i++) {
-      let id = bookmarks[i];
-      PlacesUtils.bookmarks.changeBookmarkURI(id, newUri);
-
-      if (item.title) {
-        PlacesUtils.bookmarks.setItemTitle(id, item.title);
-      }
-      if (item.favicon) {
-        let faviconUri = Services.io.
-          newURI("fake-favicon-uri:" + item.uri, null, null);
-        this.fisvc.replaceFaviconDataFromDataURL(faviconUri, item.favicon, 0);
-        this.fisvc.setAndFetchFaviconForPage(newUri, faviconUri, false,
-          this.fisvc.FAVICON_LOAD_NON_PRIVATE);
-      }
-    }
-
     this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
   },
 
