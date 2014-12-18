@@ -1,8 +1,13 @@
 let EXPORTED_SYMBOLS = ["NTabDB"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
+const {
+  Constructor: CC,
+  classes: Cc, interfaces: Ci, results: Cr, utils: Cu
+} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
@@ -11,8 +16,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbsStorage",
   "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "QuickDialData",
   "resource://ntab/QuickDialData.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
+  "resource://ntab/Tracking.jsm");
 
 if (!this.indexedDB) {
   if (Cu.importGlobalProperties) {
@@ -376,6 +384,57 @@ let NTabDB = {
     request.transaction.oncomplete = this._migrateData.bind(this);
   },
 
+  get storageDir() {
+    delete this.storageDir;
+    return this.storageDir = OS.Path.join(OS.Constants.Path.profileDir,
+      "storage/persistent/http+++offlintab.firefoxchina.cn/idb");
+  },
+  get storageSqlite() {
+    delete this.storageSqlite;
+    return this.storageSqlite = OS.Path.join(this.storageDir,
+      "123733528obfaftlni.sqlite");
+  },
+  get storageFiles() {
+    delete this.storageFiles;
+    return this.storageFiles = OS.Path.join(this.storageDir,
+      "123733528obfaftlni");
+  },
+  _fixMissingSqlite: function(aAction) {
+    let self = this;
+    OS.File.exists(this.storageSqlite).then(function(aExisted) {
+      if (aExisted) {
+        return;
+      }
+
+      OS.File.stat(self.storageFiles).then(function(aInfo) {
+        if (!aInfo.isDir) {
+          return;
+        }
+
+        if (OS.File.removeDir) {
+          OS.File.removeDir(self.storageFiles);
+        } else {
+          (new FileUtils.File(self.storageFiles)).remove(true);
+        }
+
+        Tracking.track({
+          type: "unknown",
+          action: aAction,
+          sid: "missing-sqlite"
+        });
+      });
+    })
+  },
+  fixUnknownError: function(aAction) {
+    this._fixMissingSqlite(aAction);
+
+    Tracking.track({
+      type: "unknown",
+      action: aAction,
+      sid: "attempt",
+    });
+  },
+
   _extraSuccessCb: null,
   _onSuccess: function (aEvt) {
     let self = this;
@@ -389,9 +448,14 @@ let NTabDB = {
     }
   },
   _onError: function (aEvt) {
-    if (aEvt.target.error.name == "VersionError") {
-      this.dbVersion = this.dbVersion + 1;
-      this._openDB();
+    switch (aEvt.target.error.name) {
+      case "VersionError":
+        this.dbVersion = this.dbVersion + 1;
+        this._openDB();
+        break;
+      case "UnknownError":
+        this.fixUnknownError("NTabDB");
+        break;
     }
   },
 

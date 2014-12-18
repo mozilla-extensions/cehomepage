@@ -1,6 +1,7 @@
 let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
+Cu.import('resource://ntab/NTabDB.jsm');
 Cu.import('resource://ntab/NTabSync.jsm');
 Cu.import('resource://ntab/Tracking.jsm');
 
@@ -183,6 +184,13 @@ let FxAccounts = {
   }
 };
 
+content.addEventListener('mozCNUtils:Diagnose', function(aEvt) {
+  switch(aEvt.detail) {
+    case 'UnknownError':
+      NTabDB.fixUnknownError('content');
+      break;
+  }
+}, true, true);
 content.addEventListener('mozCNUtils:Tracking', function(aEvt) {
   Tracking.track(aEvt.detail);
 }, true, true);
