@@ -1,7 +1,10 @@
 var EXPORTED_SYMBOLS = ['utils'];
 
-var Cc = Components.classes;
-var Ci = Components.interfaces;
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
 
 // file should be an array, e.g.: [dir1, dir2, dir3, filename].
 function _getFile(file_att) {
@@ -70,7 +73,7 @@ function _readStringFromFile(file) {
 		var str = {};
 		var read = 0;
 		do {
-			read = cstream.readString(0xffffffff, str);	// read as much as we can and  put it in str.value
+			read = cstream.readString(0xffffffff, str); // read as much as we can and  put it in str.value
 			data += str.value;
 		} while (read != 0);
 	} catch(err) {
@@ -216,4 +219,20 @@ var utils = {
 
 		return result.join('');
 	}
-}
+};
+
+utils.prefs = Object.create(new Preferences());
+
+utils.prefs.getLocale = function(k, v) {
+  try{
+    return this._prefSvc.getComplexValue(k, Ci.nsIPrefLocalizedString).data || v;
+  } catch (e) {
+    return this.get(k, v);
+  }
+};
+
+utils.prefs.setLocale = function(k, v) {
+  let pls = Cc['@mozilla.org/pref-localizedstring;1'].createInstance(Ci.nsIPrefLocalizedString);
+  pls.data = v;
+  this._prefSvc.setComplexValue(k, Ci.nsIPrefLocalizedString, pls);
+};

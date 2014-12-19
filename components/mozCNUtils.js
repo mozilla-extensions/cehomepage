@@ -2,10 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-let Cu = Components.utils;
-let Cr = Components.results;
-let Ci = Components.interfaces;
-let Cc = Components.classes;
+const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+
+try {
+  Cu.importGlobalProperties(['Blob']);
+} catch(e) {};
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
@@ -20,6 +21,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbsStorage",
   "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
+
+XPCOMUtils.defineLazyGetter(this, "WebChannel", function() {
+  try {
+    let temp = {};
+    Cu.import("resource://gre/modules/WebChannel.jsm", temp);
+    return temp.WebChannel;
+  } catch(e) {
+    return null;
+  }
+});
 
 XPCOMUtils.defineLazyGetter(this, "BackgroundPageThumbs", function() {
   let temp = {};
@@ -48,9 +59,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
   "resource://ntab/NTabSync.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
+  "resource://ntab/SearchEngine.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "searchEngines",
+  "resource://ntab/SearchEngine.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "Promo",
   "resource://cehp-promo/Promo.jsm");
 
@@ -58,270 +72,121 @@ XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
   "@mozilla.org/browser/sessionstore;1",
   "nsISessionStore");
 
-let delayedSuggestBaidu = {
-  attribute: "mozCNDelayedSuggestBaidu",
-  delay: 10e3,
-  icon: "chrome://ntab/skin/delayed-suggest-baidu.png",
-  knownStatus: [Cr.NS_ERROR_NET_RESET, Cr.NS_ERROR_NET_TIMEOUT],
-  notificationKey: "mozcn-delayed-suggest-baidu",
-  prefKey: "moa.delayedsuggest.baidu",
-  version: 1, // bump this to ignore existing nomore
+let jsm = {};
+XPCOMUtils.defineLazyModuleGetter(jsm, "utils",
+  "resource://ntab/utils.jsm");
+let prefs = jsm.utils.prefs;
 
-  get baidu() {
-    delete this.baidu;
-    return this.baidu = Services.search.getEngineByName("\u767e\u5ea6");
+let homepage = {
+  isCeHomepage: function() {
+    let hp = prefs.getLocale('browser.startup.homepage', 'about:blank');
+    let ceHp = prefs.getLocale('extensions.cehomepage.homepage', 'http://i.firefoxchina.cn');
+    return hp == ceHp || hp == 'about:cehome';
   },
-
-  get bundle() {
-    let url = "chrome://ntab/locale/overlay.properties";
-    delete this.bundle;
-    return this.bundle = Services.strings.createBundle(url);
-  },
-
-  get enabled() {
-    let currentVersion = 0;
-    try {
-      currentVersion = Services.prefs.getIntPref(this.prefKey);
-    } catch(e) {}
-    return (currentVersion < this.version) && this.baidu;
-  },
-
-  init: function() {
-    Services.search.init();
-  },
-
-  isGoogleSearch: function(aURI) {
-    try {
-      let publicSuffix = Services.eTLD.getPublicSuffix(aURI);
-      let hostMatch = ["google.", "www.google."].some(function(aPrefix) {
-        return (aPrefix + publicSuffix) == aURI.asciiHost;
-      });
-
-      if (!hostMatch) {
-        return false;
+  /*reset: function() {
+      prefs.set('browser.startup.homepage', this.cehomepage());
+      prefs.set('browser.startup.page', 1);
+    },
+    homepage: function() {
+      var hp = prefs.getLocale('browser.startup.homepage', 'about:blank');
+      return hp;
+    },
+    homepage_changed: function() {
+      return prefs.isSet('browser.startup.homepage') && this.homepage() != this.cehomepage();
+    },
+    page: function() {
+      return prefs.get('browser.startup.page', 1);
+    },
+    page_changed: function() {
+      return prefs.isSet('browser.startup.page') && this.page() == 1;
+    },
+    cehomepage: function() {
+      return prefs.getLocale('extensions.cehomepage.homepage', 'http://i.firefoxchina.cn');
+  },*/
+    autostart: function(flag) {
+      var ori = prefs.get('extensions.cehomepage.autostartup', true);
+      if (typeof flag != 'undefined') {
+          prefs.set('extensions.cehomepage.autostartup', flag);
       }
-    } catch(e) {
-      return false;
-    }
-
-    return (aURI.path == "/" || aURI.path.startsWith("/search?"));
-  },
-
-  attach: function(aBrowser, aRequest) {
-    this.remove(aBrowser, aRequest);
-    if (!this.enabled) {
-      return;
-    }
-
-    let timeoutId = setTimeout((function() {
-      this.notify(aBrowser, aRequest);
-    }).bind(this), this.delay);
-    aBrowser.setAttribute(this.attribute, timeoutId);
-  },
-
-  remove: function(aBrowser, aRequest) {
-    if (aBrowser.hasAttribute(this.attribute)) {
-      let timeoutId = aBrowser.getAttribute(this.attribute);
-      aBrowser.removeAttribute(this.attribute);
-      clearTimeout(parseInt(timeoutId, 10));
-    }
-
-    if (this.knownStatus.indexOf(aRequest.status) < 0) {
-      let gBrowser = aBrowser.ownerGlobal.gBrowser;
-      let notificationBox = gBrowser.getNotificationBox(aBrowser);
-      let notification = notificationBox.
-        getNotificationWithValue(this.notificationKey);
-      if (notification) {
-        notificationBox.removeNotification(notification);
+      return ori;
+    },
+    channelid: function() {
+      return prefs.get('app.chinaedition.channel', 'www.firefox.com.cn');
+    },
+    setHome: function(aUrl) {
+      if (aUrl != null && aUrl != '' && aUrl.indexOf('http://') == 0) {
+        prefs.set('browser.startup.homepage', aUrl);
+        prefs.set('browser.startup.page', 1);
+      } else {
+        this.reset();
       }
     }
-  },
+};
 
-  extractKeyword: function(aURI) {
-    let keyword = "";
+function queryBookmarks(aCallback) {
+  let db = Cc['@mozilla.org/browser/nav-history-service;1'].
+             getService(Ci.nsINavHistoryService).
+             QueryInterface(Ci.nsPIPlacesDatabase).
+             DBConnection;
+  let sql = ('SELECT b.title as title, p.url as url ' +
+             'FROM moz_bookmarks b, moz_places p ' +
+             'WHERE b.type = 1 AND b.fk = p.id AND p.hidden = 0');
+  let statement = db.createAsyncStatement(sql);
+  let links = [];
+  db.executeAsync([statement], 1, {
+    handleResult: function(aResultSet) {
+      let row;
 
-    try {
-      let query = aURI.QueryInterface(Ci.nsIURL).query;
+      while (row = aResultSet.getNextRow()) {
+        let title = row.getResultByName("title");
+        let url = row.getResultByName("url");
 
-      if (query) {
-        query.split("&").some(function(aChunk) {
-          let pair = aChunk.split("=");
-
-          let match = pair[0] == "q";
-          if (match) {
-            keyword = decodeURIComponent(pair[1]).replace(/\+/g, " ");
+        links.push({
+          title: title,
+          url: url,
+          __exposedProps__: {
+            title: "r",
+            url: "r"
           }
-          return match;
-        })
+        });
       }
-    } catch(e) {}
+    },
+    handleError: (aError) => aCallback([]),
+    handleCompletion: (aReason) => aCallback(links)
+  });
+}
 
-    return keyword;
-  },
-
-  notify: function(aBrowser, aRequest) {
-    if (!this.enabled) {
-      return;
-    }
-
-    let keyword = this.extractKeyword(aRequest.URI);
-
-    let gBrowser = aBrowser.ownerGlobal.gBrowser;
-    let notificationBox = gBrowser.getNotificationBox(aBrowser);
-
-    let self = this;
-    let prefix = "delayedsuggestbaidu.notification.";
-    let message = this.bundle.GetStringFromName(prefix + "message");
-    let positive = this.bundle.GetStringFromName(prefix + "positive");
-    let negative = this.bundle.GetStringFromName(prefix + "negative");
-
-    let notificationBar = notificationBox.appendNotification(message,
-      this.notificationKey,
-      this.icon,
-      notificationBox.PRIORITY_INFO_HIGH,
-      [{
-        label: positive,
-        accessKey: "Y",
-        callback: function() {
-          self.searchAndSwitchEngine(aBrowser, keyword);
-        }
-      }, {
-        label: negative,
-        accessKey: "N",
-        callback: function() {
-          self.markNomore()
-        }
-      }]);
-    notificationBar.persistence = 1;
-    Tracking.track({
-      type: "delayedsuggestbaidu",
-      action: "notify",
-      sid: "dummy"
-    });
-  },
-
-  searchAndSwitchEngine: function(aBrowser, aKeyword) {
-    let w = aBrowser.ownerGlobal;
-    if (aKeyword) {
-      let submission = this.baidu.getSubmission(aKeyword);
-      // always replace in the current tab
-      w.openUILinkIn(submission.uri.spec, "current", null, submission.postData);
-    } else {
-      w.openUILinkIn(this.baidu.searchForm, "current");
-    }
-
-    if (Services.search.currentEngine.name == "Google") {
-      this.baidu.hidden = false;
-      Services.search.currentEngine = this.baidu;
-
-      Tracking.track({
-        type: "delayedsuggestbaidu",
-        action: "click",
-        sid: "switch"
-      });
-    }
-
-    Tracking.track({
-      type: "delayedsuggestbaidu",
-      action: "click",
-      sid: "search"
-    });
-  },
-
-  markNomore: function() {
-    try {
-      Services.prefs.setIntPref(this.prefKey, this.version);
-    } catch(e) {}
-
-    Tracking.track({
-      type: "delayedsuggestbaidu",
-      action: "click",
-      sid: "nomore"
-    });
-  }
-};
-
-let searchEngines = {
-  expected: "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
-
-  reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
-    let url = "NA";
-    try {
-      url = aEngine.getSubmission("TEST").uri.asciiSpec;
-    } catch(e) {}
-
-    let isExpected = this.expected == url;
-    let href = "";
-    if (!isExpected && !!aIncludeURL) {
-      href = url;
-    }
-
-    Tracking.track({
-      type: "searchplugins",
-      action: aAction,
-      sid: aKey,
-      fid: isExpected,
-      href: href
-    });
-  },
-
-  patchBrowserSearch: function(aWindow) {
-    let BrowserSearch = aWindow.BrowserSearch;
-
-    if (!BrowserSearch || !BrowserSearch.recordSearchInHealthReport) {
-      return;
-    }
-
-    let origRSIHR = BrowserSearch.recordSearchInHealthReport;
-    let self = this;
-    BrowserSearch.recordSearchInHealthReport = function(aEngine, aSource) {
-      origRSIHR.apply(BrowserSearch, [].slice.call(arguments));
-
-      self.trackUsage(aEngine, aSource);
-    };
-  },
-
-  trackUsage: function(aEngine, aSource) {
-    try {
-      if (!(aEngine instanceof Ci.nsISearchEngine) ||
-          typeof(aSource) != "string") {
-        return;
+function getThumbnail(aUrl, aSuccessCallback, aErrorCallback) {
+  /* We will have to back port this to previous Fx versions
+   * use capture instead of captureIfMissing to force generate the
+   * good looking version.
+   */
+  BackgroundPageThumbs.capture(aUrl, {
+    onDone: () => {
+      let path = '';
+      if (PageThumbs.getThumbnailPath) {
+        path = PageThumbs.getThumbnailPath(aUrl);
+      } else {
+        path = PageThumbsStorage.getFilePathForURL(aUrl);
       }
-
-      let key = {
-        "\u767e\u5ea6": "baidu"
-      }[aEngine.name] || "other";
-
-      this.reportUnexpected(key, aSource, aEngine, false);
-    } catch(e) {};
-  },
-
-  removeLegacyAmazon: function() {
-    let amazondotcn = {
-      legacy: Services.search.getEngineByName("\u5353\u8d8a\u4e9a\u9a6c\u900a"),
-      update: Services.search.getEngineByName("\u4e9a\u9a6c\u900a")
-    };
-    if ((amazondotcn.legacy && !amazondotcn.legacy.hidden) &&
-        (amazondotcn.update && !amazondotcn.update.hidden)) {
-      if (Services.search.currentEngine == amazondotcn.legacy) {
-        Services.search.currentEngine = amazondotcn.update;
-      }
-      Services.search.removeEngine(amazondotcn.legacy);
+      OS.File.read(path).then((aData) => {
+        let blob = new Blob([aData], {
+          type: PageThumbs.contentType
+        });
+        aSuccessCallback(blob);
+      }, (aError) => aErrorCallback(aError));
     }
-  },
+  });
+}
 
-  init: function() {
-    let self = this;
+function getChannel() {
+  let channel = 'master-ii';
+  try {
+    channel = Services.prefs.getCharPref("moa.ntab.dial.branch");
+  } catch(e) {}
 
-    Services.search.init(function() {
-      let current = Services.search.currentEngine,
-          baidu = Services.search.getEngineByName("\u767e\u5ea6");
-      self.reportUnexpected("current", "detect", current, true);
-      self.reportUnexpected("baidu", "detect", baidu, true);
-      self.removeLegacyAmazon();
-    });
-  }
-};
+  return channel;
+}
 
 let fxAccountsProxy = {
   messageName: "mozCNUtils:FxAccounts",
@@ -437,15 +302,18 @@ mozCNUtils.prototype = {
                                          Ci.nsIMessageListener]),
 
   // nsIObserver
-  observe: function MCU_observe(aSubject, aTopic, aData) {
+  observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "profile-after-change":
         Services.obs.addObserver(this, "browser-delayed-startup-finished", false);
-        Services.obs.addObserver(this, "document-element-inserted", false);
         Services.obs.addObserver(this, "http-on-examine-response", false);
         Services.obs.addObserver(this, "http-on-examine-cached-response", false);
         Services.obs.addObserver(this, "http-on-examine-merged-response", false);
         Services.obs.addObserver(this, "keyword-search", false);
+        WebChannel ?
+          this.initPageAccess() :
+          Services.obs.addObserver(this, "document-element-inserted", false);
+        this.initNTab();
         NTabDB.migrateNTabData();
         this.initMessageListener();
         delayedSuggestBaidu.init();
@@ -472,7 +340,22 @@ mozCNUtils.prototype = {
     }
   },
 
-  trackHTTPStatus: function MCU_trackHTTPStatus(aSubject, aTopic) {
+  initPageAccess: function() {
+    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
+                     .getService(Ci.nsIMessageListenerManager);
+    globalMM.loadFrameScript('chrome://cehomepage/content/pageAccessFrameScript.js', true);
+  },
+
+  initNTab: function() {
+    let globalMM = Cc['@mozilla.org/globalmessagemanager;1']
+                     .getService(Ci.nsIMessageListenerManager);
+    globalMM.loadFrameScript('chrome://ntab/content/ntabContent.js', true);
+    globalMM.addMessageListener('NTab:NTabDocumentCreated', function(aMessage) {
+     fxAccountsProxy.maybeInitContentButton(aMessage.target);
+    });
+  },
+
+  trackHTTPStatus: function(aSubject, aTopic) {
     let channel = aSubject;
     channel.QueryInterface(Ci.nsIHttpChannel);
 
@@ -497,7 +380,7 @@ mozCNUtils.prototype = {
   },
 
   // nsIMessageListener
-  receiveMessage: function MCU_receiveMessage(aMessage) {
+  receiveMessage: function(aMessage) {
     if (this.MESSAGES.indexOf(aMessage.name) < 0 ||
         !aMessage.target.currentURI.equals(NTabDB.uri)) {
       return;
@@ -539,7 +422,7 @@ mozCNUtils.prototype = {
     "mozCNUtils:FxAccounts",
     "mozCNUtils:Tools"
   ],
-  initMessageListener: function MCU_initMessageListener() {
+  initMessageListener: function() {
     let mm = Cc["@mozilla.org/globalmessagemanager;1"].
                getService(Ci.nsIMessageListenerManager);
 
@@ -549,8 +432,7 @@ mozCNUtils.prototype = {
   },
 
   // TabsProgressListener variant of nsIWebProgressListener
-  onStateChange:
-  function MCU_onStateChange(aBrowser, b, aRequest, aStateFlags, aStatus) {
+  onStateChange: function(aBrowser, b, aRequest, aStateFlags, aStatus) {
     if (aStateFlags & Ci.nsIWebProgressListener.STATE_IS_WINDOW) {
       let isStart = aStateFlags & Ci.nsIWebProgressListener.STATE_START;
       let isStop = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
@@ -578,8 +460,7 @@ mozCNUtils.prototype = {
     }
   },
 
-  onLocationChange:
-  function MCU_onLocationChange(aBrowser, b, aRequest, aLocation, aFlags) {
+  onLocationChange: function(aBrowser, b, aRequest, aLocation, aFlags) {
     if (aFlags & Ci.nsIWebProgressListener.LOCATION_CHANGE_ERROR_PAGE) {
       // before we can fix the OfflineCacheInstaller ?
       if (aLocation.equals(NTabDB.uri)) {
@@ -589,11 +470,11 @@ mozCNUtils.prototype = {
     }
   },
 
-  initProgressListener: function MCU_initProgressListener(aSubject) {
+  initProgressListener: function(aSubject) {
     aSubject.gBrowser.addTabsProgressListener(this);
   },
 
-  injectMozCNUtils: function MCU_injectMozCNUtils(aSubject) {
+  injectMozCNUtils: function(aSubject) {
     try {
       let w = aSubject.defaultView;
 
@@ -601,25 +482,12 @@ mozCNUtils.prototype = {
     } catch(e) {}
   },
 
-  attachToWindow: function MCU_attachToWindow(aWindow) {
+  attachToWindow: function(aWindow) {
     let docURI = aWindow.document.documentURIObject;
 
     let baseDomain = Services.eTLD.getBaseDomain(docURI);
     if (baseDomain !== "firefoxchina.cn") {
       return;
-    }
-
-    let browser = aWindow.QueryInterface(Ci.nsIInterfaceRequestor).
-                    getInterface(Ci.nsIWebNavigation).
-                    QueryInterface(Ci.nsIDocShell).
-                    chromeEventHandler;
-
-    if (docURI.equals(NTabDB.uri) ||
-        docURI.equals(NTabDB.privateUri) ||
-        docURI.equals(NTabDB.readOnlyUri)) {
-      let contentScript = "chrome://ntab/content/ntabContent.js";
-      browser.messageManager.loadFrameScript(contentScript, false);
-      fxAccountsProxy.maybeInitContentButton(browser);
     }
 
     /*
@@ -704,14 +572,30 @@ mozCNUtils.prototype = {
         configurable: true,
         writable: true,
         value: {
-          homepage: function() {},
-          homepage_changed: function() {},
-          page: function() {},
-          page_changed: function() {},
-          cehomepage: function() {},
-          autostart: function(aFlag) {},
-          channelid: function() {},
-          setHome: function(aUrl) {},
+          homepage: function() {
+            return homepage.homepage()
+          },
+          homepage_changed: function() {
+            return homepage.homepage_changed();
+          },
+          page: function() {
+            return homepage.page();
+          },
+          page_changed: function() {
+            return homepage.page_changed();
+          },
+          cehomepage: function() {
+            return homepage.cehomepage();
+          },
+          autostart: function(aFlag) {
+            return homepage.autostart(aFlag)
+          },
+          channelid: function() {
+            return homepage.channelid();
+          },
+          setHome: function(aUrl) {
+            homepage.setHome(aUrl);
+          },
           __exposedProps__: {
             homepage: "r",
             homepage_changed: "r",
@@ -732,40 +616,7 @@ mozCNUtils.prototype = {
         writable: false,
         value: {
           queryAsync: function(aCallback) {
-            let db = Cc['@mozilla.org/browser/nav-history-service;1'].
-                       getService(Ci.nsINavHistoryService).
-                       QueryInterface(Ci.nsPIPlacesDatabase).
-                       DBConnection;
-            let sql = ('SELECT b.title as title, p.url as url ' +
-                       'FROM moz_bookmarks b, moz_places p ' +
-                       'WHERE b.type = 1 AND b.fk = p.id AND p.hidden = 0');
-            let statement = db.createAsyncStatement(sql);
-            let links = [];
-            db.executeAsync([statement], 1, {
-              handleResult: function(aResultSet) {
-                let row;
-
-                while (row = aResultSet.getNextRow()) {
-                  let title = row.getResultByName("title");
-                  let url = row.getResultByName("url");
-
-                  links.push({
-                    title: title,
-                    url: url,
-                    __exposedProps__: {
-                      title: "r",
-                      url: "r"
-                    }
-                  });
-                }
-              },
-              handleError: function(aError) {
-                aCallback([]);
-              },
-              handleCompletion: function(aReason) {
-                aCallback(links);
-              }
-            });
+            queryBookmarks(aCallback);
           },
           __exposedProps__: {
             queryAsync: "r"
@@ -781,27 +632,9 @@ mozCNUtils.prototype = {
           getThumbnail: function(aUrl) {
             let request = Services.DOMRequest.createRequest(aWindow);
 
-            // we will have to back port this to previous Fx versions
-            /* use capture instead of captureIfMissing to force generate the
-               good looking version */
-            BackgroundPageThumbs.capture(aUrl, {
-              onDone: function() {
-                let path = "";
-                if (PageThumbs.getThumbnailPath) {
-                  path = PageThumbs.getThumbnailPath(aUrl);
-                } else {
-                  path = PageThumbsStorage.getFilePathForURL(aUrl);
-                }
-                OS.File.read(path).then(function(aData) {
-                  let blob = new aWindow.Blob([aData], {
-                    type: PageThumbs.contentType
-                  });
-                  Services.DOMRequest.fireSuccess(request, blob);
-                }, function(aError) {
-                  Services.DOMRequest.fireError(request, "OS.File");
-                });
-              }
-            });
+            getThumbnail(aUrl,
+              (aBlob) => Services.DOMRequest.fireSuccess(request, aBlob),
+              (aError) => Services.DOMRequest.fireError(request, 'OS.File'));
 
             return request;
           },
@@ -817,12 +650,7 @@ mozCNUtils.prototype = {
         writable: false,
         value: {
           get channel() {
-            let channel = "master-ii";
-            try {
-              channel = Services.prefs.getCharPref("moa.ntab.dial.branch");
-            } catch(e) {}
-
-            return channel;
+            return getChannel();
           },
           __exposedProps__: {
             channel: "r"
@@ -835,36 +663,11 @@ mozCNUtils.prototype = {
         configurable: false,
         writable: false,
         value: {
-          maybeEnableSwitchToBaidu: function(aForm, aText, aCheck) {
-            let checkbox = aCheck &&
-              aCheck.querySelector('input[type="checkbox"]');
-            if (!aForm || !aText || !checkbox) {
-              return;
-            }
-
-            try {
-              if (delayedSuggestBaidu.baidu &&
-                  Services.search.currentEngine != delayedSuggestBaidu.baidu) {
-                aCheck.hidden = false;
-                aForm.addEventListener("submit", function() {
-                  if (!aCheck.hidden && checkbox.checked) {
-                    delayedSuggestBaidu.baidu.hidden = false;
-                    Services.search.currentEngine = delayedSuggestBaidu.baidu;
-
-                    Tracking.track({
-                      type: "delayedsuggestbaidu",
-                      action: "submit",
-                      sid: "switch"
-                    });
-                  }
-                }, false, /** wantsUntrusted */false);
-              }
-
-              let topURI = browser.currentURI;
-              if (delayedSuggestBaidu.isGoogleSearch(topURI)) {
-                aText.value = delayedSuggestBaidu.extractKeyword(topURI);
-              }
-            } catch(e) {}
+          isBaidu: function() {
+            return SearchEngines.isBaidu();
+          },
+          switchToBaidu: function() {
+            SearchEngines.switchToBaidu();
           },
           __exposedProps__: {
             maybeEnableSwitchToBaidu: "r"
@@ -883,5 +686,131 @@ mozCNUtils.prototype = {
     });
   }
 };
+
+let mozCNChannel = {
+  _webChannelId: 'moz_cn_channel',
+  _channels: {
+    'i.firefoxchina.cn': null,
+    'newtab.firefoxchina.cn': null,
+    'offlintab.firefoxchina.cn': null
+  },
+  _listener: function(aWebChannelId, aMessage, aSender) {
+    if (aWebChannelId != this._webChannelId || !aMessage) return;
+
+    let key = aMessage.key;
+    let p = aMessage.parameters;
+    switch (key) {
+      case 'frequent.query': {
+        let {limit} = p;
+        Frequent.query((aEntries) => this._send(key, aEntries, aSender), limit);
+        break;
+      }
+      case 'frequent.remove': {
+        let {url} = p;
+        Frequent.remove([url]);
+        break;
+      }
+      case 'last.query': {
+        let {limit} = p;
+        Session.query((aEntries) => this._send(key, aEntries, aSender), limit);
+        break;
+      }
+      case 'last.remove': {
+        let {url} = p;
+        Session.remove([url]);
+        break;
+      }
+      case 'sessionStore.canRestoreLastSession': {
+        this._send(key, sessionStore.canRestoreLastSession, aSender);
+        break;
+      }
+      case 'sessionStore.restoreLastSession': {
+        if (sessionStore.canRestoreLastSession) {
+          sessionStore.restoreLastSession();
+        }
+        break;
+      }
+      case 'startup.homepage': {
+        this._send(key, homepage.homepage(), aSender);
+        break;
+      }
+      case 'startup.homepage_changed': {
+        this._send(key, homepage.homepage_changed(), aSender);
+        break;
+      }
+      case 'startup.page': {
+        this._send(key, homepage.page(), aSender);
+        break;
+      }
+      case 'startup.page_changed': {
+        this._send(key, homepage.page_changed(), aSender);
+        break;
+      }
+      case 'startup.cehomepage': {
+        this._send(key, homepage.cehomepage(), aSender);
+        break;
+      }
+      case 'startup.autostart': {
+        let {flag} = p;
+        this._send(key, homepage.autostart(flag), aSender);
+        break;
+      }
+      case 'startup.channelid': {
+        this._send(key, homepage.channelid(), aSender);
+        break;
+      }
+      case 'startup.setHome': {
+        let {url} = p;
+        homepage.setHome(url);
+        break;
+      }
+      case 'bookmark.query': {
+        queryBookmarks((aLinks) => this._send(key, aLinks, aSender));
+        break;
+      }
+      case 'thumbs.getThumbnail': {
+        let {url} = p;
+
+        getThumbnail(url,
+          (aBlob) => this._send(key, {
+            url: url,
+            blob: aBlob
+          }, aSender),
+          (aError) => {
+            Cu.reportError(aError);
+            this._send(key, null, aSender);
+          }
+        )
+        break;
+      }
+      case 'variant.channel': {
+        this._send(key, getChannel(), aSender);
+        break;
+      }
+      case 'searchEngine.isBaidu': {
+        this._send(key, SearchEngine.isBaidu(), aSender);
+          }
+      case 'searchEngine.switchToBaidu': {
+        SearchEngine.switchToBaidu();
+      }
+    }
+  },
+  _send: function(aKey, aData, aSender) {
+    this._channels[aSender.currentURI.host].send({
+      key: aKey,
+      data: aData
+    }, aSender);
+  },
+  registerChannel: function() {
+    for (let origin in this._channels) {
+      let channel = this._channels[origin] = new WebChannel(this._webChannelId, Services.io.newURI('http://' + origin, null, null));
+      channel.listen(this._listener.bind(this));
+    }
+  },
+};
+
+if (WebChannel) {
+  mozCNChannel.registerChannel();
+}
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([mozCNUtils]);
