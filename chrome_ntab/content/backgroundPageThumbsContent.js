@@ -171,11 +171,10 @@ const backgroundPageThumbsContent = {
     capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
 
     let canvasDrawDate = new Date();
-    // MO changes, for <https://bugzil.la/1058237>
-    let canvas = PageThumbs.createCanvas ?
-      PageThumbs.createCanvas(content) : PageThumbs._createCanvas(content);
+    let canvas;
     // MO changes, for <https://bugzil.la/698371>
     try {
+      canvas = PageThumbUtils.createCanvas(content);
       let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
 
       let ctx = canvas.getContext("2d");
@@ -186,6 +185,9 @@ const backgroundPageThumbsContent = {
                      ctx.DRAWWINDOW_DO_NOT_FLUSH);
       ctx.restore();
     } catch(e) {
+      // MO changes, for <https://bugzil.la/1058237>
+      canvas = PageThumbs.createCanvas ?
+        PageThumbs.createCanvas(content) : PageThumbs._createCanvas(content);
       PageThumbs._captureToCanvas(content, canvas);
     }
     capture.canvasDrawTime = new Date() - canvasDrawDate;

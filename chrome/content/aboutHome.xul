@@ -7,16 +7,9 @@
   <html:link rel="icon" href="chrome://ntab/skin/logo/firefox.ico" style="display:none"/>
   <browser id="content" type="content" src="" flex="1"/>
   <script type="text/javascript">
-  window.addEventListener("load", function() {
-    var src = "http://i.firefoxchina.cn/";
-    try {
-      src = Components.classes["@mozilla.org/preferences-service;1"]
-              .getService(Components.interfaces.nsIPrefBranch2)
-              .getComplexValue("extensions.cehomepage.abouturl", Components.interfaces.nsIPrefLocalizedString).data;
-      src = src.trim();
-    } catch (e) { }
-
-    src = src || "http://i.firefoxchina.cn/";
+  window.addEventListener("DOMContentLoaded", function() {
+    var src = Components.utils.import("resource://ntab/mozCNUtils.jsm", {}).
+      Homepage.aboutpage;
 
     var query = document.location.href.slice("about:cehome".length);
     var fromQuery = /^\?from=(\w+)/.exec(query);

@@ -1,14 +1,16 @@
-const EXPORTED_SYMBOLS = [
-  'delayedSuggestBaidu',
-  'searchEngines'
+this.EXPORTED_SYMBOLS = [
+  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session"
 ];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-
-XPCOMUtils.defineLazyModuleGetter(this, 'Services',
-  'resource://gre/modules/Services.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
@@ -200,99 +202,161 @@ let delayedSuggestBaidu = {
   }
 };
 
-let searchEngines = {
-  expected: "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
+let Frequent = {
+  excludes: [
+    /^http:\/\/i.firefoxchina.cn\/n(ew)?tab/,
+    /^http:\/\/i.firefoxchina.cn\/parts\/google_rdr/,
+    /^http:\/\/i.firefoxchina.cn\/redirect\/adblock/,
+    /^http:\/\/i.firefoxchina.cn\/(redirect\/)?search/,
+    /^http:\/\/i.g-fox.cn\/(rd|search)/,
+    /^http:\/\/www5.1616.net\/q/
+  ],
+  needsDeduplication: false,
+  order: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING,
 
-  reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
-    let url = "NA";
-    try {
-      url = aEngine.getSubmission("TEST").uri.asciiSpec;
-    } catch(e) {}
+  query: function(aCallback, aLimit) {
+    let options = PlacesUtils.history.getNewQueryOptions();
+    options.maxResults = aLimit + 16;
+    options.sortingMode = this.order;
 
-    let isExpected = this.expected == url;
-    let href = "";
-    if (!isExpected && !!aIncludeURL) {
-      href = url;
-    }
-
-    Tracking.track({
-      type: "searchplugins",
-      action: aAction,
-      sid: aKey,
-      fid: isExpected,
-      href: href
-    });
-  },
-
-  patchBrowserSearch: function(aWindow) {
-    let BrowserSearch = aWindow.BrowserSearch;
-
-    if (!BrowserSearch || !BrowserSearch.recordSearchInHealthReport) {
-      return;
-    }
-
-    let origRSIHR = BrowserSearch.recordSearchInHealthReport;
+    let deduplication = {};
+    let links = [];
     let self = this;
-    BrowserSearch.recordSearchInHealthReport = function(aEngine, aSource) {
-      origRSIHR.apply(BrowserSearch, [].slice.call(arguments));
 
-      self.trackUsage(aEngine, aSource);
+    let callback = {
+      handleResult: function (aResultSet) {
+        let row;
+
+        while (row = aResultSet.getNextRow()) {
+          if (links.length >= aLimit) {
+            break;
+          }
+          let url = row.getResultByIndex(1);
+          let title = row.getResultByIndex(2);
+
+          if (self.needsDeduplication) {
+            if (deduplication[title]) {
+              continue;
+            }
+            deduplication[title] = 1;
+          }
+
+          if (!self.excludes.some(function(aExclude) {
+            return aExclude.test(url);
+          })) {
+            links.push({url: url, title: title});
+          }
+        }
+      },
+
+      handleError: function (aError) {
+        aCallback([]);
+      },
+
+      handleCompletion: function (aReason) {
+        aCallback(links);
+      }
     };
+
+    let query = PlacesUtils.history.getNewQuery();
+    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase);
+    db.asyncExecuteLegacyQueries([query], 1, options, callback);
   },
 
-  trackUsage: function(aEngine, aSource) {
+  remove: function(aUrls) {
+    let urls = [];
+    aUrls.forEach(function(aUrl) {
+      urls.push(Services.io.newURI(aUrl, null, null));
+    });
+    PlacesUtils.bhistory.removePages(urls, urls.length);
+  }
+};
+
+let getPref = function(prefName, defaultValue, valueType) {
+  valueType = valueType || Ci.nsISupportsString;
+  switch (Services.prefs.getPrefType(prefName)) {
+    case Ci.nsIPrefBranch.PREF_STRING:
+      return Services.prefs.getComplexValue(prefName, valueType).data;
+
+    case Ci.nsIPrefBranch.PREF_INT:
+      return Services.prefs.getIntPref(prefName);
+
+    case Ci.nsIPrefBranch.PREF_BOOL:
+      return Services.prefs.getBoolPref(prefName);
+
+    case Ci.nsIPrefBranch.PREF_INVALID:
+      return defaultValue;
+  }
+};
+
+let Homepage = {
+  defaultAboutpage: "http://i.firefoxchina.cn/",
+  defaultHomepage: "about:cehome",
+  // When an empty string is set as pref value, display this.defaultAboutpage.
+  get aboutpage() {
+    return getPref("extensions.cehomepage.abouturl", this.defaultAboutpage,
+      Ci.nsIPrefLocalizedString) || this.defaultAboutpage;
+  },
+  get homepage() {
+    return getPref("browser.startup.homepage", this.defaultHomepage,
+      Ci.nsIPrefLocalizedString);
+  },
+  get page() {
+    return getPref("browser.startup.page", 1);
+  },
+  isHomepage: function(aSpec, aReferenceURI) {
+    if (this.page !== 1) {
+      return false;
+    }
+
+    aSpec = this.normalizeSpec(aSpec, aReferenceURI);
+    if (!aSpec) {
+      return true;
+    }
+
+    return (this.homepage === this.defaultHomepage ||
+            this.homepage.split("?")[0] === this.aboutpage.split("?")[0] ||
+            this.homepage === aSpec);
+  },
+  normalizeSpec: function(aSpec, aReferenceURI) {
     try {
-      if (!(aEngine instanceof Ci.nsISearchEngine) ||
-          typeof(aSource) != "string") {
+      let uri = Services.uriFixup.createFixupURI(aSpec,
+        Services.uriFixup.FIXUP_FLAG_NONE);
+      if (uri.prePath !== aReferenceURI.prePath) {
         return;
       }
 
-      let key = {
-        "\u767e\u5ea6": "baidu"
-      }[aEngine.name] || "other";
-
-      this.reportUnexpected(key, aSource, aEngine, false);
-    } catch(e) {};
-  },
-
-  isBaidu: function() {
-    return delayedSuggestBaidu.baidu &&
-      Services.search.currentEngine == delayedSuggestBaidu.baidu;
-  },
-
-  switchToBaidu: function() {
-    delayedSuggestBaidu.baidu.hidden = false;
-    Services.search.currentEngine = delayedSuggestBaidu.baidu;
-    Tracking.track({
-      type: "delayedsuggestbaidu",
-      action: "submit",
-      sid: "switch"
-    });
-  },
-
-  removeLegacyAmazon: function() {
-    let amazondotcn = {
-      legacy: Services.search.getEngineByName("\u5353\u8d8a\u4e9a\u9a6c\u900a"),
-      update: Services.search.getEngineByName("\u4e9a\u9a6c\u900a")
-    };
-    if ((amazondotcn.legacy && !amazondotcn.legacy.hidden) &&
-        (amazondotcn.update && !amazondotcn.update.hidden)) {
-      if (Services.search.currentEngine == amazondotcn.legacy) {
-        Services.search.currentEngine = amazondotcn.update;
+      // ignore the "?cachebust=***" when comparing with this.aboutpage.
+      if (uri.spec.split("?")[0] === this.aboutpage.split("?")[0]) {
+        return this.defaultHomepage;
+      } else {
+        return uri.spec;
       }
-      Services.search.removeEngine(amazondotcn.legacy);
+    } catch(e) {
+      return;
     }
   },
+  setHomepage: function(aSpec, aReferenceURI) {
+    aSpec = this.normalizeSpec(aSpec, aReferenceURI);
+    if (!aSpec) {
+      return;
+    }
 
-  init: function() {
-    let self = this;
+    Services.prefs.clearUserPref("browser.startup.homepage");
+    Services.prefs.clearUserPref("browser.startup.page");
 
-    Services.search.init(function() {
-      let current = Services.search.currentEngine,
-          baidu = Services.search.getEngineByName("\u767e\u5ea6");
-      self.reportUnexpected("current", "detect", current, true);
-      self.reportUnexpected("baidu", "detect", baidu, true);
-      self.removeLegacyAmazon();
-    });
+    if (this.homepage === aSpec) {
+      return;
+    }
+    Services.prefs.setCharPref("browser.startup.homepage", aSpec);
   }
 };
+
+let Session = Object.create(Frequent, {
+  needsDeduplication: {
+    value: true
+  },
+  order: {
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
+  }
+});

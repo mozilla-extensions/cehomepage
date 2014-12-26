@@ -3,6 +3,8 @@ let Ci = Components.interfaces;
 let Cc = Components.classes;
 
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'Services',
+  'resource://gre/modules/Services.jsm');
 
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
@@ -11,68 +13,27 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, 'Services',
-  'resource://gre/modules/Services.jsm');
-
 let NTab = {
   observe: function(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case 'content-document-global-created': {
-        if (!content) return;
-        if (aSubject != content) return;
+      case 'content-document-global-created':
+        if (!content || !aSubject || aSubject !== content) {
+          return;
+        }
+
         let document = content.document;
         let docURI = document.documentURIObject;
 
         if (docURI.equals(NTabDB.uri) ||
-            docURI.equals(NTabDB.privateUri) ||
-            docURI.equals(NTabDB.readOnlyUri)) {
+            docURI.equals(NTabDB.privateUri) ||  // tracking only ?
+            docURI.equals(NTabDB.readOnlyUri)) { // tracking only ?
           this.init();
-          sendAsyncMessage('NTab:NTabDocumentCreated');
         }
         break;
-      }
     }
   },
   init: function() {
     let document = content.document;
-
-    let DefaultBrowser = {
-      get setDefault() {
-        delete this.setDefault;
-        return this.setDefault = document.querySelector('#setdefault');
-      },
-      // shellService is not universally available, see https://bugzil.la/297841
-      get shellService() {
-        let shellService = null;
-        try {
-          shellService = Cc['@mozilla.org/browser/shell-service;1'].
-                           getService(Ci.nsIShellService);
-        } catch(e) {}
-        delete this.shellService;
-        return this.shellService = shellService;
-      },
-      init: function DefaultBrowser_init() {
-        if (!this.setDefault) {
-          return;
-        }
-
-        if (!this.shellService || this.shellService.isDefaultBrowser(true)) {
-          return;
-        }
-
-        let self = this;
-        this.setDefault.addEventListener('click', function(evt) {
-          self.setAsDefault(evt);
-        }, false, /** wantsUntrusted */false);
-        this.setDefault.removeAttribute('hidden');
-      },
-      setAsDefault: function DefaultBrowser_setAsDefault(aEvt) {
-        if (this.shellService) {
-          this.shellService.setDefaultBrowser(true, false);
-        }
-        this.setDefault.setAttribute('hidden', 'true');
-      },
-    };
 
     let Launcher = {
       get launcher() {
@@ -150,6 +111,8 @@ let NTab = {
       init: function() {
         this._inited = true;
 
+        sendAsyncMessage(this.messageName, 'init');
+
         while (this._cachedMessages.length) {
           this.receiveMessage(this._cachedMessages.shift());
         }
@@ -190,7 +153,7 @@ let NTab = {
 
         let self = this;
         this.button.addEventListener('click', function(aEvt) {
-          sendAsyncMessage(self.messageName, '', aEvt);
+          sendAsyncMessage(self.messageName, 'action', aEvt);
 
           Tracking.track({
             type: 'ntabsync',
@@ -250,7 +213,6 @@ let NTab = {
 
     content.addEventListener('DOMContentLoaded', function() {
       Launcher.init();
-      DefaultBrowser.init();
       FxAccounts.init();
     }, false);
     content.addEventListener('unload', function() {

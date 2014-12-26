@@ -1,8 +1,5 @@
 (function() {
-
-  let jsm = {};
-  Cu.import('resource://ntab/utils.jsm', jsm);
-  let prefs = jsm.utils.prefs;
+  let getPref = Cu.import("resource://ntab/mozCNUtils.jsm", {}).getPref;
   /**
    * Pref browser.startup.homepage have been set to "about:cehome" in the pref.js
    * And in distribution.ini, browser.startup.homepage is set to http://i.firefoxchina.cn.
@@ -15,15 +12,15 @@
     // in china edition, pref "browser.startup.homepage" is a locale string, has mimo type,
     // so must use  getLocale() other than get()
     // see in distribution.ini
-    var homepage = prefs.getLocale("browser.startup.homepage", "");
+    var homepage = getPref("browser.startup.homepage", "", Ci.nsIPrefLocalizedString);
     if ("about:cehome" == homepage) {
-      prefs.reset("browser.startup.homepage");
+      Services.prefs.clearUserPref("browser.startup.homepage");
     }
   }
 
   function cehomepage_autoSetHomepage() {
-    var homepage = prefs.getLocale("extensions.cehomepage.homepage", "about:cehome");
-    prefs.set("browser.startup.homepage", homepage);
+    var homepage = getPref("extensions.cehomepage.homepage", "about:cehome", Ci.nsIPrefLocalizedString);
+    Services.prefs.setCharPref("browser.startup.homepage", homepage);
   }
 
   var addonlistener = {
@@ -37,24 +34,24 @@
 
     onOperationCancelled: function(addon) {
       if(addon.id == "cehomepage@mozillaonline.com") {
-        var homepage = prefs.getLocale("browser.startup.homepage", "");
-        var abouturl = prefs.getLocale("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/");
+        var homepage = getPref("browser.startup.homepage", "", Ci.nsIPrefLocalizedString);
+        var abouturl = getPref("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/", Ci.nsIPrefLocalizedString);
         var urls = homepage.split("|");
         for (var i = 0; i < urls.length; i++){
           urls[i] = urls[i].trim() == abouturl ? "about:cehome" : urls[i].trim();
         }
         homepage = urls.join("|");
-        prefs.set("browser.startup.homepage", homepage);
+        Services.prefs.setCharPref("browser.startup.homepage", homepage);
       }
     }
   };
 
   function cancelAboutProtocol(addon) {
     if(addon.id == "cehomepage@mozillaonline.com") {
-      var homepage = prefs.getLocale("browser.startup.homepage", "");
-      var abouturl = prefs.getLocale("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/");
+      var homepage = getPref("browser.startup.homepage", "", Ci.nsIPrefLocalizedString);
+      var abouturl = getPref("extensions.cehomepage.abouturl", "http://i.firefoxchina.cn/", Ci.nsIPrefLocalizedString);
       homepage = homepage.replace(/about:cehome/ig, abouturl);
-      prefs.set("browser.startup.homepage", homepage);
+      Services.prefs.setCharPref("browser.startup.homepage", homepage);
       for (var j = 0; j < gBrowser.tabs.length; j++) {
         if (gBrowser.getBrowserAtIndex(j).contentWindow.document.location == "about:cehome") {
           gBrowser.getBrowserAtIndex(j).contentWindow.document.location = abouturl;
@@ -68,11 +65,9 @@
       resetHomepageIfPossible();
 
       // the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
-      var autoSetHomepage = prefs.get("extensions.cehomepage.autoSetHomepage", false);
+      var autoSetHomepage = getPref("extensions.cehomepage.autoSetHomepage", false);
       if (autoSetHomepage) {
-        if (Application.extensions && Application.extensions.get("cehomepage@mozillaonline.com").firstRun) {
-          cehomepage_autoSetHomepage();
-        } else if (Application.getExtensions) {
+        if (Application.getExtensions) {
           // Application.extensions is obsolete in Gecko 2.0
           Application.getExtensions(function(exts) {
             if (exts.get("cehomepage@mozillaonline.com").firstRun) {
