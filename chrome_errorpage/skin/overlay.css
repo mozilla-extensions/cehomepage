@@ -1,11 +1,7 @@
 body
 {
-  display: inline;
-}
-
-html
-{
   background-color: #fff;
+  display: inline;
 }
 
 #errorPageContainer

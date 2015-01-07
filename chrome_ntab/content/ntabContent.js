@@ -21,19 +21,27 @@ let NTab = {
           return;
         }
 
-        let document = content.document;
-        let docURI = document.documentURIObject;
+        let docURI = aSubject.document.documentURIObject;
 
-        if (docURI.equals(NTabDB.uri) ||
-            docURI.equals(NTabDB.privateUri) ||  // tracking only ?
-            docURI.equals(NTabDB.readOnlyUri)) { // tracking only ?
-          this.init();
+        if (docURI.prePath !== NTabDB.uri.prePath) {
+          return;
         }
+        this.initTracking(aSubject);
+
+        if (!docURI.equals(NTabDB.uri)) {
+          return;
+        }
+        this.init(aSubject);
         break;
     }
   },
-  init: function() {
-    let document = content.document;
+  initTracking: function(aSubject) {
+    aSubject.addEventListener('mozCNUtils:Tracking', function(aEvt) {
+      Tracking.track(aEvt.detail);
+    }, true, true);
+  },
+  init: function(aSubject) {
+    let document = aSubject.document;
 
     let Launcher = {
       get launcher() {
@@ -176,18 +184,15 @@ let NTab = {
       }
     };
 
-    content.addEventListener('mozCNUtils:Diagnose', function(aEvt) {
+    aSubject.addEventListener('mozCNUtils:Diagnose', function(aEvt) {
       switch(aEvt.detail) {
         case 'UnknownError':
           NTabDB.fixUnknownError('content');
           break;
       }
     }, true, true);
-    content.addEventListener('mozCNUtils:Tracking', function(aEvt) {
-      Tracking.track(aEvt.detail);
-    }, true, true);
 
-    content.addEventListener(NTabSync.messageName, function(aEvt) {
+    aSubject.addEventListener(NTabSync.messageName, function(aEvt) {
       if (aEvt.detail && aEvt.detail.dir == 'content2fs') {
         sendAsyncMessage(NTabSync.messageName, aEvt.detail.data);
       }
@@ -195,7 +200,7 @@ let NTab = {
 
     let relaySyncMessage = function(aEvt) {
       if (aEvt.data) {
-        content.dispatchEvent(new content.CustomEvent(NTabSync.messageName, {
+        aSubject.dispatchEvent(new aSubject.CustomEvent(NTabSync.messageName, {
           detail: Cu.cloneInto({
             dir: 'fs2content',
             data: {
@@ -203,7 +208,7 @@ let NTab = {
               type: aEvt.data.type,
               state: aEvt.data.state
             }
-          }, content)
+          }, aSubject)
         }));
       }
     };
@@ -211,11 +216,11 @@ let NTab = {
     addMessageListener(NTabSync.messageName, relaySyncMessage);
     addMessageListener(FxAccounts.messageName, FxAccounts);
 
-    content.addEventListener('DOMContentLoaded', function() {
+    aSubject.addEventListener('DOMContentLoaded', function() {
       Launcher.init();
       FxAccounts.init();
     }, false);
-    content.addEventListener('unload', function() {
+    aSubject.addEventListener('unload', function() {
       removeMessageListener(NTabSync.messageName, relaySyncMessage);
       removeMessageListener(FxAccounts.messageName, FxAccounts);
     }, false);

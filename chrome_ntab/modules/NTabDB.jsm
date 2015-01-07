@@ -40,15 +40,17 @@ let NTabDB = {
       spec = Services.prefs.getCharPref('moa.ntab.web.url');
     } catch(e) {};
     delete this.spec;
-    return this.spec = spec;
+    return this.spec = spec + "?cachebust=20150105";
   },
   get privateSpec() {
     delete this.privateSpec;
-    return this.privateSpec = this.spec + "private.html";
+    return this.privateSpec = this.uri.prePath +
+      "/private.html?cachebust=20150105";
   },
   get readOnlySpec() {
     delete this.readOnlySpec;
-    return this.readOnlySpec = this.spec + "readonly.html";
+    return this.readOnlySpec = this.uri.prePath +
+      "/readonly.html?cachebust=20150105";
   },
   get uri() {
     delete this.uri;
@@ -331,7 +333,7 @@ let NTabDB = {
         let browser = doc.createElementNS(xulNS, "browser");
         browser.setAttribute("type", "content");
         browser.setAttribute("disableglobalhistory", "true");
-        browser.setAttribute("src", self.spec + "static/preload.html");
+        browser.setAttribute("src", self.uri.prePath + "/static/preload.html");
         doc.getElementById("win").appendChild(browser);
       } else {
         frame.location = xulPage;
@@ -387,7 +389,7 @@ let NTabDB = {
   get storageDir() {
     delete this.storageDir;
     return this.storageDir = OS.Path.join(OS.Constants.Path.profileDir,
-      "storage/persistent/http+++offlintab.firefoxchina.cn/idb");
+      "storage", "persistent", "http+++offlintab.firefoxchina.cn", "idb");
   },
   get storageSqlite() {
     delete this.storageSqlite;
