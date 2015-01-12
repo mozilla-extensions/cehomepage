@@ -23,7 +23,7 @@ let NTab = {
 
         let docURI = aSubject.document.documentURIObject;
 
-        if (docURI.prePath !== NTabDB.uri.prePath) {
+        if (docURI.prePath !== NTabDB.prePath) {
           return;
         }
         this.initTracking(aSubject);

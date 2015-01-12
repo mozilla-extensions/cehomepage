@@ -2,14 +2,10 @@
   var ns = MOA.ns('NTab');
 
   Cu.import('resource://ntab/NTabDB.jsm', ns);
-  Cu.import('resource://ntab/PartnerBookmarks.jsm', ns);
   Cu.import('resource://ntab/Tracking.jsm', ns);
   if (!window.NetUtil) {
     Cu.import('resource://gre/modules/NetUtil.jsm');
   }
-
-  var _url = PrivateBrowsingUtils.isWindowPrivate(window) ?
-             ns.NTabDB.privateSpec : ns.NTabDB.spec;
 
   function loadInExistingTabs() {
     if (!Services.prefs.getBoolPref("moa.ntab.loadInExistingTabs")) {
@@ -30,7 +26,7 @@
       if (!tab.hasAttribute('busy') && !tab.hasAttribute('isPermaTab')) {
         var doc = tab.linkedBrowser.contentDocument;
         if (doc && doc.location == 'about:blank') {
-          doc.location = _url;
+          doc.location = newTabPref.spec;
           tab.linkedBrowser.userTypedValue = '';
         }
       }
@@ -357,42 +353,58 @@
 
     inUse: true,
 
-    _observer: {
-      QueryInterface: function(aIID) {
-        if (aIID.equals(Ci.nsIObserver) ||
-          aIID.equals(Ci.nsISupports) ||
-          aIID.equals(Ci.nsISupportsWeakReference)) {
-          return this;
-        }
-        throw Cr.NS_NOINTERFACE;
-      },
+    get altSpec() {
+      Services.prefs.addObserver(ns.NTabDB.altSpecPref, this, false);
 
-      observe: function(aSubject, aTopic, aData) {
-        if (aTopic == 'nsPref:changed') {
-          switch (aData) {
-            case newTabPref.extPrefKey:
-              newTabPref.refresh();
-              break;
-          }
-        }
+      delete this.altSpec;
+      return this.altSpec = this.getAltSpec();
+    },
+    get specKey() {
+      delete this.specKey;
+      return this.specKey = PrivateBrowsingUtils.isWindowPrivate(window) ?
+        'privateSpec' : 'spec';
+    },
+    get spec() {
+      return this.altSpec || ns.NTabDB[this.specKey];
+    },
+
+    getAltSpec: function() {
+      var altSpec = ns.NTabDB.getAltSpec();
+      if (altSpec && gInitialPages.indexOf(altSpec) < 0) {
+        gInitialPages.push(altSpec);
       }
+      return altSpec;
     },
 
     init: function() {
-      Services.prefs.addObserver(this.extPrefKey, this._observer, true);
+      Services.prefs.addObserver(this.extPrefKey, this, false);
       this.refresh();
 
       gInitialPages = gInitialPages.concat([
         ns.NTabDB.spec, ns.NTabDB.privateSpec, ns.NTabDB.readOnlySpec
       ]);
     },
+
+    observe: function(aSubject, aTopic, aData) {
+      if (aTopic == 'nsPref:changed') {
+        switch (aData) {
+          case ns.NTabDB.altSpecPref:
+            newTabPref.altSpec = newTabPref.getAltSpec();
+            // intentionally no break
+          case newTabPref.extPrefKey:
+            newTabPref.refresh();
+            break;
+        }
+      }
+    },
+
     refresh: function() {
       this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
       /*
        * if using offlintab (different urls for pb/non-pb window):
-       * set browser.newtab.url to ns.NTabDB.spec instead of _url to prevent
-       * updating BROWSER_NEW_TAB_URL in every window based on the most recently
-       * opened window.
+       * set browser.newtab.url to (this.altSpec || ns.NTabDB.spec) instead of
+       * this.spec to prevent updating BROWSER_NEW_TAB_URL in every window based
+       * on the most recently opened window.
        *
        * if not using offlintab:
        * set browser.newtab.url on default branch to make sure
@@ -402,7 +414,7 @@
        */
       if (this.inUse) {
         Services.prefs.getDefaultBranch("").
-          setCharPref(this._appUrlKey, ns.NTabDB.spec);
+          setCharPref(this._appUrlKey, (this.altSpec || ns.NTabDB.spec));
         Services.prefs.getDefaultBranch("").
           setBoolPref(this._appPreloadKey, false);
         try {
@@ -483,7 +495,7 @@
         notificationBox.appendNotification(message, this.notificationKey,
           "chrome://browser/skin/Privacy-16.png",
           notificationBox.PRIORITY_INFO_MEDIUM, buttons);
-      // persist across the about:blank -> _url change
+      // persist across the about:blank -> newTabPref.spec change
       notificationBar.persistence = 1;
 
       ns.Tracking.track({
@@ -524,16 +536,18 @@
 
   ns.browserOpenTab = function(event) {
     if (newTabPref.inUse) {
-      openUILinkIn(_url, 'tab');
-      if (PrivateBrowsingUtils.isWindowPrivate(window)) {
-        /*
-         * BROWSER_NEW_TAB_URL is always ns.NTabDB.spec, openUILinkIn will not
-         * focus automatically.
-         */
+      var spec = newTabPref.spec;
+      openUILinkIn(spec, 'tab');
+
+      // focus automatically for cases not covered by openUILinkIn
+      if (!isBlankPageURL(spec)) {
         focusAndSelectUrlBar();
-        if (PrivateBrowsingUtils.permanentPrivateBrowsing) {
-          permanentPB.notify();
-        }
+      }
+
+      if (PrivateBrowsingUtils.isWindowPrivate(window) &&
+          PrivateBrowsingUtils.permanentPrivateBrowsing &&
+          !newTabPref.altSpec) {
+        permanentPB.notify();
       }
 
       ns.Tracking.track({
@@ -582,8 +596,6 @@
 
     newTabPref.init();
     homepageReset.check();
-
-    ns.PartnerBookmarks.init();
   };
 
   ns.onMenuItemCommand = function(event) {
@@ -594,8 +606,8 @@
     if (url) {
       title = gContextMenu.linkText();
     } else {
-      url = window._content.document.location.href;
-      title = window._content.document.title;
+      url = gBrowser.selectedBrowser.currentURI.spec;
+      title = gBrowser.selectedTab.label;
     }
 
     ns.Tracking.track({
@@ -678,9 +690,10 @@
   };
 
   ns.onContextMenuGlobal = function() {
-    document.getElementById('context-ntab').hidden = !Services.prefs.getBoolPref('moa.ntab.contextMenuItem.show') ||
-                                                     window._content.document.location.href == _url ||
-                                                     PrivateBrowsingUtils.isWindowPrivate(window._content);
+    var hidden = !Services.prefs.getBoolPref('moa.ntab.contextMenuItem.show') ||
+      gInitialPages.indexOf(gBrowser.selectedBrowser.currentURI.spec) > -1 ||
+      PrivateBrowsingUtils.isWindowPrivate(window);
+    document.getElementById('context-ntab').hidden = hidden;
   };
 
   ns.isValidURI = isValidURI;

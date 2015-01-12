@@ -3,18 +3,14 @@ var EXPORTED_SYMBOLS = ['PartnerBookmarks'];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
-  XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-    "resource://gre/modules/PlacesUtils.jsm");
-  XPCOMUtils.defineLazyModuleGetter(this, "Services",
-    "resource://gre/modules/Services.jsm");
-  XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
-    "resource://ntab/Tracking.jsm");
-} else {
-  Cu.import('resource://gre/modules/PlacesUtils.jsm');
-  Cu.import('resource://gre/modules/Services.jsm');
-  Cu.import('resource://ntab/Tracking.jsm');
-}
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SignatureVerifier",
+  "resource://ntab/mozCNUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
+  "resource://ntab/Tracking.jsm");
 
 let LOG = function(m) Services.console.logStringMessage(m);
 
@@ -29,17 +25,6 @@ let PartnerBookmarks = {
     let branch = Services.prefs.getBranch('moa.partnerbookmark.');
     delete this.prefs;
     return this.prefs = branch;
-  },
-
-  get verifier() {
-    delete this.verifier;
-    return this.verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
-      getService(Ci.nsIDataSignatureVerifier);
-  },
-
-  get key() {
-    delete this.key;
-    return this.key = this._getCharPref('key', '');
   },
 
   get updateUrl() {
@@ -70,17 +55,6 @@ let PartnerBookmarks = {
     };
     xhr.onerror = function(evt) {};
     xhr.send();
-  },
-
-  _validate: function(aData) {
-    try {
-      let data = aData.data;
-      let signature = aData.signature;
-      return this.verifier.verifyData(data, signature, this.key);
-    } catch(e) {
-      LOG(e);
-      return false;
-    }
   },
 
   _keywordsForBookmarks: {
@@ -199,7 +173,7 @@ let PartnerBookmarks = {
   update: function() {
     let self = this;
     this._fetch(this.updateUrl, function(aData) {
-      if (self._validate(aData)) {
+      if (SignatureVerifier.verify(aData.data, aData.signature)) {
         self._realUpdate(JSON.parse(aData.data), aData.signature);
       }
     });

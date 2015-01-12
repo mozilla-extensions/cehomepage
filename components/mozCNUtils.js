@@ -62,6 +62,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Frequent",
   "resource://ntab/mozCNUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "nxdomainMitigation",
+  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Session",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "getPref",
@@ -70,6 +72,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
   "resource://ntab/NTabSync.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PartnerBookmarks",
+  "resource://ntab/PartnerBookmarks.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
@@ -316,7 +320,9 @@ mozCNUtils.prototype = {
         searchEngines.init();
         fxAccountsProxy.init();
         NTabSync.init();
+        PartnerBookmarks.init();
         Promo.init();
+        nxdomainMitigation.init();
         break;
       case "browser-delayed-startup-finished":
         this.initProgressListener(aSubject);
@@ -340,7 +346,7 @@ mozCNUtils.prototype = {
     channel.QueryInterface(Ci.nsIHttpChannel);
 
     if ([
-      NTabDB.uri.prePath,
+      NTabDB.prePath,
       "http://i.g-fox.cn",
       "http://i.firefoxchina.cn"
     ].indexOf(channel.URI.prePath) == -1 ||

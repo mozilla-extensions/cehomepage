@@ -3,18 +3,12 @@ var EXPORTED_SYMBOLS = ['QuickDialData'];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
-  XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
-    "resource://gre/modules/NetUtil.jsm");
-  XPCOMUtils.defineLazyModuleGetter(this, "Services",
-    "resource://gre/modules/Services.jsm");
-  XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
-    "resource://gre/modules/FileUtils.jsm");
-} else {
-  Cu.import('resource://gre/modules/NetUtil.jsm');
-  Cu.import('resource://gre/modules/Services.jsm');
-  Cu.import('resource://gre/modules/FileUtils.jsm');
-}
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+  "resource://gre/modules/NetUtil.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
+  "resource://gre/modules/FileUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -25,12 +19,6 @@ XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
 let LOG = function(m) Services.console.logStringMessage(m);
 
 let QuickDialData = {
-  get prefs() {
-    let branch = Services.prefs.getBranch('moa.ntab.dial.');
-    delete this.prefs;
-    return this.prefs = branch;
-  },
-
   get _bundleFile() {
     let uri = Services.io.newURI('resource://ntab/quickdialdata.json',
       null, null);
@@ -48,14 +36,6 @@ let QuickDialData = {
   get _userFile() {
     return FileUtils.getFile('ProfD', ['ntab', 'quickdialdata',
                                        'user.json'], false);
-  },
-
-  _getCharPref: function(aPrefKey, aDefault) {
-    let ret = aDefault;
-    try {
-      ret = this.prefs.getCharPref(aPrefKey);
-    } catch(e) {}
-    return ret;
   },
 
   _loadData: function(aFile, aFindBackup) {

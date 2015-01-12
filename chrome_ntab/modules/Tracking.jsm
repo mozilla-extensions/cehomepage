@@ -3,12 +3,8 @@ var EXPORTED_SYMBOLS = ['Tracking'];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-if (XPCOMUtils.hasOwnProperty('defineLazyModuleGetter')) {
-  XPCOMUtils.defineLazyModuleGetter(this, "Services",
-    "resource://gre/modules/Services.jsm");
-} else {
-  Cu.import('resource://gre/modules/Services.jsm');
-}
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 let url = 'http://addons.g-fox.cn/ntab.gif';
 let _extend = function (src, target) {

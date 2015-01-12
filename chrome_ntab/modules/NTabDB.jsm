@@ -17,6 +17,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbsStorage",
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "getPref",
+  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "QuickDialData",
   "resource://ntab/QuickDialData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
@@ -34,23 +36,20 @@ if (!this.indexedDB) {
 
 let NTabDB = {
   _db: null,
+  _cbQuery: "?cachebust=20150105",
+  altSpecPref: "moa.ntab.web.alturl",
+  prePath: "http://offlintab.firefoxchina.cn",
   get spec() {
-    let spec = "http://offlintab.firefoxchina.cn/";
-    try {
-      spec = Services.prefs.getCharPref('moa.ntab.web.url');
-    } catch(e) {};
     delete this.spec;
-    return this.spec = spec + "?cachebust=20150105";
+    return this.spec = this.prePath + "/" + this._cbQuery;
   },
   get privateSpec() {
     delete this.privateSpec;
-    return this.privateSpec = this.uri.prePath +
-      "/private.html?cachebust=20150105";
+    return this.privateSpec = this.prePath + "/private.html" + this._cbQuery;
   },
   get readOnlySpec() {
     delete this.readOnlySpec;
-    return this.readOnlySpec = this.uri.prePath +
-      "/readonly.html?cachebust=20150105";
+    return this.readOnlySpec = this.prePath + "/readonly.html" + this._cbQuery;
   },
   get uri() {
     delete this.uri;
@@ -333,7 +332,7 @@ let NTabDB = {
         let browser = doc.createElementNS(xulNS, "browser");
         browser.setAttribute("type", "content");
         browser.setAttribute("disableglobalhistory", "true");
-        browser.setAttribute("src", self.uri.prePath + "/static/preload.html");
+        browser.setAttribute("src", self.prePath + "/static/preload.html");
         doc.getElementById("win").appendChild(browser);
       } else {
         frame.location = xulPage;
@@ -489,6 +488,16 @@ let NTabDB = {
     this._keepLocalStorageOnClearingCookie();
   },
 
+  getAltSpec: function() {
+    let altSpec = getPref(this.altSpecPref, "", Ci.nsIPrefLocalizedString);
+    try {
+      let altUri = Services.io.newURI(altSpec, null, null);
+      return altUri.prePath === this.prePath ? "" : altSpec;
+    } catch(e) {
+      return "";
+    }
+  },
+
   getPref: function (aKey, aDefault) {
     try {
       let item = this.localStorage.getItem(aKey);
@@ -556,14 +565,14 @@ let NTabDB = {
   observe: function (aSubject, aTopic, aData) {
     switch (aTopic) {
       case "cookie-changed":
-        if (aData != "cleared") {
+        if (aData !== "cleared") {
           break;
         }
 
         this._backupAndRestoreLocalStorage();
         break;
       case "browser:purge-domain-data":
-        if (aData != this.uri.host) {
+        if (aData !== this.uri.host) {
           break;
         }
 

@@ -1,5 +1,6 @@
 this.EXPORTED_SYMBOLS = [
-  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session"
+  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage",
+  "nxdomainMitigation", "Session", "SignatureVerifier"
 ];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
@@ -7,8 +8,6 @@ const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
@@ -16,6 +15,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
 XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
   "resource://gre/modules/Timer.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
+  "resource://ntab/NTabDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
@@ -40,11 +41,7 @@ let delayedSuggestBaidu = {
   },
 
   get enabled() {
-    let currentVersion = 0;
-    try {
-      currentVersion = Services.prefs.getIntPref(this.prefKey);
-    } catch(e) {}
-    return (currentVersion < this.version) && this.baidu;
+    return (getPref(this.prefKey, 0) < this.version) && this.baidu;
   },
 
   init: function() {
@@ -202,6 +199,127 @@ let delayedSuggestBaidu = {
   }
 };
 
+let nxdomainMitigation = {
+  allowedDomains: ["firefoxchina.net"],
+  prefs: {
+    "home": {
+      "key": "extensions.cehomepage.abouturl",
+      "val": "http://i.firefoxchina.cn/"
+    },
+    "ntab": {
+      "key": NTabDB.altSpecPref,
+      "val": "http://offlintab.firefoxchina.cn/"
+    }
+  },
+
+  get timer() {
+    delete this.timer;
+    return this.timer = Cc["@mozilla.org/timer;1"].
+      createInstance(Ci.nsITimer);
+  },
+  get updateUrl() {
+    let u = "http://check.17firefox.com/v1/mitigations.json?cachebust=20150121";
+    delete this.updateUrl;
+    return this.updateUrl = u;
+  },
+
+  _fetch: function(aUrl, aCallback) {
+    if (!aUrl) {
+      return;
+    }
+    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+                .createInstance(Ci.nsIXMLHttpRequest);
+    xhr.open('GET', aUrl, true);
+    xhr.onload = function(evt) {
+      if (xhr.status == 200) {
+        try {
+          aCallback(JSON.parse(xhr.responseText));
+        } catch(e) {
+          aCallback();
+        }
+      } else {
+        aCallback();
+      }
+    };
+    xhr.onerror = function(evt) {
+      aCallback();
+    };
+    try {
+      xhr.send();
+    } catch(e) {
+      aCallback();
+    }
+  },
+
+  _maybeSwitchHosts: function(aData) {
+    if (isNaN(aData.validUntil) || Date.now() > aData.validUntil * 86400e3) {
+      this._resetHosts();
+      return;
+    }
+
+    let self = this;
+    Object.keys(this.prefs).forEach(function(aType) {
+      let val = self.prefs[aType].val;
+      try {
+        let uri = Services.io.newURI(aData[aType], null, null);
+        let baseDomain = Services.eTLD.getBaseDomain(uri);
+        if (self.allowedDomains.indexOf(baseDomain) > -1) {
+          val = uri.spec;
+        }
+      } catch(e) {}
+
+      self._setPref(self.prefs[aType].key, val);
+    });
+  },
+
+  _resetHosts: function() {
+    let self = this;
+    Object.keys(this.prefs).forEach(function(aType) {
+      let { key, val } = self.prefs[aType];
+
+      self._setPref(key, val);
+    });
+  },
+
+  _setPref: function(aKey, aVal) {
+    let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
+      createInstance(Ci.nsIPrefLocalizedString);
+
+    localizedStr.data = "data:text/plain," + aKey + "=" + aVal;
+    Services.prefs.getDefaultBranch("").setComplexValue(aKey,
+      Ci.nsIPrefLocalizedString, localizedStr);
+  },
+
+  notify: function() {
+    let self = this;
+    this._fetch(this.updateUrl, function(aData) {
+      if (!aData) {
+        self._resetHosts();
+        return;
+      }
+
+      if (SignatureVerifier.verify(aData.data, aData.signature)) {
+        self._maybeSwitchHosts(JSON.parse(aData.data));
+      } else {
+        self._resetHosts();
+      }
+    });
+  },
+
+  init: function() {
+    let self = this;
+    Object.keys(this.prefs).forEach(function(aType) {
+      let { key, val } = self.prefs[aType];
+      self.prefs[aType].val = (getPref(key, val,
+        Ci.nsIPrefLocalizedString, true) || val);
+    });
+
+    this.notify();
+    this.timer.initWithCallback(this, (30 * 60e3),
+      Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
+  }
+};
+
 let Frequent = {
   excludes: [
     /^http:\/\/i.firefoxchina.cn\/n(ew)?tab/,
@@ -272,17 +390,21 @@ let Frequent = {
   }
 };
 
-let getPref = function(prefName, defaultValue, valueType) {
+let getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
   valueType = valueType || Ci.nsISupportsString;
-  switch (Services.prefs.getPrefType(prefName)) {
+  let prefs = !!useDefaultBranch ?
+    Services.prefs.getDefaultBranch("") :
+    Services.prefs;
+
+  switch (prefs.getPrefType(prefName)) {
     case Ci.nsIPrefBranch.PREF_STRING:
-      return Services.prefs.getComplexValue(prefName, valueType).data;
+      return prefs.getComplexValue(prefName, valueType).data;
 
     case Ci.nsIPrefBranch.PREF_INT:
-      return Services.prefs.getIntPref(prefName);
+      return prefs.getIntPref(prefName);
 
     case Ci.nsIPrefBranch.PREF_BOOL:
-      return Services.prefs.getBoolPref(prefName);
+      return prefs.getBoolPref(prefName);
 
     case Ci.nsIPrefBranch.PREF_INVALID:
       return defaultValue;
@@ -360,3 +482,24 @@ let Session = Object.create(Frequent, {
     value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
   }
 });
+
+let SignatureVerifier = {
+  get verifier() {
+    delete this.verifier;
+    return this.verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
+      getService(Ci.nsIDataSignatureVerifier);
+  },
+
+  get key() {
+    delete this.key;
+    return this.key = getPref('moa.signatureverifier.key', '');
+  },
+
+  verify: function(aData, aSignature) {
+    try {
+      return this.verifier.verifyData(aData, aSignature, this.key);
+    } catch(e) {
+      return false;
+    }
+  }
+};

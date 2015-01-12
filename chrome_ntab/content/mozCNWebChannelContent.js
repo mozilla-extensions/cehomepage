@@ -6,8 +6,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 
 XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
   "resource://ntab/mozCNUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "getPref",
-  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
