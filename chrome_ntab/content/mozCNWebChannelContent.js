@@ -1,4 +1,4 @@
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
+let {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
