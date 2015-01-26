@@ -131,18 +131,22 @@ let searchEngines = {
     } catch(e) {};
   },
 
-  removeLegacyAmazon: function() {
-    let amazondotcn = {
+  removeLegacyEngines: function() {
+    [{
       legacy: Services.search.getEngineByName("\u5353\u8d8a\u4e9a\u9a6c\u900a"),
       update: Services.search.getEngineByName("\u4e9a\u9a6c\u900a")
-    };
-    if ((amazondotcn.legacy && !amazondotcn.legacy.hidden) &&
-        (amazondotcn.update && !amazondotcn.update.hidden)) {
-      if (Services.search.currentEngine == amazondotcn.legacy) {
-        Services.search.currentEngine = amazondotcn.update;
+    }, {
+      legacy: Services.search.getEngineByName("\u6dd8\u5b9d\u8d2d\u7269"),
+      update: Services.search.getEngineByName("\u7231\u6dd8\u5b9d\u8d2d\u7269")
+    }].forEach(function(aEngines) {
+      if ((aEngines.legacy && !aEngines.legacy.hidden) &&
+          (aEngines.update && !aEngines.update.hidden)) {
+        if (Services.search.currentEngine == aEngines.legacy) {
+          Services.search.currentEngine = aEngines.update;
+        }
+        Services.search.removeEngine(aEngines.legacy);
       }
-      Services.search.removeEngine(amazondotcn.legacy);
-    }
+    });
   },
 
   init: function() {
@@ -154,7 +158,7 @@ let searchEngines = {
           baidu = Services.search.getEngineByName("\u767e\u5ea6");
       self.reportUnexpected("current", "detect", current, true);
       self.reportUnexpected("baidu", "detect", baidu, true);
-      self.removeLegacyAmazon();
+      self.removeLegacyEngines();
     });
   },
 
