@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbsStorage",
   "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
+  "resource://gre/modules/FxAccounts.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "BackgroundPageThumbs", function() {
   let temp = {};
@@ -394,8 +396,20 @@ mozCNUtils.prototype = {
             w.BrowserOpenAddonsMgr();
             break;
           case "sync":
-            // FIXME
-            w.openPreferences("paneSync");
+            let weave = Cc["@mozilla.org/weave/service;1"].
+              getService(Ci.nsISupports).wrappedJSObject;
+
+            if (weave.fxAccountsEnabled) {
+              fxAccounts.getSignedInUser().then(function(userData) {
+                if (userData) {
+                  w.openPreferences("paneSync");
+                } else {
+                  w.loadURI("about:accounts?entrypoint=aboutntab");
+                }
+              });
+            } else {
+              w.openPreferences("paneSync");
+            }
             break;
           case "settings":
             w.openPreferences();
