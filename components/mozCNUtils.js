@@ -285,6 +285,10 @@ let appcacheTempFix = {
     }
 
     let timeoutId = setTimeout((function() {
+      if (aBrowser.mDestroyed !== false) {
+        return;
+      }
+
       this.clear(aRequest.URI.asciiHost);
 
       aRequest.cancel(Cr.NS_BINDING_ABORTED);
