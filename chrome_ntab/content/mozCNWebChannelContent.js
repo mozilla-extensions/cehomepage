@@ -124,13 +124,13 @@ let mozCNWebChannelContent = {
       // shellService is not universally available, see https://bugzil.la/297841
       return;
     }
-    if (shellService.isDefaultBrowser(true)) {
+    if (shellService.isDefaultBrowser(false, false)) {
       return;
     }
 
     let { button } = aEvt.detail.elements;
     button.addEventListener('click', function() {
-      shellService.setDefaultBrowser(true, false);
+      shellService.setDefaultBrowser(false, false);
       button.setAttribute('hidden', 'true');
     }, false, /** wantsUntrusted */false);
     button.removeAttribute('hidden');
