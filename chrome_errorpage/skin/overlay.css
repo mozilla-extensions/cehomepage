@@ -109,4 +109,19 @@ body
   width: 625px;
   border: none;
   margin-top: 40px;
+  clear: both;
 }
+
+#certificateErrorReportingPanel {
+  left: auto !important;
+  clear: both;
+}
+
+#certificateErrorReporting {
+  margin-bottom: 24px;
+}
+
+#reportCertificateError {
+  padding-left: 8px !important;
+}
+
