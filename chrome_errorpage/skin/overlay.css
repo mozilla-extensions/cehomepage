@@ -29,7 +29,8 @@ body
   min-height: 28px;
 }
 
-#errorTitleText
+#errorTitleText,
+#errorTitleText[sslv3=true]
 {
   font-size: 220%;
   border-bottom: none;
