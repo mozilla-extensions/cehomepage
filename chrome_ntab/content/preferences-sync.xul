@@ -12,6 +12,13 @@
     </preferences>
   </prefpane>
 
+  <!-- for in-content prefs -->
+  <prefpane id="mainPrefPane">
+    <preferences id="mozCNSyncPrefs" insertafter="passwordsGroup">
+      <preference id="engine.mozcn.ntab" name="services.sync.engine.mozcn.ntab" type="bool"/>
+    </preferences>
+  </prefpane>
+
   <richlistbox id="syncEnginesList">
     <richlistitem>
       <checkbox label="&engine.mozcn.ntab.label;"

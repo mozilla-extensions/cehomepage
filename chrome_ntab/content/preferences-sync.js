@@ -3,8 +3,8 @@ var mozCNNTabSync = (function() {
   let qs = document.querySelector.bind(document);
   let paneSync = qs('#paneSync');
 
-  let onPaneLoad = function() {
-    paneSync.removeEventListener('paneload', onPaneLoad);
+  let onPaneLoad = function(aEvt) {
+    aEvt.target.removeEventListener(aEvt.type, onPaneLoad);
     let parentVBox = qs("#fxaSyncEngines > vbox");
     let checkbox = qs('checkbox[preference="engine.mozcn.ntab"]');
     if (!parentVBox || !checkbox) {
@@ -14,7 +14,11 @@ var mozCNNTabSync = (function() {
     parentVBox.appendChild(checkbox.cloneNode());
   };
 
-  paneSync.addEventListener('paneload', onPaneLoad, false);
+  if (paneSync) {
+    paneSync.addEventListener('paneload', onPaneLoad, false);
+  } else {
+    window.addEventListener('DOMContentLoaded', onPaneLoad, false);
+  }
 
   // prompt for confirmation for every false => true change
   let url = "chrome://ntab/locale/sync.properties";
