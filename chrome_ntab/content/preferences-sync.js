@@ -29,7 +29,11 @@ var mozCNNTabSync = (function() {
 
   let onSyncToEnablePref = function(aCheckbox) {
     if (!aCheckbox.checked) {
-      return undefined;
+      if (window.mozCNSyncHack && mozCNSyncHack.onSyncToEnablePref) {
+        return mozCNSyncHack.onSyncToEnablePref(aCheckbox);
+      } else {
+        return undefined;
+      }
     }
     let shouldEnable = Services.prompt.confirm(window, title, message);
 
