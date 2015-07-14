@@ -36,7 +36,7 @@ if (!this.indexedDB) {
 
 let NTabDB = {
   _db: null,
-  _cbQuery: "?cachebust=20150601",
+  _cbQuery: "?cachebust=20150714",
   altSpecPref: "moa.ntab.web.alturl",
   prePath: "http://offlintab.firefoxchina.cn",
   get spec() {
