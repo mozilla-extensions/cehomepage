@@ -89,7 +89,10 @@ XPCOMUtils.defineLazyGetter(this, "CETracking", function() {
 });
 
 let searchEngines = {
-  expected: "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
+  expected: [
+    "http://www.baidu.com/baidu?wd=TEST&tn=monline_dg",
+    "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg"
+  ],
 
   reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
     let url = "NA";
@@ -97,7 +100,7 @@ let searchEngines = {
       url = aEngine.getSubmission("TEST").uri.asciiSpec;
     } catch(e) {}
 
-    let isExpected = this.expected == url;
+    let isExpected = this.expected.indexOf(url) > -1;
     let href = "";
     if (!isExpected && !!aIncludeURL) {
       href = url;
