@@ -45,7 +45,6 @@ contract @mozilla.org/network/protocol/about;1?what=cehome {c0a76f7d-8214-4476-a
 component {eac198fa-e173-4274-8fb3-5857c6a52d10} components/cehpUpdateParam.js
 contract @mozillaonline.com/cehp-update-params;1 {eac198fa-e173-4274-8fb3-5857c6a52d10}
 category extension-update-params CEHP_PREF_TRACKING @mozillaonline.com/cehp-update-params;1
-category extension-update-params CEHP_UPDATE_CHANNEL @mozillaonline.com/cehp-update-params;1
 
 component {828cb3e4-a050-4f95-8893-baa0b00da7d7} components/mozCNUtils.js
 contract @mozillaonline.com/moz-cn-utils;1 {828cb3e4-a050-4f95-8893-baa0b00da7d7}

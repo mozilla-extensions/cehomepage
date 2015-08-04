@@ -1,8 +1,6 @@
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "UpdateChannel",
-  "resource://gre/modules/UpdateChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -65,8 +63,6 @@ CehpUpdateParams.prototype = {
     switch(param) {
       case "CEHP_PREF_TRACKING":
         return collectPref();
-      case "CEHP_UPDATE_CHANNEL":
-        return UpdateChannel.get();
       default:
         return "NotSupported";
     }
