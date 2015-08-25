@@ -82,12 +82,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
 XPCOMUtils.defineLazyModuleGetter(this, "Promo",
   "resource://cehp-promo/Promo.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "CETracking", function() {
-  try {
-    return Cc["@mozilla.com.cn/tracking;1"].getService().wrappedJSObject;
-  } catch(e) {};
-});
-
 let searchEngines = {
   expected: [
     "http://www.baidu.com/baidu?wd=TEST&tn=monline_dg",
@@ -349,7 +343,6 @@ mozCNUtils.prototype = {
         fxAccountsProxy.maybeRegisterMutationObserver(aSubject);
         break;
       case "http-on-examine-response":
-        this.trackHttpsForBaidu(aSubject);
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
         this.trackHTTPStatus(aSubject, aTopic);
@@ -359,21 +352,6 @@ mozCNUtils.prototype = {
 
   initNTab: function() {
     gMM.loadFrameScript("chrome://ntab/content/ntabContent.js", true);
-  },
-
-  trackHttpsForBaidu: function(aSubject) {
-    let channel = aSubject;
-    channel.QueryInterface(Ci.nsIHttpChannel);
-
-    if (channel.URI.spec !== "https://www.baidu.com/con?from=firefox") {
-      return;
-    }
-
-    if (!CETracking) {
-      return;
-    }
-
-    CETracking.track("baidu-https-" + channel.status.toString(16));
   },
 
   trackHTTPStatus: function(aSubject, aTopic) {
