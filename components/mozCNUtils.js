@@ -187,6 +187,7 @@ let fxAccountsProxy = {
     attributeFilter: [
       "disabled",
       "failed",
+      "fxastatus",
       "hidden",
       "label",
       "signedin",
@@ -194,11 +195,42 @@ let fxAccountsProxy = {
       "tooltiptext"
     ]
   },
+  generateKVs: function(gFxAccounts) {
+    let kvs = {};
+
+    if (gFxAccounts.button) {
+      this.mutationConfig.attributeFilter.forEach(function(aKey) {
+        if (gFxAccounts.button.hasAttribute(aKey)) {
+          kvs[aKey] = gFxAccounts.button.getAttribute(aKey);
+        }
+      });
+    } else if (gFxAccounts.panelUIFooter &&
+               gFxAccounts.panelUILabel &&
+               gFxAccounts.panelUIStatus) {
+      ["disabled", "fxastatus"].forEach(function(aKey) {
+        if (gFxAccounts.panelUIFooter.hasAttribute(aKey)) {
+          kvs[aKey] = gFxAccounts.panelUIFooter.getAttribute(aKey);
+        }
+      });
+      ["label"].forEach(function(aKey) {
+        if (gFxAccounts.panelUILabel.hasAttribute(aKey)) {
+          kvs[aKey] = gFxAccounts.panelUILabel.getAttribute(aKey);
+        }
+      });
+      ["tooltiptext"].forEach(function(aKey) {
+        if (gFxAccounts.panelUIStatus.hasAttribute(aKey)) {
+          kvs[aKey] = gFxAccounts.panelUIStatus.getAttribute(aKey);
+        }
+      });
+    }
+
+    return kvs;
+  },
   maybeRegisterMutationObserver: function(aWindow) {
     let gFxAccounts = aWindow.gFxAccounts;
     let windowMM = aWindow.messageManager;
 
-    if (!gFxAccounts || !gFxAccounts.button || !windowMM) {
+    if (!gFxAccounts || !windowMM) {
       return;
     }
 
@@ -207,27 +239,34 @@ let fxAccountsProxy = {
     let observer = new aWindow.MutationObserver(function(mutations) {
       mutations.forEach(function(mutation) {
         if (mutation.type != "attributes" ||
-            mutation.target != gFxAccounts.button ||
             config.attributeFilter.indexOf(mutation.attributeName) < 0) {
           return;
         }
 
-        windowMM.broadcastAsyncMessage(self.messageName, "mutation", mutation);
+        let kvs = self.generateKVs(gFxAccounts);
+        windowMM.broadcastAsyncMessage(self.messageName, "mutation", kvs);
       });
     });
 
-    observer.observe(gFxAccounts.button, config);
+    if (gFxAccounts.button) {
+      observer.observe(gFxAccounts.button, config);
+    } else {
+      observer.observe(gFxAccounts.panelUIFooter, config);
+      observer.observe(gFxAccounts.panelUILabel, config);
+      observer.observe(gFxAccounts.panelUIStatus, config);
+    }
   },
   maybeInitContentButton: function(aBrowser) {
     let gFxAccounts = aBrowser.ownerGlobal &&
                       aBrowser.ownerGlobal.gFxAccounts;
     let browserMM = aBrowser.messageManager;
 
-    if (!gFxAccounts || !gFxAccounts.button || !browserMM) {
+    if (!gFxAccounts || !browserMM) {
       return;
     }
 
-    browserMM.sendAsyncMessage(this.messageName, "init", gFxAccounts.button);
+    let kvs = this.generateKVs(gFxAccounts);
+    browserMM.sendAsyncMessage(this.messageName, "init", kvs);
   },
   init: function() {
     gMM.addMessageListener(this.messageName, this);

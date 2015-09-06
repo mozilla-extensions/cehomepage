@@ -84,6 +84,7 @@ let NTab = {
       attributes: [
         "disabled",
         "failed",
+        "fxastatus",
         "hidden",
         "label",
         "signedin",
@@ -108,10 +109,8 @@ let NTab = {
 
         switch(aMessage.data) {
           case "init":
-            this.updateFromButton(aMessage.objects);
-            break;
           case "mutation":
-            this.updateFromMutation(aMessage.objects);
+            this.updateFromKV(aMessage.objects, aMessage.data);
             break;
         }
       },
@@ -126,9 +125,9 @@ let NTab = {
         }
       },
 
-      updateAttribute: function(aButton, aAttributeName) {
-        if (aButton.hasAttribute(aAttributeName)) {
-          let attributeVal = aButton.getAttribute(aAttributeName);
+      updateAttribute: function(aKV, aAttributeName) {
+        if (aKV[aAttributeName]) {
+          let attributeVal = aKV[aAttributeName];
           switch (aAttributeName) {
             case "label":
               this.button.textContent = attributeVal;
@@ -154,33 +153,39 @@ let NTab = {
           }
         }
       },
-      updateFromButton: function (aButton) {
+      updateFromKV: function(aKV, aType) {
         if (!this.button) {
           return;
         }
 
-        let self = this;
-        this.button.addEventListener('click', function(aEvt) {
-          sendAsyncMessage(self.messageName, 'action', aEvt);
+        if (aType == 'init') {
+          let self = this;
+          this.button.addEventListener('click', function(aEvt) {
+            let fxaStatus = aEvt.originalTarget.getAttribute("fxastatus");
+            sendAsyncMessage(self.messageName, 'action', {
+              originalTarget: {
+                getAttribute: function(aAttribute) {
+                  switch(aAttribute) {
+                    case "fxastatus":
+                      return fxaStatus;
+                    default:
+                      return;
+                  }
+                }
+              }
+            });
 
-          Tracking.track({
-            type: 'ntabsync',
-            action: 'click',
-            sid: 'in-content'
-          });
-        }, false, /** wantsUntrusted */false);
+            Tracking.track({
+              type: 'ntabsync',
+              action: 'click',
+              sid: 'in-content'
+            });
+          }, false, /** wantsUntrusted */false);
+        }
 
         for (let i = 0, l = this.attributes.length; i < l; i++) {
-          this.updateAttribute(aButton, this.attributes[i]);
+          this.updateAttribute(aKV, this.attributes[i]);
         }
-      },
-      updateFromMutation: function(aMutation) {
-        let {target, attributeName} = aMutation;
-        if (this.attributes.indexOf(attributeName) < 0) {
-          return;
-        }
-
-        this.updateAttribute(target, attributeName);
       }
     };
 
