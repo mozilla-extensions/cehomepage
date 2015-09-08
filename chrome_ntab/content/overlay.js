@@ -413,20 +413,29 @@
        * see http://dxr.mozilla.org/mozilla-central/search?q=getNewTabPageURL
        */
       if (this.inUse) {
-        Services.prefs.getDefaultBranch("").
-          setCharPref(this._appUrlKey, (this.altSpec || ns.NTabDB.spec));
-        Services.prefs.getDefaultBranch("").
-          setBoolPref(this._appPreloadKey, false);
-        try {
-          Services.prefs.clearUserPref(this._appUrlKey);
-          Services.prefs.clearUserPref(this._appPreloadKey);
-        } catch(e) {};
+        let spec = this.altSpec || ns.NTabDB.spec;
+        if (window.NewTabURL && NewTabURL.override) {
+          NewTabURL.override(spec);
+        } else {
+          Services.prefs.getDefaultBranch("").
+            setCharPref(this._appUrlKey, spec);
+          Services.prefs.getDefaultBranch("").
+            setBoolPref(this._appPreloadKey, false);
+          try {
+            Services.prefs.clearUserPref(this._appUrlKey);
+            Services.prefs.clearUserPref(this._appPreloadKey);
+          } catch(e) {};
+        }
       } else {
-        if (!Services.prefs.prefHasUserValue(this._appUrlKey)) {
-          Services.prefs.getDefaultBranch("").
-            setCharPref(this._appUrlKey, "about:newtab");
-          Services.prefs.getDefaultBranch("").
-            setBoolPref(this._appPreloadKey, true);
+        if (window.NewTabURL && NewTabURL.reset) {
+          NewTabURL.reset();
+        } else {
+          if (!Services.prefs.prefHasUserValue(this._appUrlKey)) {
+            Services.prefs.getDefaultBranch("").
+              setCharPref(this._appUrlKey, "about:newtab");
+            Services.prefs.getDefaultBranch("").
+              setBoolPref(this._appPreloadKey, true);
+          }
         }
       }
     }
