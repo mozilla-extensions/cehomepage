@@ -76,6 +76,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
   "resource://ntab/NTabSync.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PartnerBookmarks",
   "resource://ntab/PartnerBookmarks.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "QuickDialData",
+  "resource://ntab/QuickDialData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
@@ -643,7 +645,7 @@ mozCNWebChannel.prototype = {
         this.channel.send({
           id: aMessage.id,
           key: aMessage.key,
-          data: getPref("moa.ntab.dial.branch", "master-ii")
+          data: QuickDialData.variant
         }, aSender);
         break;
     }

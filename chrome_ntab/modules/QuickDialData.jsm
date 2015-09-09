@@ -9,6 +9,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
   "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "getPref",
+  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
                     .createInstance(Ci.nsIScriptableUnicodeConverter);
@@ -19,9 +21,36 @@ XPCOMUtils.defineLazyGetter(this, "gUnicodeConverter", function () {
 let LOG = function(m) Services.console.logStringMessage(m);
 
 let QuickDialData = {
+  get variant() {
+    let fxChannel = getPref('app.chinaedition.channel', 'www.firefox.com.cn');
+    let variant = {
+      'firefox.mail.163.com': 'netease_mail',
+      'firefox.yazuo': 'yazuo',
+      'firefox.yazuo2': 'yazuo2'
+    }[fxChannel];
+
+    /*
+     * For some users, this pref might be set as "master-i" in bug 999, this
+     * should be reflected in the response to "variant.channel" event, so these
+     * users' offlintab will continue to update default quickdial data from the
+     * "master-i" endpoint.
+     *
+     * On the other side, QuickDialData.read will only be called in a fresh
+     * profile, where "moa.ntab.dial.branch" pref no longer exists. As a result,
+     * there's no "resource://ntab/quickdialdata/master-i.json" included.
+     */
+    let dialBranch = getPref('moa.ntab.dial.branch', 'master-ii');
+    variant = variant || {
+      'master-i': 'master-i'
+    }[dialBranch];
+    variant = variant || 'master-ii';
+
+    delete this.variant;
+    return this.variant = variant;
+  },
   get _bundleFile() {
-    let uri = Services.io.newURI('resource://ntab/quickdialdata.json',
-      null, null);
+    let spec = 'resource://ntab/quickdialdata/' + this.variant + '.json';
+    let uri = Services.io.newURI(spec, null, null);
     return uri.QueryInterface(Ci.nsIFileURL).file;
   },
   get _latestFile() {
