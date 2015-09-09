@@ -414,6 +414,10 @@ let getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
 let Homepage = {
   defaultAboutpage: "http://i.firefoxchina.cn/",
   defaultHomepage: "about:cehome",
+  vanillaHomepages: [
+    "about:home",
+    "http://start.firefoxchina.cn/"
+  ],
   // When an empty string is set as pref value, display this.defaultAboutpage.
   get aboutpage() {
     return getPref("extensions.cehomepage.abouturl", this.defaultAboutpage,
@@ -444,7 +448,7 @@ let Homepage = {
     try {
       let uri = Services.uriFixup.createFixupURI(aSpec,
         Services.uriFixup.FIXUP_FLAG_NONE);
-      if (uri.prePath !== aReferenceURI.prePath) {
+      if (aReferenceURI && (uri.prePath !== aReferenceURI.prePath)) {
         return;
       }
 
@@ -471,6 +475,44 @@ let Homepage = {
       return;
     }
     Services.prefs.setCharPref("browser.startup.homepage", aSpec);
+  },
+  init: function() {
+    this.defaultPrefTweak();
+  },
+  defaultPrefTweak: function() {
+    let key = "browser.startup.homepage";
+    if (this._cachedHomepage === undefined) {
+      let homepage = getPref(key, this.defaultHomepage,
+        Ci.nsIPrefLocalizedString, true);
+
+      let self = this;
+      let updatedHomepage = homepage.split("|").map(function(spec) {
+        // for china repack installation
+        let normalizedSpec = self.normalizeSpec(spec) || spec;
+        // for vanilla installation
+        if (self.vanillaHomepages.indexOf(normalizedSpec) > -1) {
+          return self.defaultHomepage;
+        }
+
+        return normalizedSpec;
+      });
+
+      if (updatedHomepage === homepage) {
+        this._cachedHomepage = false;
+        return;
+      }
+
+      this._cachedHomepage = updatedHomepage;
+    }
+
+    if (this._cachedHomepage) {
+      let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
+        createInstance(Ci.nsIPrefLocalizedString);
+      let prefix = "data:text/plain," + key + "=";
+      localizedStr.data = prefix + this._cachedHomepage;
+      Services.prefs.getDefaultBranch("").setComplexValue(key,
+        Ci.nsIPrefLocalizedString, localizedStr);
+    }
   }
 };
 

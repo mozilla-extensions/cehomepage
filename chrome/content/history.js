@@ -18,11 +18,6 @@
     }
   }
 
-  function cehomepage_autoSetHomepage() {
-    var homepage = getPref("extensions.cehomepage.homepage", "about:cehome", Ci.nsIPrefLocalizedString);
-    Services.prefs.setCharPref("browser.startup.homepage", homepage);
-  }
-
   var addonlistener = {
     onUninstalling: function (addon) {
       cancelAboutProtocol(addon);
@@ -63,19 +58,6 @@
   window.addEventListener('load', function() {
     window.setTimeout(function(evt) {
       resetHomepageIfPossible();
-
-      // the following lines added for z.g-fox.cn, on first install of the addon, set z.g-fox.cn to homepage
-      var autoSetHomepage = getPref("extensions.cehomepage.autoSetHomepage", false);
-      if (autoSetHomepage) {
-        if (Application.getExtensions) {
-          // Application.extensions is obsolete in Gecko 2.0
-          Application.getExtensions(function(exts) {
-            if (exts.get("cehomepage@mozillaonline.com").firstRun) {
-              cehomepage_autoSetHomepage();
-            }
-          });
-        }
-      }
 
       /**
        * The distribution.ini of the old users may still remians the cehomepage pref as "about:cehome"

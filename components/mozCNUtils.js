@@ -64,6 +64,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Frequent",
   "resource://ntab/mozCNUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
+  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "nxdomainMitigation",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Session",
@@ -366,11 +368,13 @@ mozCNUtils.prototype = {
         Services.obs.addObserver(this, "http-on-examine-response", false);
         Services.obs.addObserver(this, "http-on-examine-cached-response", false);
         Services.obs.addObserver(this, "http-on-examine-merged-response", false);
+        Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
         mozCNWebChannels.init();
         this.initNTab();
         NTabDB.migrateNTabData();
         this.initMessageListener();
         delayedSuggestBaidu.init();
+        Homepage.init();
         searchEngines.init();
         fxAccountsProxy.init();
         NTabSync.init();
@@ -387,6 +391,9 @@ mozCNUtils.prototype = {
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
         this.trackHTTPStatus(aSubject, aTopic);
+        break;
+      case "prefservice:after-app-defaults":
+        Homepage.defaultPrefTweak();
         break;
     }
   },
