@@ -368,7 +368,6 @@ mozCNUtils.prototype = {
         Services.obs.addObserver(this, "http-on-examine-response", false);
         Services.obs.addObserver(this, "http-on-examine-cached-response", false);
         Services.obs.addObserver(this, "http-on-examine-merged-response", false);
-        Services.obs.addObserver(this, "prefservice:after-app-defaults", false);
         mozCNWebChannels.init();
         this.initNTab();
         NTabDB.migrateNTabData();
@@ -391,9 +390,6 @@ mozCNUtils.prototype = {
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
         this.trackHTTPStatus(aSubject, aTopic);
-        break;
-      case "prefservice:after-app-defaults":
-        Homepage.defaultPrefTweak();
         break;
     }
   },

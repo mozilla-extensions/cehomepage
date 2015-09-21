@@ -418,17 +418,22 @@ let Homepage = {
     "about:home",
     "http://start.firefoxchina.cn/"
   ],
+
+  distributionTopic: "distribution-customization-complete",
+  homepagePref: "browser.startup.homepage",
+  pagePref: "browser.startup.page",
+
   // When an empty string is set as pref value, display this.defaultAboutpage.
   get aboutpage() {
     return getPref("extensions.cehomepage.abouturl", this.defaultAboutpage,
       Ci.nsIPrefLocalizedString) || this.defaultAboutpage;
   },
   get homepage() {
-    return getPref("browser.startup.homepage", this.defaultHomepage,
+    return getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString);
   },
   get page() {
-    return getPref("browser.startup.page", 1);
+    return getPref(this.pagePref, 1);
   },
   isHomepage: function(aSpec, aReferenceURI) {
     if (this.page !== 1) {
@@ -468,50 +473,63 @@ let Homepage = {
       return;
     }
 
-    Services.prefs.clearUserPref("browser.startup.homepage");
-    Services.prefs.clearUserPref("browser.startup.page");
+    Services.prefs.clearUserPref(this.homepagePref);
+    Services.prefs.clearUserPref(this.pagePref);
 
     if (this.homepage === aSpec) {
       return;
     }
-    Services.prefs.setCharPref("browser.startup.homepage", aSpec);
+    Services.prefs.setCharPref(this.homepagePref, aSpec);
   },
   init: function() {
     this.defaultPrefTweak();
+
+    this.handleDistributionDefaults();
   },
   defaultPrefTweak: function() {
-    let key = "browser.startup.homepage";
-    if (this._cachedHomepage === undefined) {
-      let homepage = getPref(key, this.defaultHomepage,
-        Ci.nsIPrefLocalizedString, true);
+    let homepage = getPref(this.homepagePref, this.defaultHomepage,
+      Ci.nsIPrefLocalizedString, true);
 
-      let self = this;
-      let updatedHomepage = homepage.split("|").map(function(spec) {
-        // for china repack installation
-        let normalizedSpec = self.normalizeSpec(spec) || spec;
-        // for vanilla installation
-        if (self.vanillaHomepages.indexOf(normalizedSpec) > -1) {
-          return self.defaultHomepage;
-        }
-
-        return normalizedSpec;
-      });
-
-      if (updatedHomepage === homepage) {
-        this._cachedHomepage = false;
-        return;
+    let self = this;
+    let updatedHomepage = homepage.split("|").map(function(spec) {
+      // for china repack installation
+      let normalizedSpec = self.normalizeSpec(spec) || spec;
+      // for vanilla installation
+      if (self.vanillaHomepages.indexOf(normalizedSpec) > -1) {
+        return self.defaultHomepage;
       }
 
-      this._cachedHomepage = updatedHomepage;
+      return normalizedSpec;
+    }).join("|");
+
+    if (updatedHomepage === homepage) {
+      return;
     }
 
-    if (this._cachedHomepage) {
-      let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
-        createInstance(Ci.nsIPrefLocalizedString);
-      let prefix = "data:text/plain," + key + "=";
-      localizedStr.data = prefix + this._cachedHomepage;
-      Services.prefs.getDefaultBranch("").setComplexValue(key,
-        Ci.nsIPrefLocalizedString, localizedStr);
+    let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
+      createInstance(Ci.nsIPrefLocalizedString);
+    let prefix = "data:text/plain," + this.homepagePref + "=";
+    localizedStr.data = prefix + updatedHomepage;
+    Services.prefs.getDefaultBranch("").setComplexValue(this.homepagePref,
+      Ci.nsIPrefLocalizedString, localizedStr);
+  },
+  handleDistributionDefaults: function() {
+    Services.obs.addObserver(this, this.distributionTopic, false);
+    Services.prefs.addObserver(this.homepagePref, this, false);
+  },
+  observe: function(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case this.distributionTopic:
+        Services.prefs.removeObserver(this.homepagePref, this, false);
+        Services.obs.removeObserver(this, aTopic);
+        break;
+      case "nsPref:changed":
+        if (aData !== this.homepagePref) {
+          break;
+        }
+
+        this.defaultPrefTweak();
+        break;
     }
   }
 };
