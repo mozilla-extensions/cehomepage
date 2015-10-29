@@ -38,7 +38,7 @@ function collectPref() {
     // dialModified will require async indexedDB
     ret.push("NA");
 
-    // this array should be manually updated, at least for now
+    // remember to update this with temp bookmark hacks
     let slugs = ["taobao", "tmall", "tmall11nov"];
     ret.push(PartnerBookmarks.getUpdateTracking(slugs));
 
