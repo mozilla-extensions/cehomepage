@@ -56,9 +56,9 @@ let PartnerBookmarks = {
   },
 
   _keywordsForBookmarks: {
+    // batch #1
     // predefined (excluding those w/o querystrings?)
     'http://www.baidu.com/index.php?tn=monline_5_dg': 'mozcn:baidu:home',
-    'http://www.amazon.cn/?source=Mozilla': 'mozcn:amazoncn:home',
     'http://www.vancl.com/?source=mozilla': 'mozcn:vancl:home',
     'http://r.union.meituan.com/url/visit/?a=1&key=yKmOefsJ5QiYS98RvpLzMN2qxT7BFhr4&url=http://www.meituan.com': 'mozcn:meituan:union',
     'http://www.hao123.com/?tn=12092018_12_hao_pg': 'mozcn:hao123:home',
@@ -82,7 +82,6 @@ let PartnerBookmarks = {
 
     // yhd
     'http://www.yihaodian.com/product/index.do?merchant=1&tracker_u=1787&tracker_type=1&uid=433588_test_': 'mozcn:yhd:home',
-    'http://www.yihaodian.com/?tracker_u=10977119545': 'mozcn:yhd:home',
 
     // taobao
     'http://www.taobao.com/go/chn/tbk_channel/onsale.php?pid=mm_28347190_2425761_13730658&eventid=101329': 'mozcn:toolbar:taobao',
@@ -93,7 +92,19 @@ let PartnerBookmarks = {
     'http://s.click.taobao.com/t_9?p=mm_28347190_2425761_14472249&l=http%3A%2F%2Fmall.taobao.com%2F': 'mozcn:toolbar:tmall',
     'http://s.click.taobao.com/t?e=m%3D2%26s%3DGEWeb2k8yoQcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMXq0KRRmDoQot4hWD5k2kjNoVxuUFnM6iJG6UkagZE085UoOeRlV%2BcG%2Bh63zuUZMYYgaseAKBk0cDPtbhjM5VDw%3D': 'mozcn:toolbar:tmall',
     'http://s.click.taobao.com/t?e=m%3D2%26s%3D0XGYiwkvavMcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMagXItMrTZFp79%2FTFaMDK6RoVxuUFnM6iJG6UkagZE085UoOeRlV%2BcG%2Bh63zuUZMYYgaseAKBk0cLdkr8YvWKT4%3D': 'mozcn:toolbar:tmall',
-    'http://s.click.taobao.com/t?e=m%3D2%26s%3DHLQ0nwFAGAUcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMfTDcs3PiqZXlovu%2FCElQOtoVxuUFnM6iJG6UkagZE085UoOeRlV%2BcG%2Bh63zuUZMYYgaseAKBk0cLdkr8YvWKT4%3D': 'mozcn:toolbar:tmall'
+    'http://s.click.taobao.com/t?e=m%3D2%26s%3DHLQ0nwFAGAUcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMfTDcs3PiqZXlovu%2FCElQOtoVxuUFnM6iJG6UkagZE085UoOeRlV%2BcG%2Bh63zuUZMYYgaseAKBk0cLdkr8YvWKT4%3D': 'mozcn:toolbar:tmall',
+
+    // batch #2, for bug 2260
+    'http://www.amazon.cn/?source=Mozilla': 'mozcn:amazoncn:home',
+    'http://aos.prf.hn/click/camref:111lEF': 'mozcn:applestore:home',
+    'https://www.baidu.com/index.php?tn=monline_3_dg': 'mozcn:baidu:home',
+    'https://www.baidu.com/index.php?tn=monline_6_dg': 'mozcn:baidu:home',
+    'http://ai.taobao.com/?pid=mm_28347190_2425761_17624777': 'mozcn:taobao:legacy',
+    'http://ai.taobao.com/?pid=mm_28347190_2425761_20444747': 'mozcn:toolbar:taobao',
+    'http://ai.taobao.com/?pid=mm_28347190_2425761_20450656': 'mozcn:toolbar:taobao',
+    'http://ai.taobao.com/?pid=mm_28347190_2425761_20458269': 'mozcn:toolbar:taobao',
+    'http://s.click.taobao.com/t?e=m%3D2%26s%3DIJymWS3%2FHfIcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMfYs3%2BfQ9YMc79%2FTFaMDK6RoVxuUFnM6iMUjUj9sJ%2FOjxctsWvavBZ6hMMc65kB68aUuZxIcp9pfUIgVEmFmgnbDX0%2BHH2IEVaX4VWt66S4EJPwiig1bxLP9BvYCQR6XAr%2BKQ71wHNCAqP8YyUoZZlq4cXg3ii9waXPs9Sj9Qli1np4c65at3FeX3cwyLTlAhj2l4PysJx%2FP': 'mozcn:toolbar:tmall11nov',
+    'http://www.yihaodian.com/?tracker_u=10977119545': 'mozcn:yhd:home'
   },
 
   _backfillKeywords: function() {
@@ -308,7 +319,7 @@ let PartnerBookmarks = {
                 self._setFaviconForUrl(item.uri, item.favicon);
               }
               return PlacesUtils.keywords.insert({
-                keyword: keyword,
+                keyword: (item.keyword || keyword),
                 url: item.uri
               });
             });
@@ -367,7 +378,7 @@ let PartnerBookmarks = {
 
   _inited: false,
 
-  _backfillVersion: 1,
+  _backfillVersion: 2,
 
   _tempFixVersion: 3,
 
