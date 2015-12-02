@@ -671,9 +671,11 @@ let Homepage = {
 
       let self = this;
       let distributionHomepage = parser.getString(section, this.homepagePref);
-      let fixedHomepage = distributinHomepage.split("|").map(function(spec) {
+      // remove the extra quotation marks
+      distributionHomepage = JSON.parse(distributionHomepage);
+      let fixedHomepage = distributionHomepage.split("|").map(function(spec) {
         return spec === self.defaultHomepage ? self.defaultAboutpage : spec;
-      });
+      }).join("|");
       if (fixedHomepage === distributionHomepage) {
         return;
       }
