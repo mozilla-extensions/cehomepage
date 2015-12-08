@@ -182,8 +182,98 @@ let PartnerBookmarks = {
     if (tempFixVersion >= this._tempFixVersion) {
       return;
     }
-    
-    this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+
+    let keyword = 'mozcn:toolbar:taobao12dec';
+    let item = {
+      favicon: 'data:image/png;base64,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',
+      index: 4,
+      parent: PlacesUtils.bookmarks.toolbarFolder,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      title: '\u6dd8\u5b9d\u53cc12',
+      uri: 'http://s.click.taobao.com/t?e=m%3D2%26s%3DFEuJ5ZAKQ%2FkcQipKwQzePCperVdZeJviLKpWJ%2Bin0XJRAdhuF14FMdr%2FFqSQluTn1aH1Hk3GeOhoVxuUFnM6iMUjUj9sJ%2FOjkPiKwSWyD2b8vekcD5j4y7g5kJpUiIWcbYbSbVjnPd7DX0%2BHH2IEVaDF6DfW5eWK47FHjfsActnyHL0%2Bek76Z2L5qldaMNQnwwHtdTNPQJ8vGi9uMcjVheUuB3K%2FJ59GIO2NZx5EuPx%2F0%2BTbAU5P3G0F05MOIR43yoVdc9yqaPhUqpJROUkU%2BZ%2B5TMisDz%2F3ofaxk5PnWYoA5NwsA3beVGOHuAwDJLdg158qROwFt0RPtx0Qs0xrF05U%2BEi82A4g47KQn%2BRht24hhQs2DjqgEA%3D%3D'
+    };
+
+    let bookmarks = [];
+    let self = this;
+    if (PlacesUtils.keywords) {
+      return PlacesUtils.keywords.fetch(keyword).then(function(keywordObj) {
+        if (!keywordObj) {
+          return;
+        }
+
+        return PlacesUtils.bookmarks.fetch({
+          url: keywordObj.url.href
+        }, function(bookmark) {
+          bookmarks.push(bookmark);
+        });
+      }).then(function() {
+        if (bookmarks.filter(function(bookmark) {
+          return bookmark.parentGuid === item.parentGuid;
+        }).length) {
+          return;
+        }
+
+        return PlacesUtils.bookmarks.insert({
+          parentGuid: item.parentGuid,
+          index: item.index,
+          title: item.title,
+          url: item.uri
+        });
+      }).then(function() {
+        return Promise.all(bookmarks.map(function(bookmark) {
+          bookmark.url = item.uri;
+          if (item.title) {
+            bookmark.title = item.title;
+          }
+          return PlacesUtils.bookmarks.update(bookmark);
+        }));
+      }).then(function() {
+        if (item.favicon) {
+          self._setFaviconForUrl(item.uri, item.favicon);
+        }
+
+        return PlacesUtils.keywords.insert({
+          keyword: keyword,
+          url: item.uri
+        });
+      }).then(function() {
+        self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
+      });
+    } else {
+      let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
+      let newUri = Services.io.newURI(item.uri, null, null);
+
+      if (uri) {
+        bookmarks = PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {});
+        // see comments in this._realUpdate
+        bookmarks = bookmarks.filter(function(aId) {
+          return PlacesUtils.bookmarks.getKeywordForBookmark(aId) == keyword;
+        }).filter(function(aId) {
+          return PlacesUtils.bookmarks.getFolderIdForItem(aId) == item.parent;
+        });
+      }
+
+      if (!bookmarks.length) {
+        let id = PlacesUtils.bookmarks.insertBookmark(
+          item.parent, newUri, item.index, item.title);
+        PlacesUtils.bookmarks.setKeywordForBookmark(id, keyword);
+      }
+
+      for (let i = 0, l = bookmarks.length; i < l; i++) {
+        let id = bookmarks[i];
+        PlacesUtils.bookmarks.changeBookmarkURI(id, newUri);
+
+        if (item.title) {
+          PlacesUtils.bookmarks.setItemTitle(id, item.title);
+        }
+      }
+
+      if (item.favicon) {
+        this._setFaviconForUrl(item.uri, item.favicon);
+      }
+
+      this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+    }
   },
 
   _realUpdate: function(aUpdates, aSignature) {
@@ -290,7 +380,7 @@ let PartnerBookmarks = {
 
   _backfillVersion: 2,
 
-  _tempFixVersion: 3,
+  _tempFixVersion: 4,
 
   init: function() {
     if (this._inited) {
