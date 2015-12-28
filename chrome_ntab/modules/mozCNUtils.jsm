@@ -24,7 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
-let delayedSuggestBaidu = {
+var delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
   delay: 10e3,
   icon: "chrome://ntab/skin/delayed-suggest-baidu.png",
@@ -203,7 +203,7 @@ let delayedSuggestBaidu = {
   }
 };
 
-let nxdomainMitigation = {
+var nxdomainMitigation = {
   allowedDomains: ["firefoxchina.net"],
   prefs: {
     "home": {
@@ -324,7 +324,7 @@ let nxdomainMitigation = {
   }
 };
 
-let Frequent = {
+var Frequent = {
   excludes: [
     /^http:\/\/i.firefoxchina.cn\/n(ew)?tab/,
     /^http:\/\/i.firefoxchina.cn\/parts\/google_rdr/,
@@ -394,7 +394,7 @@ let Frequent = {
   }
 };
 
-let getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
+var getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
   valueType = valueType || Ci.nsISupportsString;
   let prefs = !!useDefaultBranch ?
     Services.prefs.getDefaultBranch("") :
@@ -415,7 +415,7 @@ let getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
   }
 };
 
-let Homepage = {
+var Homepage = {
   defaultAboutpage: "http://i.firefoxchina.cn/",
   defaultHomepage: "about:cehome",
   vanillaHomepages: [
@@ -687,7 +687,7 @@ let Homepage = {
   }
 };
 
-let Session = Object.create(Frequent, {
+var Session = Object.create(Frequent, {
   needsDeduplication: {
     value: true
   },
@@ -696,7 +696,7 @@ let Session = Object.create(Frequent, {
   }
 });
 
-let SignatureVerifier = {
+var SignatureVerifier = {
   get verifier() {
     delete this.verifier;
     return this.verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
