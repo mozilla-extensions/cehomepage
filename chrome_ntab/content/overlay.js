@@ -414,7 +414,9 @@
        */
       if (this.inUse) {
         let spec = this.altSpec || ns.NTabDB.spec;
-        if (window.NewTabURL && NewTabURL.override) {
+        if (window.aboutNewTabService) {
+          aboutNewTabService.newTabURL = spec;
+        } else if (window.NewTabURL && NewTabURL.override) {
           NewTabURL.override(spec);
         } else {
           Services.prefs.getDefaultBranch("").
@@ -427,7 +429,9 @@
           } catch(e) {};
         }
       } else {
-        if (window.NewTabURL && NewTabURL.reset) {
+        if (window.aboutNewTabService) {
+          aboutNewTabService.resetNewTabURL();
+        } else if (window.NewTabURL && NewTabURL.reset) {
           NewTabURL.reset();
         } else {
           if (!Services.prefs.prefHasUserValue(this._appUrlKey)) {
