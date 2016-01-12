@@ -427,7 +427,6 @@ var Homepage = {
   homepagePref: "browser.startup.homepage",
   pagePref: "browser.startup.page",
   quitTopic: "quit-application",
-  willBeDisabled: false,
 
   // When an empty string is set as pref value, display this.defaultAboutpage.
   get aboutpage() {
@@ -573,10 +572,6 @@ var Homepage = {
     });
   },
   maybeUpdateSession: function() {
-    if (!this.willBeDisabled) {
-      return;
-    }
-
     try {
       let state = JSON.parse(sessionStore.getBrowserState());
       for (let win of state.windows) {
@@ -602,12 +597,6 @@ var Homepage = {
       sessionStore.setBrowserState(JSON.stringify(state));
     } catch(ex) {};
   },
-  /*
-   * The homepage pref was incorrectly set as about:cehome in distribution.ini
-   * around Fx 7, which is an invalid url w/o cehomepage. The addon listener
-   * here fixes it by setting an user value to override the bad default on
-   * disabling or uninstalling cehomepage.
-   */
   initAddonListener: function() {
     AddonManager.addAddonListener(this);
     if (AddonManager.shutdown) {
@@ -620,23 +609,6 @@ var Homepage = {
   },
   uninit: function() {
     AddonManager.removeAddonListener(this);
-
-    if (!this.willBeDisabled) {
-      return;
-    }
-
-    // Do not override any homepage set by user.
-    if (Services.prefs.prefHasUserValue(this.homepagePref) ||
-        !this.overridingHomepage) {
-      return;
-    }
-
-    Services.prefs.setCharPref(this.homepagePref, this.overridingHomepage);
-    Tracking.track({
-      type: "homepage",
-      action: "override",
-      sid: "distpref"
-    });
   },
   onUninstalling: function(addon) {
     return this.onDisabling(addon);
@@ -646,44 +618,7 @@ var Homepage = {
       return;
     }
 
-    this.willBeDisabled = true;
-    this.generateOverridingHomepage();
     this.maybeUpdateSession();
-  },
-  onOperationCancelled: function(addon) {
-    if (addon.id !== "cehomepage@mozillaonline.com") {
-      return;
-    }
-
-    this.willBeDisabled = false;
-  },
-  generateOverridingHomepage: function() {
-    try {
-      let file = Services.dirsvc.get("XREAppDist", Ci.nsIFile);
-      file.append("distribution.ini");
-
-      let factory = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
-        getService(Ci.nsIINIParserFactory);
-      let parser = factory.createINIParser(file);
-
-      let locale = getPref("general.useragent.locale", "en-US");
-      let section = ["LocalizablePreferences", locale].join("-");
-
-      let self = this;
-      let distributionHomepage = parser.getString(section, this.homepagePref);
-      // remove the extra quotation marks
-      distributionHomepage = JSON.parse(distributionHomepage);
-      let fixedHomepage = distributionHomepage.split("|").map(function(spec) {
-        return spec === self.defaultHomepage ? self.defaultAboutpage : spec;
-      }).join("|");
-      if (fixedHomepage === distributionHomepage) {
-        return;
-      }
-
-      this.overridingHomepage = fixedHomepage;
-    } catch(ex) {
-      Cu.reportError(ex);
-    };
   }
 };
 
