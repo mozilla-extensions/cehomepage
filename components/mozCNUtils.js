@@ -89,7 +89,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promo",
 let searchEngines = {
   expected: [
     "http://www.baidu.com/baidu?wd=TEST&tn=monline_dg",
-    "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg"
+    "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
+    "https://www.baidu.com/baidu?wd=TEST&tn=monline_dg"
   ],
 
   reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
@@ -114,8 +115,14 @@ let searchEngines = {
   },
 
   patchBrowserSearch: function(aWindow) {
-    let BrowserSearch = aWindow.BrowserSearch;
+    // Since Fx 44
+    if (aWindow.gURLBar && aWindow.gURLBar._parseAndRecordSearchEngineAction) {
+      try {
+        Services.obs.removeObserver(this, "keyword-search");
+      } catch(ex) {};
+    }
 
+    let BrowserSearch = aWindow.BrowserSearch;
     if (!BrowserSearch || !BrowserSearch.recordSearchInHealthReport) {
       return;
     }
