@@ -416,7 +416,8 @@ mozCNUtils.prototype = {
     if ([
       NTabDB.prePath,
       "http://i.g-fox.cn",
-      "http://i.firefoxchina.cn"
+      "http://i.firefoxchina.cn",
+      "http://n.firefoxchina.cn"
     ].indexOf(channel.URI.prePath) == -1 ||
         !(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI)) {
       return;
@@ -672,6 +673,7 @@ let mozCNWebChannels = {
   channelID: "moz_cn_utils",
   specs: {
     "http://i.firefoxchina.cn/": "",
+    "http://n.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",
     "http://offlintab.firefoxchina.cn/": "offlintabListener"
   },

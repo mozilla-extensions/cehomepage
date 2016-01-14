@@ -13,7 +13,7 @@
 			var stringBundle = document.getElementById('ceerrorpage-strings');
 			goToHomePageBtn.textContent = stringBundle.getString("goToHomePage");
 			goToHomePageBtn.addEventListener("click", function () {
-			contentWin.location = "http://i.firefoxchina.cn/?from_err_btn";
+			contentWin.location = "http://n.firefoxchina.cn/?from_err_btn";
       });
 			var btnChildren = contentDoc.getElementsByTagName("button");
 			if (btnChildren) {

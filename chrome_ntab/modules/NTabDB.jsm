@@ -206,9 +206,7 @@ let NTabDB = {
     "moa.ntab.backgroundimagestyle",
     "moa.ntab.qdtab",
     "moa.ntab.view",
-    "moa.ntab.view.firefoxchina.url",
-    "moa.ntab.view.nav.url",
-    "moa.ntab.view.search.url"
+    "moa.ntab.view.firefoxchina.url"
   ],
   _intPrefs: [
     "moa.ntab.dial.column",
