@@ -90,7 +90,8 @@ let searchEngines = {
   expected: [
     "http://www.baidu.com/baidu?wd=TEST&tn=monline_dg",
     "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
-    "https://www.baidu.com/baidu?wd=TEST&tn=monline_dg"
+    "https://www.baidu.com/baidu?wd=TEST&tn=monline_dg",
+    "https://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg"
   ],
 
   reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
