@@ -4,11 +4,12 @@
 
 (function () { // bug 673569 workaround :(
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
 // MO changes, compatible with older Fx release
 try {
   Cu.importGlobalProperties(['Blob']);
+  Cu.importGlobalProperties(['FileReader']);
 } catch(e) {};
 try {
   Cu.import("resource://gre/modules/PageThumbUtils.jsm");
@@ -142,13 +143,13 @@ const backgroundPageThumbsContent = {
           this._startNextCapture();
         }
         else if (this._state == STATE_CANCELED) {
-          // A capture request was received while the current capture's page
-          // was still loading.
           delete this._currentCapture;
           this._startNextCapture();
         }
       }
-      else if (this._state == STATE_LOADING) {
+      // MO changes, kinda conflict with non-http redirect detection?
+      else if (this._state == STATE_LOADING/* &&
+               Components.isSuccessCode(status)*/) {
         if (req.status == Components.results.NS_ERROR_REDIRECT_LOOP) {
           this._refreshLog("loop");
         }
@@ -162,6 +163,20 @@ const backgroundPageThumbsContent = {
           this._captureCurrentPage();
         }, 25);
       }
+      else if (this._state != STATE_CANCELED) {
+        // Something went wrong.  Cancel the capture.  Loading about:blank
+        // while onStateChange is still on the stack does not actually stop
+        // the request if it redirects, so do it asyncly.
+        this._state = STATE_CANCELED;
+        if (!this._cancelTimer) {
+          this._cancelTimer =
+            Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
+          this._cancelTimer.init(() => {
+            this._loadAboutBlank();
+            delete this._cancelTimer;
+          }, 0, Ci.nsITimer.TYPE_ONE_SHOT);
+        }
+      }
     }
   },
 
@@ -171,19 +186,25 @@ const backgroundPageThumbsContent = {
     capture.pageLoadTime = new Date() - capture.pageLoadStartDate;
 
     let canvasDrawDate = new Date();
-    let canvas;
+    // MO changes, for <https://bugzil.la/1197361>
+    let canvas,
+        finalCanvas;
     // MO changes, for <https://bugzil.la/698371>
     try {
-      canvas = PageThumbUtils.createCanvas(content);
-      let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
+      if (PageThumbUtils.createSnapshotThumbnail) {
+        finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
+      } else {
+        canvas = PageThumbUtils.createCanvas(content);
+        let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
 
-      let ctx = canvas.getContext("2d");
-      ctx.save();
-      ctx.scale(scale, scale);
-      ctx.drawWindow(content, 0, 0, sw, sh,
-                     PageThumbUtils.THUMBNAIL_BG_COLOR,
-                     ctx.DRAWWINDOW_DO_NOT_FLUSH);
-      ctx.restore();
+        let ctx = canvas.getContext("2d");
+        ctx.save();
+        ctx.scale(scale, scale);
+        ctx.drawWindow(content, 0, 0, sw, sh,
+                       PageThumbUtils.THUMBNAIL_BG_COLOR,
+                       ctx.DRAWWINDOW_DO_NOT_FLUSH);
+        ctx.restore();
+      }
     } catch(e) {
       // MO changes, for <https://bugzil.la/1058237>
       canvas = PageThumbs.createCanvas ?
@@ -192,7 +213,7 @@ const backgroundPageThumbsContent = {
     }
     capture.canvasDrawTime = new Date() - canvasDrawDate;
 
-    canvas.toBlob(blob => {
+    (finalCanvas || canvas).toBlob(blob => {
       // MO changes, for <https://bugzil.la/1047483>
       try {
         capture.imageBlob = new Blob([blob]);
@@ -206,8 +227,14 @@ const backgroundPageThumbsContent = {
 
   _finishCurrentCapture: function () {
     let capture = this._currentCapture;
-    let fileReader = Cc["@mozilla.org/files/filereader;1"].
-                     createInstance(Ci.nsIDOMFileReader);
+    let fileReader;
+    // MO changes, for <https://bugzil.la/1231100>
+    try {
+      fileReader = new FileReader();
+    } catch(e) {
+      fileReader = Cc["@mozilla.org/files/filereader;1"].
+                   createInstance(Ci.nsIDOMFileReader);
+    }
     fileReader.onloadend = () => {
       sendAsyncMessage("BackgroundPageThumbs:didCapture", {
         id: capture.id,
