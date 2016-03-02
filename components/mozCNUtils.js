@@ -158,7 +158,10 @@ let searchEngines = {
       update: Services.search.getEngineByName("\u4e9a\u9a6c\u900a")
     }, {
       legacy: Services.search.getEngineByName("\u6dd8\u5b9d\u8d2d\u7269"),
-      update: Services.search.getEngineByName("\u7231\u6dd8\u5b9d\u8d2d\u7269")
+      update: Services.search.getEngineByName("\u7231\u6dd8\u5b9d")
+    }, {
+      legacy: Services.search.getEngineByName("\u7231\u6dd8\u5b9d\u8d2d\u7269"),
+      update: Services.search.getEngineByName("\u7231\u6dd8\u5b9d")
     }].forEach(function(aEngines) {
       if ((aEngines.legacy && !aEngines.legacy.hidden) &&
           (aEngines.update && !aEngines.update.hidden)) {
