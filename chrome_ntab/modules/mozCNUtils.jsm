@@ -208,7 +208,7 @@ var nxdomainMitigation = {
   prefs: {
     "home": {
       "key": "extensions.cehomepage.abouturl",
-      "val": "http://n.firefoxchina.cn/"
+      "val": "http://e.firefoxchina.cn/"
     },
     "ntab": {
       "key": NTabDB.altSpecPref,
@@ -326,10 +326,10 @@ var nxdomainMitigation = {
 
 var Frequent = {
   excludes: [
-    /^http:\/\/[in].firefoxchina.cn\/n(ew)?tab/,
-    /^http:\/\/[in].firefoxchina.cn\/parts\/google_rdr/,
-    /^http:\/\/[in].firefoxchina.cn\/redirect\/adblock/,
-    /^http:\/\/[in].firefoxchina.cn\/(redirect\/)?search/,
+    /^http:\/\/[ein].firefoxchina.cn\/n(ew)?tab/,
+    /^http:\/\/[ein].firefoxchina.cn\/parts\/google_rdr/,
+    /^http:\/\/[ein].firefoxchina.cn\/redirect\/adblock/,
+    /^http:\/\/[ein].firefoxchina.cn\/(redirect\/)?search/,
     /^http:\/\/i.g-fox.cn\/(rd|search)/,
     /^http:\/\/www5.1616.net\/q/
   ],
@@ -416,10 +416,11 @@ var getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
 };
 
 var Homepage = {
-  defaultAboutpage: "http://n.firefoxchina.cn/",
+  defaultAboutpage: "http://e.firefoxchina.cn/",
   defaultHomepage: "about:cehome",
   historicalAboutpages: [
-    "http://i.firefoxchina.cn/"
+    "http://i.firefoxchina.cn/",
+    "http://n.firefoxchina.cn/"
   ],
   vanillaHomepages: [
     "about:home",

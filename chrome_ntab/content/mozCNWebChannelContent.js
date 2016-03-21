@@ -16,6 +16,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
 let mozCNWebChannelContent = {
   channelID: "moz_cn_utils",
   specs: [
+    "http://e.firefoxchina.cn/",
     "http://i.firefoxchina.cn/",
     "http://n.firefoxchina.cn/",
     "http://newtab.firefoxchina.cn/",

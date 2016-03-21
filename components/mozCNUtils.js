@@ -419,6 +419,7 @@ mozCNUtils.prototype = {
     if ([
       NTabDB.prePath,
       "http://i.g-fox.cn",
+      "http://e.firefoxchina.cn",
       "http://i.firefoxchina.cn",
       "http://n.firefoxchina.cn"
     ].indexOf(channel.URI.prePath) == -1 ||
@@ -675,6 +676,7 @@ let mozCNWebChannels = {
   contentURL: "chrome://ntab/content/mozCNWebChannelContent.js",
   channelID: "moz_cn_utils",
   specs: {
+    "http://e.firefoxchina.cn/": "",
     "http://i.firefoxchina.cn/": "",
     "http://n.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",

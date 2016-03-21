@@ -15,7 +15,7 @@
         var stringBundle = document.getElementById('ceerrorpage-strings');
         goToHomePageBtn.textContent = stringBundle.getString('goToHomePage');
         goToHomePageBtn.addEventListener('click', function () {
-          contentWin.location = 'http://n.firefoxchina.cn/?from_err_btn';
+          contentWin.location = 'http://e.firefoxchina.cn/?from_err_btn';
         });      
         if (btnChildren) {
           errorPageContainer.insertBefore(goToHomePageBtn, btnChildren);
