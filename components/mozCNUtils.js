@@ -87,12 +87,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Promo",
   "resource://cehp-promo/Promo.jsm");
 
 let searchEngines = {
-  expected: [
-    "http://www.baidu.com/baidu?wd=TEST&tn=monline_dg",
-    "http://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg",
-    "https://www.baidu.com/baidu?wd=TEST&tn=monline_dg",
-    "https://www.baidu.com/baidu?wd=TEST&tn=monline_4_dg"
-  ],
+  expected: /^https?:\/\/www\.baidu\.com\/baidu\?wd=TEST&tn=monline(?:_|_4_)dg(?:&ie=utf-8)?$/,
 
   reportUnexpected: function(aKey, aAction, aEngine, aIncludeURL) {
     let url = "NA";
@@ -100,7 +95,7 @@ let searchEngines = {
       url = aEngine.getSubmission("TEST").uri.asciiSpec;
     } catch(e) {}
 
-    let isExpected = this.expected.indexOf(url) > -1;
+    let isExpected = this.expected.test(url);
     let href = "";
     if (!isExpected && !!aIncludeURL) {
       href = url;
