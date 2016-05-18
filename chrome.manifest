@@ -20,12 +20,13 @@ locale    ntab   zh-CN       chrome_ntab/locale/zh-CN/
 overlay   chrome://browser/content/browser.xul  chrome://ntab/content/ff-overlay.xul
 overlay   about:config  chrome://ntab/content/config-overlay.xul
 overlay   chrome://browser/content/preferences/sync.xul  chrome://ntab/content/preferences-sync.xul
-overlay   about:preferences                       chrome://ntab/content/preferences-sync.xul
-overlay   about:preferences?entrypoint=abouthome  chrome://ntab/content/preferences-sync.xul
-overlay   about:preferences?entrypoint=menubar    chrome://ntab/content/preferences-sync.xul
-overlay   about:preferences?entrypoint=menupanel  chrome://ntab/content/preferences-sync.xul
-overlay   about:preferences?entrypoint=syncbutton chrome://ntab/content/preferences-sync.xul
-overlay   about:preferences?entrypoint=uitour     chrome://ntab/content/preferences-sync.xul
+overlay   about:preferences                         chrome://ntab/content/preferences-sync.xul
+overlay   about:preferences?entrypoint=abouthome    chrome://ntab/content/preferences-sync.xul
+overlay   about:preferences?entrypoint=menubar      chrome://ntab/content/preferences-sync.xul
+overlay   about:preferences?entrypoint=menupanel    chrome://ntab/content/preferences-sync.xul
+overlay   about:preferences?entrypoint=syncbutton   chrome://ntab/content/preferences-sync.xul
+overlay   about:preferences?entrypoint=tabs-sidebar chrome://ntab/content/preferences-sync.xul
+overlay   about:preferences?entrypoint=uitour       chrome://ntab/content/preferences-sync.xul
 overlay   chrome://browser/content/sync/customize.xul    chrome://ntab/content/sync-customize.xul
 
 override  chrome://global/content/backgroundPageThumbsContent.js chrome://ntab/content/backgroundPageThumbsContent.js appversion>=27.0
