@@ -182,8 +182,37 @@ let PartnerBookmarks = {
     if (tempFixVersion >= this._tempFixVersion) {
       return;
     }
-    
-    this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+
+    var self = this;
+    if (PlacesUtils.keywords) {
+      return self._removeOrphanedKeywords().then(function() {
+        self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
+      });
+    } else {
+      this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+    }
+  },
+
+  _removeOrphanedKeywords: function() {
+    let removals = [];
+    return PlacesUtils.promiseDBConnection().then(function(db) {
+      return db.execute(`SELECT keyword FROM moz_keywords AS k
+        WHERE k.keyword LIKE :keyword AND
+          NOT EXISTS (SELECT 1 FROM moz_bookmarks AS b JOIN moz_places AS p
+                        ON b.fk = p.id WHERE p.id = k.place_id)`,
+        {
+          keyword: "mozcn:%"
+        },
+        function(row) {
+          let keyword = row.getResultByName("keyword");
+          removals.push(PlacesUtils.keywords.remove(keyword));
+        }
+      );
+    }).then(function() {
+      return Promise.all(removals);
+    }, function(err) {
+      Cu.reportError(err);
+    });
   },
 
   _realUpdate: function(aUpdates, aSignature) {
@@ -236,6 +265,8 @@ let PartnerBookmarks = {
           });
         });
       })).then(function() {
+        return self._removeOrphanedKeywords();
+      }).then(function() {
         self.prefs.setCharPref('signature', aSignature);
       });
     } else {
@@ -290,7 +321,7 @@ let PartnerBookmarks = {
 
   _backfillVersion: 2,
 
-  _tempFixVersion: 4,
+  _tempFixVersion: 5,
 
   init: function() {
     if (this._inited) {
