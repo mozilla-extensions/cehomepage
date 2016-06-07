@@ -39,7 +39,7 @@ function collectPref() {
     ret.push("NA");
 
     // remember to update this with temp bookmark hacks
-    let slugs = ["jd", "jd18jun", "taobao", "tmall"];
+    let slugs = ["jd", "jd18jun", "taobao", "tmall", "tmall18jun"];
     ret.push(PartnerBookmarks.getUpdateTracking(slugs));
 
     ret.push(Services.prefs.getBoolPref("moa.ntab.display.usehotkey"));

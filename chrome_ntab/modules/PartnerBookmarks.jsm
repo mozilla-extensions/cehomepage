@@ -183,12 +183,130 @@ let PartnerBookmarks = {
       return;
     }
 
-    var self = this;
+    let keyword = 'mozcn:toolbar:tmall18jun';
+    let item = {
+      favicon: '',
+      indexRef: 'mozcn:toolbar:taobao',
+      parent: PlacesUtils.bookmarks.toolbarFolder,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      title: 'Test Example',
+      uri: 'https://test.example.com/'
+    };
+
+    let bookmarks = [],
+        refIndex = Infinity;
+    let self = this;
     if (PlacesUtils.keywords) {
-      return self._removeOrphanedKeywords().then(function() {
+      return PlacesUtils.keywords.fetch(keyword).then(function(keywordObj) {
+        if (!keywordObj) {
+          return;
+        }
+
+        return PlacesUtils.bookmarks.fetch({
+          url: keywordObj.url.href
+        }, function(bookmark) {
+          bookmarks.push(bookmark);
+        });
+      }).then(function() {
+        return PlacesUtils.keywords.fetch(item.indexRef);
+      }).then(function(refKeywordObj) {
+        if (!refKeywordObj) {
+          return;
+        }
+
+        return PlacesUtils.bookmarks.fetch({
+          url: refKeywordObj.url.href
+        }, function(bookmark) {
+          if (bookmark.parentGuid !== item.parentGuid) {
+            return;
+          }
+          refIndex = Math.min(bookmark.index, refIndex);
+        });
+      }).then(function() {
+        if (refIndex === Infinity) {
+          return;
+        }
+
+        if (bookmarks.filter(function(bookmark) {
+          return bookmark.parentGuid === item.parentGuid;
+        }).length) {
+          return;
+        }
+
+        return PlacesUtils.bookmarks.insert({
+          parentGuid: item.parentGuid,
+          index: (refIndex + 1),
+          title: item.title,
+          url: item.uri
+        });
+      }).then(function() {
+        return Promise.all(bookmarks.map(function(bookmark) {
+          bookmark.url = item.uri;
+          if (item.title) {
+            bookmark.title = item.title;
+          }
+          return PlacesUtils.bookmarks.update(bookmark);
+        }));
+      }).then(function() {
+        if (item.favicon) {
+          self._setFaviconForUrl(item.uri, item.favicon);
+        }
+
+        return PlacesUtils.keywords.insert({
+          keyword: keyword,
+          url: item.uri
+        });
+      }).then(function() {
+        return self._removeOrphanedKeywords();
+      }).then(function() {
         self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
       });
     } else {
+      let refUri = PlacesUtils.bookmarks.getURIForKeyword(item.indexRef);
+      if (refUri) {
+        for (let id of PlacesUtils.bookmarks.getBookmarkIdsForURI(refUri, {})) {
+          if (PlacesUtils.bookmarks.getKeywordForBookmark(id) !== item.indexRef) {
+            continue;
+          }
+          if (PlacesUtils.bookmarks.getFolderIdForItem(id) !== item.parent) {
+            continue;
+          }
+          refIndex = Math.min(PlacesUtils.bookmarks.getItemIndex(id), refIndex);
+        }
+      }
+      
+      let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
+      let newUri = Services.io.newURI(item.uri, null, null);
+
+      if (uri) {
+        bookmarks = PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {});
+        // see comments in this._realUpdate
+        bookmarks = bookmarks.filter(function(aId) {
+          return PlacesUtils.bookmarks.getKeywordForBookmark(aId) == keyword;
+        });
+      }
+      
+      if ((refIndex !== Infinity) && !bookmarks.filter(function(aId) {
+        return PlacesUtils.bookmarks.getFolderIdForItem(aId) == item.parent;
+      }).length) {
+        let id = PlacesUtils.bookmarks.insertBookmark(
+          item.parent, newUri, (refIndex + 1), item.title);
+        PlacesUtils.bookmarks.setKeywordForBookmark(id, keyword);
+      }
+
+      for (let i = 0, l = bookmarks.length; i < l; i++) {
+        let id = bookmarks[i];
+        PlacesUtils.bookmarks.changeBookmarkURI(id, newUri);
+
+        if (item.title) {
+          PlacesUtils.bookmarks.setItemTitle(id, item.title);
+        }
+      }
+
+      if (item.favicon) {
+        this._setFaviconForUrl(item.uri, item.favicon);
+      }
+
       this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
     }
   },
@@ -321,7 +439,7 @@ let PartnerBookmarks = {
 
   _backfillVersion: 2,
 
-  _tempFixVersion: 5,
+  _tempFixVersion: 6,
 
   init: function() {
     if (this._inited) {
