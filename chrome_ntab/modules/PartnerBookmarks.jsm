@@ -274,7 +274,7 @@ let PartnerBookmarks = {
           refIndex = Math.min(PlacesUtils.bookmarks.getItemIndex(id), refIndex);
         }
       }
-      
+
       let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
       let newUri = Services.io.newURI(item.uri, null, null);
 
@@ -285,7 +285,7 @@ let PartnerBookmarks = {
           return PlacesUtils.bookmarks.getKeywordForBookmark(aId) == keyword;
         });
       }
-      
+
       if ((refIndex !== Infinity) && !bookmarks.filter(function(aId) {
         return PlacesUtils.bookmarks.getFolderIdForItem(aId) == item.parent;
       }).length) {
