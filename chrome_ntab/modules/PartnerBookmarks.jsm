@@ -185,12 +185,12 @@ let PartnerBookmarks = {
 
     let keyword = 'mozcn:toolbar:tmall18jun';
     let item = {
-      favicon: '',
+      favicon: 'data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AAAAAAACz/wAAuP8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALj/AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv////////////wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv////////////wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC///////////////////////////////////////////////////////8AAL//AAC//wAAs/8AALP/AAC//wAAv///////////////////////////////////////////////////////AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AALj/AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC4/wAAs/8AAAAAAACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==',
       indexRef: 'mozcn:toolbar:taobao',
       parent: PlacesUtils.bookmarks.toolbarFolder,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-      title: 'Test Example',
-      uri: 'https://test.example.com/'
+      title: '\u5929\u732b\u5e74\u4e2d\u5927\u4fc3',
+      uri: 'http://s.click.taobao.com/t?e=m%3D2%26s%3DdGPBkNqE1x4cQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMWcTTSaX0OmFlovu%2FCElQOtoVxuUFnM6iMUjUj9sJ%2FOjxctsWvavBZ6hMMc65kB68aUuZxIcp9pfUIgVEmFmgnaR4ypTBJBwtB6l0bxfYrBpJPwiig1bxLNjhhLmMMa805dSg4f1Xi85G6s8No20r4ZoDvYrw%2Fmp73%2FT5NsBTk%2Fcgr0GHubJtL2oz7D9%2BD71%2FBWaDNq6%2FOGCzcVODu4Sr14nrOKsH8tSLTBp5%2F8EiZiik8%2BDJQtR6jNOVPhIvNgOIM3%2FLfsenHbhIYULNg46oBA%3D'
     };
 
     let bookmarks = [],
