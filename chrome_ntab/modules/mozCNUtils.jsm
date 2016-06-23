@@ -26,6 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
 
 var delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
+  baiduName: "\u767e\u5ea6",
   delay: 10e3,
   icon: "chrome://ntab/skin/delayed-suggest-baidu.png",
   knownStatus: [Cr.NS_ERROR_NET_RESET, Cr.NS_ERROR_NET_TIMEOUT],
@@ -35,7 +36,7 @@ var delayedSuggestBaidu = {
 
   get baidu() {
     delete this.baidu;
-    return this.baidu = Services.search.getEngineByName("\u767e\u5ea6");
+    return this.baidu = Services.search.getEngineByName(this.baiduName);
   },
 
   get bundle() {

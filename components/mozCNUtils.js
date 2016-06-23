@@ -376,7 +376,7 @@ mozCNUtils.prototype = {
         Services.obs.addObserver(this, "http-on-examine-merged-response", false);
         Services.obs.addObserver(this, "places-browser-init-complete", false);
         mozCNWebChannels.init();
-        this.initNTab();
+        this.initFrameScripts();
         NTabDB.migrateNTabData();
         this.initMessageListener();
         delayedSuggestBaidu.init();
@@ -403,8 +403,13 @@ mozCNUtils.prototype = {
     }
   },
 
-  initNTab: function() {
-    gMM.loadFrameScript("chrome://ntab/content/ntabContent.js", true);
+  initFrameScripts: function() {
+    [
+      "chrome://ceerrorpage/content/ceerrorpage.js",
+      "chrome://ntab/content/ntabContent.js"
+    ].forEach(function(frameScript) {
+      gMM.loadFrameScript(frameScript, true);
+    });
   },
 
   trackHTTPStatus: function(aSubject, aTopic) {
@@ -435,8 +440,7 @@ mozCNUtils.prototype = {
 
   // nsIMessageListener
   receiveMessage: function(aMessage) {
-    if (this.MESSAGES.indexOf(aMessage.name) < 0 ||
-        !aMessage.target.currentURI.equals(NTabDB.uri)) {
+    if (this.MESSAGES.indexOf(aMessage.name) < 0) {
       return;
     }
 
@@ -478,11 +482,31 @@ mozCNUtils.prototype = {
             break;
         }
         break;
+      case "mozCNUtils:WebChannel":
+        switch (aMessage.data) {
+          case "setBaiduAsCurrentSearch":
+            delayedSuggestBaidu.baidu.hidden = false;
+            Services.search.currentEngine = delayedSuggestBaidu.baidu;
+            break;
+          case "setFxAsDefaultBrowser":
+            let shellService;
+            try {
+              shellService = Cc['@mozilla.org/browser/shell-service;1'].
+                getService(Ci.nsIShellService);
+            } catch(e) {
+              // shellService is not universally available, see https://bugzil.la/297841
+              break;
+            }
+            shellService.setDefaultBrowser(false, false);
+            break;
+        }
+        break;
     }
   },
 
   MESSAGES: [
-    "mozCNUtils:Tools"
+    "mozCNUtils:Tools",
+    "mozCNUtils:WebChannel"
   ],
   initMessageListener: function() {
     for (let msg of this.MESSAGES) {

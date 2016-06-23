@@ -132,7 +132,7 @@ let mozCNWebChannelContent = {
 
     let { button } = aEvt.detail.elements;
     button.addEventListener('click', function() {
-      shellService.setDefaultBrowser(false, false);
+      sendAsyncMessage("mozCNUtils:WebChannel", "setFxAsDefaultBrowser");
       button.setAttribute('hidden', 'true');
     }, false, /** wantsUntrusted */false);
     button.removeAttribute('hidden');
@@ -151,22 +151,59 @@ let mozCNWebChannelContent = {
       return;
     }
 
-    try {
-      if (delayedSuggestBaidu.baidu &&
-          Services.search.currentEngine != delayedSuggestBaidu.baidu) {
-        check.hidden = false;
-        form.addEventListener("submit", function() {
-          if (self.isElementVisible(check) && checkbox.checked) {
-            delayedSuggestBaidu.baidu.hidden = false;
-            Services.search.currentEngine = delayedSuggestBaidu.baidu;
+    let initSwitchToBaiduCheckbox = function() {
+      check.hidden = false;
+      form.addEventListener("submit", function() {
+        if (self.isElementVisible(check) && checkbox.checked) {
+          sendAsyncMessage("mozCNUtils:WebChannel",
+                           "setBaiduAsCurrentSearch");
 
-            Tracking.track({
-              type: "delayedsuggestbaidu",
-              action: "submit",
-              sid: "switch"
-            });
+          Tracking.track({
+            type: "delayedsuggestbaidu",
+            action: "submit",
+            sid: "switch"
+          });
+        }
+      }, false, /** wantsUntrusted */false);
+    };
+
+    try {
+      if (Services.appinfo.processType ===
+          Services.appinfo.PROCESS_TYPE_CONTENT) {
+        // should works with Fx 31+
+        let messageName = "ContentSearch";
+        let listener = {
+          receiveMessage: function(msg) {
+            if (msg.name !== messageName) {
+              return;
+            }
+            let data = msg.data || {};
+            if (data.type !== "State") {
+              return;
+            }
+            removeMessageListener(msg.name, listener);
+            if (data.data.currentEngine.name ===
+                delayedSuggestBaidu.baiduName) {
+              return;
+            }
+            if (!data.data.engines.some(function(engine) {
+              return engine.name === delayedSuggestBaidu.baiduName;
+            })) {
+              return;
+            }
+            initSwitchToBaiduCheckbox();
           }
-        }, false, /** wantsUntrusted */false);
+        };
+        addMessageListener(messageName, listener);
+        sendAsyncMessage(messageName, {
+          type: "GetState",
+          data: null
+        });
+      } else {
+        if (delayedSuggestBaidu.baidu &&
+            Services.search.currentEngine != delayedSuggestBaidu.baidu) {
+          initSwitchToBaiduCheckbox();
+        }
       }
 
       let topURI = docShell.currentURI;
@@ -175,7 +212,9 @@ let mozCNWebChannelContent = {
       } else {
         text.value = topURI.spec;
       }
-    } catch(e) {};
+    } catch(e) {
+      Cu.reportError(e);
+    };
   },
 
   maybeHighlightSetHomepage: function(aEvt) {
