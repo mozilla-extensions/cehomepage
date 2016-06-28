@@ -554,6 +554,15 @@ mozCNWebChannel.prototype = {
       case "frequent.remove":
         Frequent.remove([aMessage.parameters.url]);
         break;
+      case "frequent.tophosts":
+        Frequent.topHosts(function(aEntries) {
+          self.channel.send({
+            id: aMessage.id,
+            key: aMessage.key,
+            data: aEntries
+          }, aSender);
+        }, aMessage.parameters.hosts);
+        break;
       case "last.query":
         Session.query(function(aEntries) {
           self.channel.send({

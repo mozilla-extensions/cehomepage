@@ -391,6 +391,51 @@ var Frequent = {
       urls.push(Services.io.newURI(aUrl, null, null));
     });
     PlacesUtils.bhistory.removePages(urls, urls.length);
+  },
+
+  topHosts: function(aCallback, aHosts) {
+    if (aHosts.length < 100) {
+      aCallback([]);
+      return;
+    }
+    let start = Date.now();
+    let indexes = [];
+    PlacesUtils.promiseDBConnection().then(function(db) {
+      return db.execute(`SELECT :idx AS idx, count(v.id) As count
+        FROM moz_historyvisits AS v JOIN moz_places AS h ON v.place_id = h.id
+        WHERE v.visit_date >= strftime('%s', 'now', 'localtime', 'start of day', '-1 month', 'utc') * 1000000
+          AND h.rev_host LIKE :rev_host;`,
+        aHosts.map(function(host, idx) {
+          return {
+            idx: idx,
+            rev_host: (host.split("").reverse().join("") + ".%")
+          }
+        }),
+        function(row) {
+          let item = {
+            idx: row.getResultByName("idx"),
+            count: row.getResultByName("count")
+          };
+          if (item.count < 1) {
+            return;
+          }
+          indexes.push(item);
+        }
+      );
+    }).then(function() {
+      let msg = "Frequent.topHosts: " + (Date.now() - start) + "ms";
+      Services.console.logStringMessage(msg);
+
+      indexes.sort(function(x, y) {
+        return (y.count - x.count) || (x.idx - y.idx);
+      });
+      aCallback(indexes.slice(0, 20).map(function(item) {
+        return item.idx;
+      }));
+    }, function(err) {
+      Cu.reportError(err);
+      aCallback([]);
+    });
   }
 };
 
