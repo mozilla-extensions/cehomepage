@@ -18,8 +18,15 @@ AboutNTab.prototype = {
             Ci.nsIAboutModule.HIDE_FROM_ABOUTABOUT);
   },
 
-  newChannel: function(aURI) {
-    var channel = Services.io.newChannel(NTabDB.spec, null, null);
+  newChannel: function(aURI, aLoadInfo) {
+    // aLoadInfo since Fx 36, https://bugzil.la/1067468
+    var uri = Services.io.newURI(NTabDB.spec, null, null);
+    var channel;
+    if (Services.io.newChannelFromURIWithLoadInfo && aLoadInfo) {
+      channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
+    } else {
+      channel = Services.io.newChannelFromURI(uri);
+    }
     channel.loadFlags = channel.loadFlags | channel.LOAD_REPLACE;
     channel.originalURI = aURI;
     return channel;
