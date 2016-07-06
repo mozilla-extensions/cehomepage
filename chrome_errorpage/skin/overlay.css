@@ -67,6 +67,12 @@ body
   background-color: #9ACE5C;
 }
 
+/* since Fx 48 */
+#netErrorButtonContainer > #goToHomePage {
+  margin-left: 10px;
+  margin-top: 1.2em;
+}
+
 #errorPageContainer #goToHomePage:hover
 {
   background-color: #BDCE5C;
@@ -78,7 +84,7 @@ body
   background-color: #DDE0E5;
 }
 
-#errorPageContainer > button
+#errorPageContainer button
 {
   width: auto;
   height: 30px;

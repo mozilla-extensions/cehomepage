@@ -39,14 +39,15 @@ let mozCNErrorPage = {
   },
 
   patchErrorPage: function(event) {
-    var contentDoc=event.target;
-    var contentWin=contentDoc.defaultView;
+    var contentDoc = event.target;
+    var contentWin = contentDoc.defaultView;
 
     var errorPageContainer = contentDoc.getElementById('errorPageContainer');
     var errorPageBody = contentDoc.body;
 
     // Add 'Go To Homepage' button
-    var btnChildren = contentDoc.querySelector('#errorPageContainer > button');
+    var btnChildren = (contentDoc.querySelector('#netErrorButtonContainer > button') ||
+                       contentDoc.querySelector('#errorPageContainer > button'));
     if (btnChildren && btnChildren.style.display !== 'none') {
       var goToHomePageBtn = contentDoc.createElement('button');
       goToHomePageBtn.id = 'goToHomePage';
@@ -56,11 +57,7 @@ let mozCNErrorPage = {
       goToHomePageBtn.addEventListener('click', function () {
         contentWin.location = 'http://e.firefoxchina.cn/?from_err_btn';
       });
-      if (btnChildren) {
-        errorPageContainer.insertBefore(goToHomePageBtn, btnChildren);
-      } else {
-        errorPageContainer.appendChild(goToHomePageBtn);
-      }
+      btnChildren.parentNode.insertBefore(goToHomePageBtn, btnChildren);
     }
 
     // Reset the default error page css
@@ -86,7 +83,8 @@ let mozCNErrorPage = {
       var timer = 0;
       var interval = setInterval(function(){
         if(timer < 150 && recomendIframe.contentDocument) {
-          if(recomendIframe.contentDocument.readyState == 'complete' || recomendIframe.contentDocument.readyState == 'interactive') {
+          if (recomendIframe.contentDocument.readyState == 'complete' ||
+              recomendIframe.contentDocument.readyState == 'interactive') {
             if (recomendIframe.contentWindow.document.URL.match(/^about:neterror/)) {
               errorPageBody.removeChild(recomendIframe);
             } else {

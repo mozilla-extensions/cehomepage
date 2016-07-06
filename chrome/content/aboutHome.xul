@@ -14,7 +14,7 @@
     var query = document.location.href.slice("about:cehome".length);
     var fromQuery = /^\?from=(\w+)/.exec(query);
     if (fromQuery) {
-      if (src.contains("?")) {
+      if (src.indexOf("?") > -1) {
         src = src.replace("?", (fromQuery[0] + "&amp;"));
       } else {
         src += fromQuery[0];
