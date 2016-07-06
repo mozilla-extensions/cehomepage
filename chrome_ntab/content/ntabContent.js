@@ -10,8 +10,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
   "resource://ntab/NTabSync.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
-  "resource://ntab/Tracking.jsm");
 
 let NTab = {
   observe: function(aSubject, aTopic, aData) {
@@ -37,7 +35,7 @@ let NTab = {
   },
   initTracking: function(aSubject) {
     aSubject.addEventListener('mozCNUtils:Tracking', function(aEvt) {
-      Tracking.track(aEvt.detail);
+      sendAsyncMessage('mozCNUtils:Tracking', aEvt.detail);
     }, true, true);
   },
   init: function(aSubject) {
@@ -65,12 +63,6 @@ let NTab = {
             self.launcher.classList.toggle('tools');
 
             sendAsyncMessage('mozCNUtils:Tools', aEvt.currentTarget.id);
-
-            Tracking.track({
-              type: 'tools',
-              action: 'click',
-              sid: aEvt.currentTarget.id
-            });
           }, false, /** wantsUntrusted */false);
         });
       }
@@ -173,12 +165,6 @@ let NTab = {
                   }
                 }
               }
-            });
-
-            Tracking.track({
-              type: 'ntabsync',
-              action: 'click',
-              sid: 'in-content'
             });
           }, false, /** wantsUntrusted */false);
         }

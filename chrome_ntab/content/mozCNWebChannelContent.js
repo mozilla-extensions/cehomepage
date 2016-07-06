@@ -4,14 +4,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
-  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
-  "resource://ntab/Tracking.jsm");
 
 let mozCNWebChannelContent = {
   channelID: "moz_cn_utils",
@@ -23,6 +19,7 @@ let mozCNWebChannelContent = {
     NTabDB.spec
   ],
   cachedWindows: new Map(),
+  messageName: "mozCNUtils:WebChannel",
 
   handleEvent: function(aEvt) {
     switch (aEvt.type) {
@@ -118,24 +115,36 @@ let mozCNWebChannelContent = {
       return;
     }
 
-    let shellService;
-    try {
-      shellService = Cc['@mozilla.org/browser/shell-service;1'].
-        getService(Ci.nsIShellService);
-    } catch(e) {
-      // shellService is not universally available, see https://bugzil.la/297841
-      return;
-    }
-    if (shellService.isDefaultBrowser(false, false)) {
-      return;
-    }
-
-    let { button } = aEvt.detail.elements;
-    button.addEventListener('click', function() {
-      sendAsyncMessage("mozCNUtils:WebChannel", "setFxAsDefaultBrowser");
-      button.setAttribute('hidden', 'true');
-    }, false, /** wantsUntrusted */false);
-    button.removeAttribute('hidden');
+    let self = this;
+    let messageType = "isFxDefaultBrowser";
+    let listener = {
+      receiveMessage: function(msg) {
+        let data = msg.data || {};
+        if (data.type !== messageType) {
+          return;
+        }
+        removeMessageListener(msg.name, listener);
+        
+        /* undefined: no shellService,
+           true: is default,
+           false: is not default */
+        if (data.data !== false) {
+          return;
+        }
+        let { button } = aEvt.detail.elements;
+        button.addEventListener('click', function() {
+          sendAsyncMessage(self.messageName, {
+            type: "setFxAsDefaultBrowser"
+          });
+          button.setAttribute('hidden', 'true');
+        }, false, /** wantsUntrusted */false);
+        button.removeAttribute('hidden');
+      }
+    };
+    addMessageListener(this.messageName, listener);
+    sendAsyncMessage(this.messageName, {
+      type: messageType
+    });
   },
 
   maybeEnableSwitchToBaidu: function(aEvt) {
@@ -151,70 +160,35 @@ let mozCNWebChannelContent = {
       return;
     }
 
-    let initSwitchToBaiduCheckbox = function() {
-      check.hidden = false;
-      form.addEventListener("submit", function() {
-        if (self.isElementVisible(check) && checkbox.checked) {
-          sendAsyncMessage("mozCNUtils:WebChannel",
-                           "setBaiduAsCurrentSearch");
-
-          Tracking.track({
-            type: "delayedsuggestbaidu",
-            action: "submit",
-            sid: "switch"
-          });
+    let messageType = "isBaiduCurrentSearch";
+    let listener = {
+      receiveMessage: function(msg) {
+        let data = msg.data || {};
+        if (data.type !== messageType) {
+          return;
         }
-      }, false, /** wantsUntrusted */false);
-    };
-
-    try {
-      if (Services.appinfo.processType ===
-          Services.appinfo.PROCESS_TYPE_CONTENT) {
-        // should works with Fx 31+
-        let messageName = "ContentSearch";
-        let listener = {
-          receiveMessage: function(msg) {
-            if (msg.name !== messageName) {
-              return;
-            }
-            let data = msg.data || {};
-            if (data.type !== "State") {
-              return;
-            }
-            removeMessageListener(msg.name, listener);
-            if (data.data.currentEngine.name ===
-                delayedSuggestBaidu.baiduName) {
-              return;
-            }
-            if (!data.data.engines.some(function(engine) {
-              return engine.name === delayedSuggestBaidu.baiduName;
-            })) {
-              return;
-            }
-            initSwitchToBaiduCheckbox();
+        removeMessageListener(msg.name, listener);
+        text.value = data.data.searchText;
+        if (data.data.isCurrent) {
+          return;
+        }
+        if (!data.data.exists) {
+          return;
+        }
+        check.hidden = false;
+        form.addEventListener("submit", function() {
+          if (self.isElementVisible(check) && checkbox.checked) {
+            sendAsyncMessage(self.messageName, {
+              type: "setBaiduAsCurrentSearch"
+            });
           }
-        };
-        addMessageListener(messageName, listener);
-        sendAsyncMessage(messageName, {
-          type: "GetState",
-          data: null
-        });
-      } else {
-        if (delayedSuggestBaidu.baidu &&
-            Services.search.currentEngine != delayedSuggestBaidu.baidu) {
-          initSwitchToBaiduCheckbox();
-        }
+        }, false, /** wantsUntrusted */false);
       }
-
-      let topURI = docShell.currentURI;
-      if (delayedSuggestBaidu.isGoogleSearch(topURI)) {
-        text.value = delayedSuggestBaidu.extractKeyword(topURI);
-      } else {
-        text.value = topURI.spec;
-      }
-    } catch(e) {
-      Cu.reportError(e);
     };
+    addMessageListener(this.messageName, listener);
+    sendAsyncMessage(this.messageName, {
+      type: messageType
+    });
   },
 
   maybeHighlightSetHomepage: function(aEvt) {

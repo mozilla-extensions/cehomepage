@@ -295,6 +295,11 @@ let fxAccountsProxy = {
         break;
       case "action":
         browser.ownerGlobal.gFxAccounts.onMenuPanelCommand(aMessage.objects);
+        Tracking.track({
+          type: "ntabsync",
+          action: "click",
+          sid: "in-content"
+        });
         break;
     }
   },
@@ -447,6 +452,9 @@ mozCNUtils.prototype = {
     let w = aMessage.target.ownerGlobal;
 
     switch (aMessage.name) {
+      case "mozCNUtils:Tracking":
+        Tracking.track(aMessage.data);
+        break;
       case "mozCNUtils:Tools":
         switch (aMessage.data) {
           case "downloads":
@@ -481,30 +489,72 @@ mozCNUtils.prototype = {
             w.openPreferences();
             break;
         }
+        Tracking.track({
+          type: "tools",
+          action: "click",
+          sid: aMessage.data
+        });
         break;
       case "mozCNUtils:WebChannel":
-        switch (aMessage.data) {
+        switch ((aMessage.data && aMessage.data.type)) {
+          case "isBaiduCurrentSearch":
+            let topURI = aMessage.target.currentURI;
+            aMessage.target.messageManager.sendAsyncMessage(aMessage.name, {
+              type: aMessage.data.type,
+              data: {
+                exists: !!delayedSuggestBaidu.baidu,
+                isCurrent: (delayedSuggestBaidu.baidu &&
+                            (Services.search.currentEngine ===
+                             delayedSuggestBaidu.baidu)),
+                searchText: (delayedSuggestBaidu.isGoogleSearch(topURI) ?
+                             delayedSuggestBaidu.extractKeyword(topURI) :
+                             topURI.spec)
+              }
+            });
+            break;
+          case "isFxDefaultBrowser":
+            // a response should be sent even shellService not available
+            aMessage.target.messageManager.sendAsyncMessage(aMessage.name, {
+              type: aMessage.data.type,
+              data: (this.shellService &&
+                     this.shellService.isDefaultBrowser(false, false))
+            });
+            break;
           case "setBaiduAsCurrentSearch":
             delayedSuggestBaidu.baidu.hidden = false;
             Services.search.currentEngine = delayedSuggestBaidu.baidu;
+            
+            Tracking.track({
+              type: "delayedsuggestbaidu",
+              action: "submit",
+              sid: "switch"
+            });
             break;
           case "setFxAsDefaultBrowser":
-            let shellService;
-            try {
-              shellService = Cc['@mozilla.org/browser/shell-service;1'].
-                getService(Ci.nsIShellService);
-            } catch(e) {
-              // shellService is not universally available, see https://bugzil.la/297841
+            if (!this.shellService) {
               break;
             }
-            shellService.setDefaultBrowser(false, false);
+            this.shellService.setDefaultBrowser(false, false);
             break;
         }
         break;
     }
   },
 
+  get shellService() {
+    let shellService;
+    try {
+      shellService = Cc['@mozilla.org/browser/shell-service;1'].
+        getService(Ci.nsIShellService);
+    } catch(e) {
+      // shellService is not universally available, see https://bugzil.la/297841
+    }
+    delete this.shellService;
+    return this.shellService = shellService;
+  },
+
   MESSAGES: [
+    "mozCNUtils:Tracking",
     "mozCNUtils:Tools",
     "mozCNUtils:WebChannel"
   ],
