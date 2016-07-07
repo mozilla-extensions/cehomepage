@@ -15,15 +15,9 @@ AboutCEhome.prototype = {
   },
 
   newChannel: function(aURI, aLoadInfo) {
-    // aLoadInfo since Fx 36, https://bugzil.la/1067468
     var home = 'chrome://cehomepage/content/aboutHome.xul';
     var uri = Services.io.newURI(home, null, null);
-    var channel;
-    if (Services.io.newChannelFromURIWithLoadInfo && aLoadInfo) {
-      channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
-    } else {
-      channel = Services.io.newChannelFromURI(uri);
-    }
+    var channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     channel.originalURI = aURI;
     return channel;
   }

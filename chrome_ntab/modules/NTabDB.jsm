@@ -24,15 +24,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "QuickDialData",
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
-if (!this.indexedDB) {
-  if (Cu.importGlobalProperties) {
-    Cu.importGlobalProperties(["indexedDB"]);
-  } else {
-    let idbManager = Cc["@mozilla.org/dom/indexeddb/manager;1"].
-      getService(Ci.nsIIndexedDatabaseManager);
-    idbManager.initWindowless(this);
-  }
-}
+Cu.importGlobalProperties(["indexedDB"]);
 
 let NTabDB = {
   _db: null,
@@ -82,17 +74,7 @@ let NTabDB = {
 
   get localStorage() {
     this.storageManager.precacheStorage(this.principal);
-    let localStorage;
-    try {
-      localStorage = this.storageManager.getStorage(this.principal);
-    } catch(e) {
-      // extra window or null required since Fx 34 <https://bugzil.la/660237>
-      if (e.result == Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS) {
-        localStorage = this.storageManager.getStorage(null, this.principal);
-      } else {
-        throw e;
-      }
-    }
+    let localStorage = this.storageManager.getStorage(null, this.principal);
     delete this.localStorage;
     return this.localStorage = localStorage;
   },
@@ -216,18 +198,8 @@ let NTabDB = {
 
   _migratePrefToLocalStorage: function () {
     if (!this.localStorage) {
-      try {
-        this.localStorage = this.storageManager.
-          createStorage(this.principal, this.spec);
-      } catch(e) {
-        // extra window or null required since Fx 34 <https://bugzil.la/660237>
-        if (e.result == Cr.NS_ERROR_XPC_NOT_ENOUGH_ARGS) {
-          this.localStorage = this.storageManager.
-            createStorage(null, this.principal, this.spec);
-        } else {
-          throw e;
-        }
-      }
+      this.localStorage = this.storageManager.
+        createStorage(null, this.principal, this.spec);
     }
 
     let self = this;

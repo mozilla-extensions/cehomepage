@@ -10,6 +10,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
   "resource://gre/modules/AddonManager.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
@@ -439,25 +441,14 @@ var Frequent = {
   }
 };
 
+var DefaultPreferences = new Preferences({
+  branch: "",
+  defaultBranch: true
+});
 var getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
-  valueType = valueType || Ci.nsISupportsString;
-  let prefs = !!useDefaultBranch ?
-    Services.prefs.getDefaultBranch("") :
-    Services.prefs;
+  let prefs = !!useDefaultBranch ? DefaultPreferences : Preferences;
 
-  switch (prefs.getPrefType(prefName)) {
-    case Ci.nsIPrefBranch.PREF_STRING:
-      return prefs.getComplexValue(prefName, valueType).data;
-
-    case Ci.nsIPrefBranch.PREF_INT:
-      return prefs.getIntPref(prefName);
-
-    case Ci.nsIPrefBranch.PREF_BOOL:
-      return prefs.getBoolPref(prefName);
-
-    case Ci.nsIPrefBranch.PREF_INVALID:
-      return defaultValue;
-  }
+  return prefs.get(prefName, defaultValue, valueType);
 };
 
 var Homepage = {
@@ -475,7 +466,6 @@ var Homepage = {
   distributionTopic: "distribution-customization-complete",
   homepagePref: "browser.startup.homepage",
   pagePref: "browser.startup.page",
-  quitTopic: "quit-application",
 
   // When an empty string is set as pref value, display this.defaultAboutpage.
   get aboutpage() {
@@ -584,11 +574,6 @@ var Homepage = {
 
         this.maybeResetHomepage();
         break;
-      case this.quitTopic:
-        Services.obs.removeObserver(this, aTopic);
-
-        this.uninit();
-        break;
       case "nsPref:changed":
         if (aData !== this.homepagePref) {
           break;
@@ -626,38 +611,37 @@ var Homepage = {
   maybeUpdateSession: function() {
     try {
       let state = JSON.parse(sessionStore.getBrowserState());
+      let unchanged = true;
       for (let win of state.windows) {
-        try {
-          for (let tab of win.tabs) {
+        for (let tab of win.tabs) {
+          for (let entry of tab.entries) {
             try {
-              for (let entry of tab.entries) {
-                try {
-                  if (entry.url === this.defaultHomepage) {
-                    entry.url = this.defaultAboutpage;
-                    Tracking.track({
-                      type: "homepage",
-                      action: "replace",
-                      sid: "session"
-                    });
-                  }
-                } catch(ex) {};
+              if (entry.url === this.defaultHomepage) {
+                entry.url = this.defaultAboutpage;
+                unchanged = false;
+                Tracking.track({
+                  type: "homepage",
+                  action: "replace",
+                  sid: "session"
+                });
               }
-            } catch(ex) {};
+            } catch(ex) {
+              Cu.reportError(ex);
+            };
           }
-        } catch(ex) {};
+        }
+      }
+      if (unchanged) {
+        return;
       }
       sessionStore.setBrowserState(JSON.stringify(state));
     } catch(ex) {};
   },
   initAddonListener: function() {
     AddonManager.addAddonListener(this);
-    if (AddonManager.shutdown) {
-      AddonManager.shutdown.addBlocker("mozCNUtils.jsm:Homepage shutdown",
-        this.uninit.bind(this)
-      );
-    } else {
-      Services.obs.addObserver(this, this.quitTopic, false);
-    }
+    AddonManager.shutdown.addBlocker("mozCNUtils.jsm:Homepage shutdown",
+      this.uninit.bind(this)
+    );
   },
   uninit: function() {
     AddonManager.removeAddonListener(this);

@@ -19,14 +19,8 @@ AboutNTab.prototype = {
   },
 
   newChannel: function(aURI, aLoadInfo) {
-    // aLoadInfo since Fx 36, https://bugzil.la/1067468
     var uri = Services.io.newURI(NTabDB.spec, null, null);
-    var channel;
-    if (Services.io.newChannelFromURIWithLoadInfo && aLoadInfo) {
-      channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
-    } else {
-      channel = Services.io.newChannelFromURI(uri);
-    }
+    var channel = Services.io.newChannelFromURIWithLoadInfo(uri, aLoadInfo);
     channel.loadFlags = channel.loadFlags | channel.LOAD_REPLACE;
     channel.originalURI = aURI;
     return channel;

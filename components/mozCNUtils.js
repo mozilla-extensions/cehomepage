@@ -4,11 +4,11 @@
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
-try {
-  Cu.importGlobalProperties(["Blob"]);
-} catch(e) {};
+Cu.importGlobalProperties(["Blob"]);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
+  "resource://gre/modules/WebChannel.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
@@ -17,47 +17,16 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbsStorage",
-  "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
   "resource://gre/modules/FxAccounts.jsm");
-
-XPCOMUtils.defineLazyGetter(this, "BackgroundPageThumbs", function() {
-  let temp = {};
-  try {
-    Cu.import("resource://gre/modules/BackgroundPageThumbs.jsm", temp);
-
-    if (!BackgroundPageThumbs.captureIfMissing) {
-      throw new Error("BackgroundPageThumbs not recent enough");
-    }
-  } catch(e) {
-    /*
-     * a local copy of BackgroundPageThumbs.jsm as in Fx 27.0.1, if
-     * 1. resource://gre/modules/BackgroundPageThumbs.jsm does not exist;
-     * 2. resource://gre/modules/BackgroundPageThumbs.jsm from esr24.
-     */
-    Cu.import("resource://ntab/BackgroundPageThumbs.jsm", temp);
-  }
-  return temp.BackgroundPageThumbs;
-});
+XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
+  "resource://gre/modules/BackgroundPageThumbs.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gMM", function() {
   return Cc["@mozilla.org/globalmessagemanager;1"].
     getService(Ci.nsIMessageListenerManager);
-});
-
-XPCOMUtils.defineLazyGetter(this, "WebChannel", function() {
-  let temp = {};
-  try {
-    Cu.import("resource://gre/modules/WebChannel.jsm", temp);
-  } catch(e) {
-    // a local copy of WebChannel.jsm as in Fx 34.0.5
-    Cu.import("resource://ntab/WebChannel.jsm", temp);
-    gMM.loadFrameScript("chrome://ntab/content/webChannelContent.js", true);
-  }
-  return temp.WebChannel;
 });
 
 XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
@@ -205,6 +174,7 @@ let fxAccountsProxy = {
       "tooltiptext"
     ]
   },
+  // no gFxAccounts.button since Fx 41
   generateKVs: function(gFxAccounts) {
     let kvs = {};
 
@@ -708,12 +678,7 @@ mozCNWebChannel.prototype = {
         let url = aMessage.parameters.url;
         BackgroundPageThumbs.capture(url, {
           onDone: function() {
-            let path = "";
-            if (PageThumbs.getThumbnailPath) {
-              path = PageThumbs.getThumbnailPath(url);
-            } else {
-              path = PageThumbsStorage.getFilePathForURL(url);
-            }
+            let path = PageThumbs.getThumbnailPath(url);
             OS.File.read(path).then(function(aData) {
               let blob = new Blob([aData], {
                 type: PageThumbs.contentType

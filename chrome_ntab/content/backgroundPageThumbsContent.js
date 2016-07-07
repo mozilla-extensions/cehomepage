@@ -6,16 +6,12 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+Cu.importGlobalProperties(['Blob']);
 // MO changes, compatible with older Fx release
 try {
-  Cu.importGlobalProperties(['Blob']);
   Cu.importGlobalProperties(['FileReader']);
 } catch(e) {};
-try {
-  Cu.import("resource://gre/modules/PageThumbUtils.jsm");
-} catch(e) {
-  Cu.import("resource://gre/modules/PageThumbs.jsm");
-}
+Cu.import("resource://gre/modules/PageThumbUtils.jsm");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -35,17 +31,14 @@ const backgroundPageThumbsContent = {
       loadGroup.QueryInterface(Ci.nsISupportsPriority).
       priority = Ci.nsISupportsPriority.PRIORITY_LOWEST;
 
-    // MO changes, compatible with older Fx release
-    try {
-      docShell.allowMedia = false;
-      docShell.allowPlugins = false;
-      docShell.allowContentRetargeting = false;
-      let defaultFlags = Ci.nsIRequest.LOAD_ANONYMOUS |
-                         Ci.nsIRequest.LOAD_BYPASS_CACHE |
-                         Ci.nsIRequest.INHIBIT_CACHING |
-                         Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
-      docShell.defaultLoadFlags = defaultFlags;
-    } catch(e) {}
+    docShell.allowMedia = false;
+    docShell.allowPlugins = false;
+    docShell.allowContentRetargeting = false;
+    let defaultFlags = Ci.nsIRequest.LOAD_ANONYMOUS |
+                       Ci.nsIRequest.LOAD_BYPASS_CACHE |
+                       Ci.nsIRequest.INHIBIT_CACHING |
+                       Ci.nsIWebNavigation.LOAD_FLAGS_BYPASS_HISTORY;
+    docShell.defaultLoadFlags = defaultFlags;
 
     addMessageListener("BackgroundPageThumbs:capture",
                        this._onCapture.bind(this));
@@ -189,37 +182,24 @@ const backgroundPageThumbsContent = {
     // MO changes, for <https://bugzil.la/1197361>
     let canvas,
         finalCanvas;
-    // MO changes, for <https://bugzil.la/698371>
-    try {
-      if (PageThumbUtils.createSnapshotThumbnail) {
-        finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
-      } else {
-        canvas = PageThumbUtils.createCanvas(content);
-        let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
+    if (PageThumbUtils.createSnapshotThumbnail) {
+      finalCanvas = PageThumbUtils.createSnapshotThumbnail(content, null);
+    } else {
+      canvas = PageThumbUtils.createCanvas(content);
+      let [sw, sh, scale] = PageThumbUtils.determineCropSize(content, canvas);
 
-        let ctx = canvas.getContext("2d");
-        ctx.save();
-        ctx.scale(scale, scale);
-        ctx.drawWindow(content, 0, 0, sw, sh,
-                       PageThumbUtils.THUMBNAIL_BG_COLOR,
-                       ctx.DRAWWINDOW_DO_NOT_FLUSH);
-        ctx.restore();
-      }
-    } catch(e) {
-      // MO changes, for <https://bugzil.la/1058237>
-      canvas = PageThumbs.createCanvas ?
-        PageThumbs.createCanvas(content) : PageThumbs._createCanvas(content);
-      PageThumbs._captureToCanvas(content, canvas);
+      let ctx = canvas.getContext("2d");
+      ctx.save();
+      ctx.scale(scale, scale);
+      ctx.drawWindow(content, 0, 0, sw, sh,
+                     PageThumbUtils.THUMBNAIL_BG_COLOR,
+                     ctx.DRAWWINDOW_DO_NOT_FLUSH);
+      ctx.restore();
     }
     capture.canvasDrawTime = new Date() - canvasDrawDate;
 
     (finalCanvas || canvas).toBlob(blob => {
-      // MO changes, for <https://bugzil.la/1047483>
-      try {
-        capture.imageBlob = new Blob([blob]);
-      } catch(e) {
-        capture.imageBlob = blob;
-      }
+      capture.imageBlob = new Blob([blob]);
       // Load about:blank to finish the capture and wait for onStateChange.
       this._loadAboutBlank();
     });
