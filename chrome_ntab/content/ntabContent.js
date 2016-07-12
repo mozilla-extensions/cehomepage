@@ -62,7 +62,25 @@ let NTab = {
           li.addEventListener('click', function(aEvt) {
             self.launcher.classList.toggle('tools');
 
-            sendAsyncMessage('mozCNUtils:Tools', aEvt.currentTarget.id);
+            let id = aEvt.currentTarget.id;
+            sendAsyncMessage('mozCNUtils:Tracking', {
+              type: 'tools',
+              action: 'click',
+              sid: id
+            });
+
+            let msg = {
+              'downloads': 'AboutHome:Downloads',
+              'bookmarks': 'AboutHome:Bookmarks',
+              'history': 'AboutHome:History',
+              'addons': 'AboutHome:Addons',
+              'sync': 'AboutHome:Sync',
+              'settings': 'AboutHome:Settings'
+            }[id];
+            if (!msg) {
+              return;
+            }
+            sendAsyncMessage(msg);
           }, false, /** wantsUntrusted */false);
         });
       }

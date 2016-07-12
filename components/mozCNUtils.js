@@ -425,46 +425,6 @@ mozCNUtils.prototype = {
       case "mozCNUtils:Tracking":
         Tracking.track(aMessage.data);
         break;
-      case "mozCNUtils:Tools":
-        switch (aMessage.data) {
-          case "downloads":
-            w.BrowserDownloadsUI();
-            break;
-          case "bookmarks":
-            w.PlacesCommandHook.showPlacesOrganizer("AllBookmarks");
-            break;
-          case "history":
-            w.PlacesCommandHook.showPlacesOrganizer("History");
-            break;
-          case "addons":
-            w.BrowserOpenAddonsMgr();
-            break;
-          case "sync":
-            let weave = Cc["@mozilla.org/weave/service;1"].
-              getService(Ci.nsISupports).wrappedJSObject;
-
-            if (weave.fxAccountsEnabled) {
-              fxAccounts.getSignedInUser().then(function(userData) {
-                if (userData) {
-                  w.openPreferences("paneSync");
-                } else {
-                  w.loadURI("about:accounts?entrypoint=aboutntab");
-                }
-              });
-            } else {
-              w.openPreferences("paneSync");
-            }
-            break;
-          case "settings":
-            w.openPreferences();
-            break;
-        }
-        Tracking.track({
-          type: "tools",
-          action: "click",
-          sid: aMessage.data
-        });
-        break;
       case "mozCNUtils:WebChannel":
         switch ((aMessage.data && aMessage.data.type)) {
           case "isBaiduCurrentSearch":
@@ -525,7 +485,6 @@ mozCNUtils.prototype = {
 
   MESSAGES: [
     "mozCNUtils:Tracking",
-    "mozCNUtils:Tools",
     "mozCNUtils:WebChannel"
   ],
   initMessageListener: function() {
