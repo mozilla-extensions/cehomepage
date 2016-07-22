@@ -41,8 +41,6 @@ Weave.Utils.deferGetSet(NTabRecord, "cleartext", ["value"]);
 
 this.NTabEngine = function(service) {
   SyncEngine.call(this, "mozCN.NTab", service);
-
-  Weave.Svc.Prefs.observe("engine." + this.prefName, this);
 }
 NTabEngine.prototype = {
   __proto__: SyncEngine.prototype,
@@ -60,18 +58,6 @@ NTabEngine.prototype = {
     }
 
     return shouldApply;
-  },
-
-  // hack to trigger {start,stop}-tracking on pref change
-  observe: function observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "nsPref:changed":
-        if (Weave.Service._ignorePrefObserver) {
-          break;
-        }
-        this.enabled = this.enabled;
-        break;
-    }
   }
 };
 
