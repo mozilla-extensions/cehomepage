@@ -81,7 +81,7 @@ let mozCNErrorPage = {
         }
       }, false);
       var timer = 0;
-      var interval = setInterval(function(){
+      var interval = contentWin.setInterval(function(){
         if(timer < 150 && recomendIframe.contentDocument) {
           if (recomendIframe.contentDocument.readyState == 'complete' ||
               recomendIframe.contentDocument.readyState == 'interactive') {
@@ -91,13 +91,13 @@ let mozCNErrorPage = {
               recomendIframe.height = '330px';
             }
             timer = 0;
-            clearInterval(interval);
+            contentWin.clearInterval(interval);
           } else {
             timer++;
           }
         } else {
           timer = 0;
-          clearInterval(interval);
+          contentWin.clearInterval(interval);
         }
       }, 200);
     }
