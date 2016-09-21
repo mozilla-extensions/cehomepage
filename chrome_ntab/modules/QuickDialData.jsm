@@ -25,8 +25,8 @@ let QuickDialData = {
     let fxChannel = getPref('app.chinaedition.channel', 'www.firefox.com.cn');
     let variant = {
       'firefox.mail.163.com': 'netease_mail',
-      'firefox.yazuo': 'yazuo',
-      'firefox.yazuo2': 'yazuo2'
+      'firefox.xbsafe.jiangxi-telecom': 'jxtel',
+      'firefox.yazuo': 'yazuo'
     }[fxChannel];
 
     /*
