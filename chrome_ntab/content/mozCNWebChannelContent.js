@@ -10,7 +10,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 
 let mozCNWebChannelContent = {
-  channelID: "moz_cn_utils",
   specs: [
     "http://e.firefoxchina.cn/",
     "http://i.firefoxchina.cn/",
@@ -20,6 +19,13 @@ let mozCNWebChannelContent = {
   ],
   cachedWindows: new Map(),
   messageName: "mozCNUtils:WebChannel",
+
+  get channelID() {
+    let prefKey = "webchannel.allowObject.urlWhitelist";
+    delete this.channelID;
+    return this.channelID = Services.prefs.getPrefType(prefKey) ?
+                            "moz_cn_channel_v2" : "moz_cn_utils";
+  },
 
   handleEvent: function(aEvt) {
     switch (aEvt.type) {

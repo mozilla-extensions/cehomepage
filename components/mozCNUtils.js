@@ -676,13 +676,18 @@ mozCNWebChannel.prototype = {
 
 let mozCNWebChannels = {
   contentURL: "chrome://ntab/content/mozCNWebChannelContent.js",
-  channelID: "moz_cn_utils",
   specs: {
     "http://e.firefoxchina.cn/": "",
     "http://i.firefoxchina.cn/": "",
     "http://n.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",
     "http://offlintab.firefoxchina.cn/": "offlintabListener"
+  },
+  get channelID() {
+    let prefKey = "webchannel.allowObject.urlWhitelist";
+    delete this.channelID;
+    return this.channelID = Services.prefs.getPrefType(prefKey) ?
+                            "moz_cn_channel_v2" : "moz_cn_utils";
   },
   init: function () {
     let self = this;
