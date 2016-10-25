@@ -167,10 +167,12 @@ let PartnerBookmarks = {
 
   _setFaviconForUrl(uri, iconData) {
     let faviconUri = Services.io.newURI('fake-favicon-uri:' + uri, null, null);
-    this.fisvc.replaceFaviconDataFromDataURL(faviconUri, iconData, 0);
+    let systemPrincipal = Services.scriptSecurityManager.getSystemPrincipal();
+    this.fisvc.replaceFaviconDataFromDataURL(faviconUri, iconData, 0,
+      systemPrincipal);
     let newUri = Services.io.newURI(uri, null, null);
     this.fisvc.setAndFetchFaviconForPage(newUri, faviconUri, false,
-      this.fisvc.FAVICON_LOAD_NON_PRIVATE);
+      this.fisvc.FAVICON_LOAD_NON_PRIVATE, null, systemPrincipal);
   },
 
   _tempFix: function() {
