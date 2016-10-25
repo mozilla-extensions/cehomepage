@@ -211,7 +211,7 @@ let PartnerBookmarks = {
       }).then(function() {
         return Promise.all(item.indexRefs.map(function(indexRef) {
           return PlacesUtils.keywords.fetch(indexRef);
-        });
+        }));
       }).then(function(refKeywordObjs) {
         let refKeywordObj;
         while (!refKeywordObj && refKeywordObjs.length) {
