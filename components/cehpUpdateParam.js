@@ -40,7 +40,7 @@ function collectPref() {
 
     // remember to update this with temp bookmark hacks
     let slugs = ["jd", "jd18jun",
-                 "taobao",
+                 "taobao", "taobao12dec",
                  "tmall", "tmall18jun", "tmall11nov"];
     ret.push(PartnerBookmarks.getUpdateTracking(slugs));
 

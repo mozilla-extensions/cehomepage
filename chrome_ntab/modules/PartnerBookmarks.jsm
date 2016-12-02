@@ -185,13 +185,154 @@ let PartnerBookmarks = {
       return;
     }
 
-    let self = this;
-    if (PlacesUtils.keywords) {
-      return self._removeOrphanedKeywords().then(function() {
-        self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
-      });
+    if (Date.now() >= this._tempFixVersion * 3600e3) {
+      let self = this;
+      if (PlacesUtils.keywords) {
+        return self._removeOrphanedKeywords().then(function() {
+          self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
+        });
+      } else {
+        this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+      }
     } else {
-      this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+      let keyword = 'mozcn:toolbar:taobao12dec';
+      let item = {
+        favicon: 'data:image/x-icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAQAQAAAAAAAAAAAAAAAAAAAAAAAD///8A////AP///wD///8AL2n//////wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AC9p//8PTOv/////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wCrw///D0zr/w9M6/8vaf//L2n//w9M6/8PTOv/D0zr/w9M6/8PTOv/D0zr/w9M6/8PTOv/q8P//////wCrw///D0zr/y9p//8vaf//L2n//y9p//8vaf//L2n//y9p//8vaf//L2n//y9p//8vaf//L2n//w9M6/+rw///VoX/////////////L2n//y9p//8vaf//L2n//y9p//8vaf//////////////////mLX//y9p//8vaf//D0zr/1aF//////////////////8vaf//mLX//////////////////y9p//8vaf////////////+Ytf//L2n//w9M6/9Whf//L2n/////////////NG3///////80bf///////////////////////zRt/////////////y9p//8PTOv/VoX//y9p//8vaf///////zRt////////NG3/////////////NG3///////80bf////////////8vaf//D0zr/1aF//8vaf//L2n//5i1////////NG3//zRt/////////////zRt//80bf//NG3/////////////L2n//w9M6/9Whf//L2n//y9p//+Ytf///////////////////////////////////////zRt/////////////y9p//8PTOv/VoX//y9p/////////////zRt////////NG3/////////////NG3//zRt//80bf////////////8vaf//D0zr/1aF//8vaf////////////80bf//NG3/////////////////////////////NG3/////////////L2n//w9M6/9Whf//L2n//zRt//80bf///////5i1/////////////zRt//80bf//NG3//zRt////////mLX//y9p//8PTOv/VoX//y9p///+/////////zRt/////////////zRt////////////////////////mLX//zRt//8vaf//D0zr/6vD//9Whf////////////8vaf////////////8vaf//L2n//y9p//8vaf//L2n//y9p//8vaf//D0zr/6vD//////8Aq8P//1aF//9Whf//VoX//1aF//9Whf//VoX//1aF//9Whf//VoX//1aF//9Whf//VoX//6vD//////8A9/8AAPP/AACAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAEAAA==',
+        indexNoRef: 4,
+        indexRefs: ['mozcn:toolbar:jd', 'mozcn:toolbar:taobao'],
+        parent: PlacesUtils.bookmarks.toolbarFolder,
+        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+        title: '\u6dd8\u5b9d\u53cc12',
+        uri: 'https://s.click.taobao.com/t?e=m%3D2%26s%3DnVt2eqRPBGkcQipKwQzePCperVdZeJviLKpWJ%2Bin0XJRAdhuF14FMV1voFRheeVc8sviUM61dt1oVxuUFnM6iMUjUj9sJ%2FOjkPiKwSWyD2b8vekcD5j4y7g5kJpUiIWcbYbSbVjnPd6R4ypTBJBwtOQKEdpGVcTl4reRQcXD1bHBV7GfGbfBR6Hvmp47zBYVcWCaq8Ydoqqq8z9vCsVgmqQAnVTbpciOC3qMqgr7%2BGU1usVnEIFPhi5nM6pBEk4MvDovBBh%2F%2FUm7KEl6b4zk6klaGaW7FGJu2XPP23XswEOcI1zX3waUocYMXU3NNCg%2F'
+      };
+
+      let bookmarks = [],
+          refIndex = -Infinity;
+      let self = this;
+      if (PlacesUtils.keywords) {
+        return PlacesUtils.keywords.fetch(keyword).then(function(keywordObj) {
+          if (!keywordObj) {
+            return;
+          }
+
+          return PlacesUtils.bookmarks.fetch({
+            url: keywordObj.url.href
+          }, function(bookmark) {
+            bookmarks.push(bookmark);
+          });
+        }).then(function() {
+          return Promise.all(item.indexRefs.map(function(indexRef) {
+            return PlacesUtils.keywords.fetch(indexRef);
+          }));
+        }).then(function(refKeywordObjs) {
+          let refKeywordObj;
+          while (!refKeywordObj && refKeywordObjs.length) {
+            refKeywordObj = refKeywordObjs.shift();
+          }
+          if (!refKeywordObj) {
+            return;
+          }
+
+          return PlacesUtils.bookmarks.fetch({
+            url: refKeywordObj.url.href
+          }, function(bookmark) {
+            if (bookmark.parentGuid !== item.parentGuid) {
+              return;
+            }
+            refIndex = Math.max(bookmark.index, refIndex);
+          });
+        }).then(function() {
+          let index = refIndex === -Infinity ? item.indexNoRef : (refIndex + 1);
+
+          if (bookmarks.filter(function(bookmark) {
+            return bookmark.parentGuid === item.parentGuid;
+          }).length) {
+            return;
+          }
+
+          return PlacesUtils.bookmarks.insert({
+            parentGuid: item.parentGuid,
+            index: index,
+            title: item.title,
+            url: item.uri
+          });
+        }).then(function() {
+          return Promise.all(bookmarks.map(function(bookmark) {
+            bookmark.url = item.uri;
+            if (item.title) {
+              bookmark.title = item.title;
+            }
+            return PlacesUtils.bookmarks.update(bookmark);
+          }));
+        }).then(function() {
+          if (item.favicon) {
+            self._setFaviconForUrl(item.uri, item.favicon);
+          }
+
+          return PlacesUtils.keywords.insert({
+            keyword: keyword,
+            url: item.uri
+          });
+        }).then(function() {
+          return self._removeOrphanedKeywords();
+        }).then(function() {
+          self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
+        });
+      } else {
+        let refUris = item.indexRefs.map(function(indexRef) {
+          return PlacesUtils.bookmarks.getURIForKeyword(indexRef);
+        });
+        let refUri;
+        while (!refUri && refUris.length) {
+          refUri = refUris.shift();
+        }
+        if (refUri) {
+          for (let id of PlacesUtils.bookmarks.getBookmarkIdsForURI(refUri, {})) {
+            if (item.indexRefs.indexOf(PlacesUtils.bookmarks.getKeywordForBookmark(id)) < 0) {
+              continue;
+            }
+            if (PlacesUtils.bookmarks.getFolderIdForItem(id) !== item.parent) {
+              continue;
+            }
+            refIndex = Math.max(PlacesUtils.bookmarks.getItemIndex(id), refIndex);
+          }
+        }
+
+        let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
+        let newUri = Services.io.newURI(item.uri, null, null);
+
+        if (uri) {
+          bookmarks = PlacesUtils.bookmarks.getBookmarkIdsForURI(uri, {});
+          // see comments in this._realUpdate
+          bookmarks = bookmarks.filter(function(aId) {
+            return PlacesUtils.bookmarks.getKeywordForBookmark(aId) == keyword;
+          });
+        }
+
+        let index = refIndex === -Infinity ? item.indexNoRef : (refIndex + 1);
+        if (!bookmarks.filter(function(aId) {
+          return PlacesUtils.bookmarks.getFolderIdForItem(aId) == item.parent;
+        }).length) {
+          let id = PlacesUtils.bookmarks.insertBookmark(
+            item.parent, newUri, index, item.title);
+          PlacesUtils.bookmarks.setKeywordForBookmark(id, keyword);
+        }
+
+        for (let i = 0, l = bookmarks.length; i < l; i++) {
+          let id = bookmarks[i];
+          PlacesUtils.bookmarks.changeBookmarkURI(id, newUri);
+
+          if (item.title) {
+            PlacesUtils.bookmarks.setItemTitle(id, item.title);
+          }
+        }
+
+        if (item.favicon) {
+          this._setFaviconForUrl(item.uri, item.favicon);
+        }
+
+        this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+      }
     }
   },
 
@@ -323,7 +464,8 @@ let PartnerBookmarks = {
 
   _backfillVersion: 2,
 
-  _tempFixVersion: 7,
+  // (new Date(2016, 11, 13, 8)).getTime() / 3600e3 @ 2016-12-13T00:00:00.000Z
+  _tempFixVersion: 411552,
 
   init: function() {
     if (this._inited) {
