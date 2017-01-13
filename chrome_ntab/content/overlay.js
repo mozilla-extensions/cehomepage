@@ -132,12 +132,12 @@
     ],
 
     otherNavs: [
-      /^http:\/\/.*\.2345\.com/,
-      /^http:\/\/.*\.360\.cn/,
-      /^http:\/\/.*\.baidu\.com/,
-      /^http:\/\/.*\.duba\.com/,
-      /^http:\/\/.*\.hao123\.com/,
-      /^http:\/\/.*\.sogou\.com/
+      /^https?:\/\/.*\.2345\.com/,
+      /^https?:\/\/.*\.360\.cn/,
+      /^https?:\/\/.*\.baidu\.com/,
+      /^https?:\/\/.*\.duba\.com/,
+      /^https?:\/\/.*\.hao123\.com/,
+      /^https?:\/\/.*\.sogou\.com/
     ],
     firstOtherNavUrl: null,
 
