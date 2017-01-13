@@ -132,8 +132,12 @@
     ],
 
     otherNavs: [
-      /^http:\/\/www\.hao123\.com/,
-      /^http:\/\/www\.2345\.com/
+      /^http:\/\/.*\.2345\.com/,
+      /^http:\/\/.*\.360\.cn/,
+      /^http:\/\/.*\.baidu\.com/,
+      /^http:\/\/.*\.duba\.com/,
+      /^http:\/\/.*\.hao123\.com/,
+      /^http:\/\/.*\.sogou\.com/
     ],
     firstOtherNavUrl: null,
 
@@ -169,7 +173,7 @@
     },
 
     // for comparison, using int instead of string
-    currentCheck: 20131129,
+    currentCheck: 20170113,
 
     get latestCheck() {
       var latestCheck = 0;
@@ -300,7 +304,8 @@
           ns.Tracking.track({
             type: "homepagereset",
             action: "click",
-            sid: "yes"
+            sid: "yes",
+            href: (this.firstOtherNavUrl && this.firstOtherNavUrl.spec)
           });
         }
       }, {
