@@ -305,7 +305,7 @@
             type: "homepagereset",
             action: "click",
             sid: "yes",
-            href: (this.firstOtherNavUrl && this.firstOtherNavUrl.spec)
+            href: (self.firstOtherNavUrl && self.firstOtherNavUrl.spec)
           });
         }
       }, {
