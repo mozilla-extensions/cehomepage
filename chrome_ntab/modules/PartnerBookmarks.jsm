@@ -373,11 +373,15 @@ let PartnerBookmarks = {
   },
 
   getUpdateTracking: function(aSlugs) {
+    // Since Fx 53, https://bugzil.la/1329926
+    if (!PlacesUtils.bookmarks.getURIForKeyword) {
+      return "NA";
+    }
+
     let ret = [];
 
     aSlugs.forEach(function(aSlug) {
       let keyword = 'mozcn:toolbar:' + aSlug;
-      // until this sync call is broken
       let uri = PlacesUtils.bookmarks.getURIForKeyword(keyword);
       if (!uri) {
         return;
