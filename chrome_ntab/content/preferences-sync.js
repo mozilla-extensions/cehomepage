@@ -1,4 +1,7 @@
 var mozCNNTabSync = (function() {
+  let url = "chrome://ntab/locale/sync.properties";
+  let bundle = Services.strings.createBundle(url);
+
   // this cannot be done with an overlay, sigh
   let qs = document.querySelector.bind(document);
   let paneSync = qs('#paneSync');
@@ -7,11 +10,23 @@ var mozCNNTabSync = (function() {
     aEvt.target.removeEventListener(aEvt.type, onPaneLoad);
     let parentVBox = qs("#fxaSyncEngines > vbox");
     let checkbox = qs('checkbox[preference="engine.mozcn.ntab"]');
-    if (!parentVBox || !checkbox) {
+    if (!parentVBox) {
       return;
     }
 
-    parentVBox.appendChild(checkbox.cloneNode());
+    if (checkbox) {
+      parentVBox.appendChild(checkbox.cloneNode());
+    } else {
+      checkbox = document.createElement("checkbox");
+      checkbox.setAttribute("label",
+        bundle.GetStringFromName("engine.mozcn.ntab.label"));
+      checkbox.setAttribute("accesskey",
+        bundle.GetStringFromName("engine.mozcn.ntab.accesskey"));
+      checkbox.setAttribute("preference", "engine.mozcn.ntab");
+      checkbox.setAttribute("onsynctopreference",
+        "return mozCNNTabSync.onSyncToEnablePref(this);");
+      parentVBox.appendChild(checkbox);
+    }
   };
 
   if (paneSync) {
@@ -21,11 +36,8 @@ var mozCNNTabSync = (function() {
   }
 
   // prompt for confirmation for every false => true change
-  let url = "chrome://ntab/locale/sync.properties";
-  let bundle = Services.strings.createBundle(url);
-  let prefix = "ntabsync.notification.";
-  let message = bundle.GetStringFromName(prefix + "message");
-  let title = bundle.GetStringFromName(prefix + "title");
+  let message = bundle.GetStringFromName("ntabsync.notification.message");
+  let title = bundle.GetStringFromName("ntabsync.notification.title");
 
   let onSyncToEnablePref = function(aCheckbox) {
     if (!aCheckbox.checked) {
