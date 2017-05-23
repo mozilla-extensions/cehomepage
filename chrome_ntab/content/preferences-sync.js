@@ -27,6 +27,12 @@ var mozCNNTabSync = (function() {
         "return mozCNNTabSync.onSyncToEnablePref(this);");
       parentVBox.appendChild(checkbox);
     }
+
+    let preference = document.createElement("preference");
+    preference.id = "engine.mozcn.ntab";
+    preference.setAttribute("name", "services.sync.engine.mozcn.ntab");
+    preference.setAttribute("type", "bool");
+    qs("#syncEnginePrefs").appendChild(preference);
   };
 
   if (paneSync) {
