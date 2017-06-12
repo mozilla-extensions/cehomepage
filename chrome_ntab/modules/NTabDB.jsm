@@ -56,17 +56,32 @@ let NTabDB = {
     return this.readOnlyUri = Services.io.newURI(this.readOnlySpec, null, null);
   },
   get principal() {
+    let principal;
+    if (Services.scriptSecurityManager.createCodebasePrincipal) {
+      principal = Services.scriptSecurityManager.
+        createCodebasePrincipal(this.uri, {});
+    } else {
+      principal = Services.scriptSecurityManager.
+        getNoAppCodebasePrincipal(this.uri);
+    }
     delete this.principal;
-    return this.principal = Services.scriptSecurityManager.
-      getNoAppCodebasePrincipal(this.uri);
+    return this.principal = principal;
   },
   get extraPrincipals() {
     let extraPrincipals = [];
     [
       "http://newtab.firefoxchina.cn/"
     ].forEach(function(aSpec) {
-      extraPrincipals.push(Services.scriptSecurityManager.
-        getNoAppCodebasePrincipal(Services.io.newURI(aSpec, null, null)));
+      let extraPrincipal;
+      let extraUri = Services.io.newURI(aSpec, null, null);
+      if (Services.scriptSecurityManager.createCodebasePrincipal) {
+        extraPrincipal = Services.scriptSecurityManager.
+          createCodebasePrincipal(extraUri, {});
+      } else {
+        extraPrincipal = Services.scriptSecurityManager.
+          getNoAppCodebasePrincipal(extraUri);
+      }
+      extraPrincipals.push(extraPrincipal);
     });
     delete this.extraPrincipals;
     return this.extraPrincipals = extraPrincipals;
