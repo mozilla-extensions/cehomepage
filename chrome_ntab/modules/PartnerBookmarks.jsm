@@ -185,118 +185,13 @@ let PartnerBookmarks = {
       return;
     }
 
-    if (Date.now() >= this._tempFixVersion * 3600e3) {
-      let self = this;
-      if (PlacesUtils.keywords) {
-        return self._removeOrphanedKeywords().then(function() {
-          self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
-        });
-      } else {
-        this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
-      }
+    let self = this;
+    if (PlacesUtils.keywords) {
+      return self._removeOrphanedKeywords().then(function() {
+        self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
+      });
     } else {
-      let keyword = 'mozcn:toolbar:tmall18jun';
-      let item = {
-        favicon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVQ4je2SOw6AIBQEBwwFFS0cwstwKBq989oQTdTED2rlS6bbnWLzEL1a4FnB2XtPsGancG2DX/CRIBPkMCrE099XiHIYZYIwICoj6bA8kOZ87S4CQB6rQLeLx2qd3whu0CaYAA69JBBEwec9AAAAAElFTkSuQmCC',
-        indexNoRef: 4,
-        indexRefs: ['mozcn:toolbar:jd', 'mozcn:toolbar:taobao'],
-        parent: PlacesUtils.bookmarks.toolbarFolder,
-        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
-        title: '\u5929\u732b6.18',
-        uri: 'https://s.click.taobao.com/t?e=m%3D2%26s%3DBLRFk9jQcEgcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMfEyMcFxZkRP1aH1Hk3GeOhoVxuUFnM6iMUjUj9sJ%2FOj1mvebSZJTzUa7rG88kl1%2BaUuZxIcp9pfUIgVEmFmgnaR4ypTBJBwtB6l0bxfYrBpJPwiig1bxLMAV4Err%2B0r%2ByrbHgqSJ08vcSpj5qSCmbA%3D'
-      };
-
-      let bookmarks = [],
-          existedTmall = false,
-          refIndex = -Infinity;
-      let self = this;
-      if (PlacesUtils.keywords) {
-        return PlacesUtils.promiseDBConnection().then(function(db) {
-          return db.execute(`SELECT b.title AS title, p.url AS url
-            FROM moz_bookmarks AS b JOIN moz_places AS p ON b.fk = p.id
-            WHERE b.parent = :parent_id AND p.url LIKE :tmall_url
-            LIMIT 1;`,
-            {
-              parent_id: item.parent,
-              tmall_url: "%://www.tmall.com/%"
-            }
-          );
-        }).then(function(rows) {
-          existedTmall = !!rows.length;
-
-          return PlacesUtils.keywords.fetch(keyword);
-        }).then(function(keywordObj) {
-          if (!keywordObj) {
-            return;
-          }
-
-          return PlacesUtils.bookmarks.fetch({
-            url: keywordObj.url.href
-          }, function(bookmark) {
-            bookmarks.push(bookmark);
-          });
-        }).then(function() {
-          return Promise.all(item.indexRefs.map(function(indexRef) {
-            return PlacesUtils.keywords.fetch(indexRef);
-          }));
-        }).then(function(refKeywordObjs) {
-          let refKeywordObj;
-          while (!refKeywordObj && refKeywordObjs.length) {
-            refKeywordObj = refKeywordObjs.shift();
-          }
-          if (!refKeywordObj) {
-            return;
-          }
-
-          return PlacesUtils.bookmarks.fetch({
-            url: refKeywordObj.url.href
-          }, function(bookmark) {
-            if (bookmark.parentGuid !== item.parentGuid) {
-              return;
-            }
-            refIndex = Math.max(bookmark.index, refIndex);
-          });
-        }).then(function() {
-          let index = refIndex === -Infinity ? item.indexNoRef : (refIndex + 1);
-
-          if (bookmarks.filter(function(bookmark) {
-            return bookmark.parentGuid === item.parentGuid;
-          }).length || existedTmall) {
-            return;
-          }
-
-          return PlacesUtils.bookmarks.insert({
-            parentGuid: item.parentGuid,
-            index: index,
-            title: item.title,
-            url: item.uri
-          });
-        }).then(function() {
-          return Promise.all(bookmarks.map(function(bookmark) {
-            bookmark.url = item.uri;
-            if (item.title) {
-              bookmark.title = item.title;
-            }
-            return PlacesUtils.bookmarks.update(bookmark);
-          }));
-        }).then(function() {
-          if (item.favicon) {
-            self._setFaviconForUrl(item.uri, item.favicon);
-          }
-
-          return PlacesUtils.keywords.insert({
-            keyword: keyword,
-            url: item.uri
-          });
-        }).then(function() {
-          return self._removeOrphanedKeywords();
-        }).then(function() {
-          self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
-        });
-      } else {
-        // don't care about such old versions
-        this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
-      }
+      this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
     }
   },
 
@@ -427,7 +322,6 @@ let PartnerBookmarks = {
   _inited: false,
 
   _backfillVersion: 2,
-
   // (new Date(2017, 5, 19, 8)).getTime() / 3600e3 @ 2017-06-21T00:00:00.000Z
   _tempFixVersion: 416112,
 
