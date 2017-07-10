@@ -73,6 +73,11 @@ body
   margin-top: 1.2em;
 }
 
+/* override https://bugzil.la/1363046 in Fx 55 */
+#netErrorButtonContainer {
+  justify-content: start;
+}
+
 #errorPageContainer #goToHomePage:hover
 {
   background-color: #BDCE5C;
