@@ -35,8 +35,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Frequent",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
   "resource://ntab/mozCNUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "nxdomainMitigation",
-  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Session",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "getPref",
@@ -381,7 +379,6 @@ mozCNUtils.prototype = {
         fxAccountsProxy.init();
         NTabSync.init();
         Promo.init();
-        nxdomainMitigation.init();
         break;
       case "browser-delayed-startup-finished":
         this.initProgressListener(aSubject);

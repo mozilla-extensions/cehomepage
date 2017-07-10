@@ -358,27 +358,13 @@
 
     inUse: true,
 
-    get altSpec() {
-      Services.prefs.addObserver(ns.NTabDB.altSpecPref, this, false);
-
-      delete this.altSpec;
-      return this.altSpec = this.getAltSpec();
-    },
     get specKey() {
       delete this.specKey;
       return this.specKey = PrivateBrowsingUtils.isWindowPrivate(window) ?
         'privateSpec' : 'spec';
     },
     get spec() {
-      return this.altSpec || ns.NTabDB[this.specKey];
-    },
-
-    getAltSpec: function() {
-      var altSpec = ns.NTabDB.getAltSpec();
-      if (altSpec && gInitialPages.indexOf(altSpec) < 0) {
-        gInitialPages.push(altSpec);
-      }
-      return altSpec;
+      return ns.NTabDB[this.specKey];
     },
 
     init: function() {
@@ -393,9 +379,6 @@
     observe: function(aSubject, aTopic, aData) {
       if (aTopic == 'nsPref:changed') {
         switch (aData) {
-          case ns.NTabDB.altSpecPref:
-            newTabPref.altSpec = newTabPref.getAltSpec();
-            // intentionally no break
           case newTabPref.extPrefKey:
             newTabPref.refresh();
             break;
@@ -407,9 +390,9 @@
       this.inUse = Services.prefs.getBoolPref(this.extPrefKey);
       /*
        * if using offlintab (different urls for pb/non-pb window):
-       * set browser.newtab.url to (this.altSpec || ns.NTabDB.spec) instead of
-       * this.spec to prevent updating BROWSER_NEW_TAB_URL in every window based
-       * on the most recently opened window.
+       * set browser.newtab.url to ns.NTabDB.spec instead of this.spec to
+       * prevent updating BROWSER_NEW_TAB_URL in every window based on
+       * the most recently opened window.
        *
        * if not using offlintab:
        * set browser.newtab.url on default branch to make sure
@@ -418,7 +401,7 @@
        * see http://dxr.mozilla.org/mozilla-central/search?q=getNewTabPageURL
        */
       if (this.inUse) {
-        let spec = this.altSpec || ns.NTabDB.spec;
+        let spec = ns.NTabDB.spec;
         if (window.aboutNewTabService) {
           aboutNewTabService.newTabURL = spec;
         } else if (window.NewTabURL && NewTabURL.override) {
@@ -563,8 +546,7 @@
       }
 
       if (PrivateBrowsingUtils.isWindowPrivate(window) &&
-          PrivateBrowsingUtils.permanentPrivateBrowsing &&
-          !newTabPref.altSpec) {
+          PrivateBrowsingUtils.permanentPrivateBrowsing) {
         permanentPB.notify();
       }
 

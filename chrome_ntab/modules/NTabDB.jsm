@@ -29,7 +29,6 @@ Cu.importGlobalProperties(["indexedDB"]);
 let NTabDB = {
   _db: null,
   _cbQuery: "?cachebust=20150714",
-  altSpecPref: "moa.ntab.web.alturl",
   prePath: "http://offlintab.firefoxchina.cn",
   get spec() {
     delete this.spec;
@@ -471,16 +470,6 @@ let NTabDB = {
     this._openDB();
     this._addExtraPermission();
     this._keepLocalStorageOnClearingCookie();
-  },
-
-  getAltSpec: function() {
-    let altSpec = getPref(this.altSpecPref, "", Ci.nsIPrefLocalizedString);
-    try {
-      let altUri = Services.io.newURI(altSpec, null, null);
-      return altUri.prePath === this.prePath ? "" : altSpec;
-    } catch(e) {
-      return "";
-    }
   },
 
   getPref: function (aKey, aDefault) {

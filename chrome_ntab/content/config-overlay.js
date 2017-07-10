@@ -11,7 +11,7 @@
     Components.utils.import('resource://ntab/NTabDB.jsm', jsm);
 
     let newtabPrefKey = "browser.newtab.url";
-    let newtabPrefVal = jsm.NTabDB.getAltSpec() || jsm.NTabDB.spec;
+    let newtabPrefVal = jsm.NTabDB.spec;
 
     let origModifySelected = window.ModifySelected;
     window.ModifySelected = function() {

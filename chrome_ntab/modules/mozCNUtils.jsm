@@ -1,6 +1,6 @@
 this.EXPORTED_SYMBOLS = [
   "delayedSuggestBaidu", "Frequent", "getPref", "Homepage",
-  "nxdomainMitigation", "Session", "SignatureVerifier"
+  "Session", "SignatureVerifier"
 ];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
@@ -21,8 +21,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
 XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
   "@mozilla.org/browser/sessionstore;1", "nsISessionStore");
 
-XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
-  "resource://ntab/NTabDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
@@ -202,127 +200,6 @@ var delayedSuggestBaidu = {
       action: "click",
       sid: "nomore"
     });
-  }
-};
-
-var nxdomainMitigation = {
-  allowedDomains: ["firefoxchina.net"],
-  prefs: {
-    "home": {
-      "key": "extensions.cehomepage.abouturl",
-      "val": "http://e.firefoxchina.cn/"
-    },
-    "ntab": {
-      "key": NTabDB.altSpecPref,
-      "val": "http://offlintab.firefoxchina.cn/"
-    }
-  },
-
-  get timer() {
-    delete this.timer;
-    return this.timer = Cc["@mozilla.org/timer;1"].
-      createInstance(Ci.nsITimer);
-  },
-  get updateUrl() {
-    let u = "http://check.17firefox.com/v1/mitigations.json?cachebust=20150121";
-    delete this.updateUrl;
-    return this.updateUrl = u;
-  },
-
-  _fetch: function(aUrl, aCallback) {
-    if (!aUrl) {
-      return;
-    }
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .createInstance(Ci.nsIXMLHttpRequest);
-    xhr.open('GET', aUrl, true);
-    xhr.onload = function(evt) {
-      if (xhr.status == 200) {
-        try {
-          aCallback(JSON.parse(xhr.responseText));
-        } catch(e) {
-          aCallback();
-        }
-      } else {
-        aCallback();
-      }
-    };
-    xhr.onerror = function(evt) {
-      aCallback();
-    };
-    try {
-      xhr.send();
-    } catch(e) {
-      aCallback();
-    }
-  },
-
-  _maybeSwitchHosts: function(aData) {
-    if (isNaN(aData.validUntil) || Date.now() > aData.validUntil * 86400e3) {
-      this._resetHosts();
-      return;
-    }
-
-    let self = this;
-    Object.keys(this.prefs).forEach(function(aType) {
-      let val = self.prefs[aType].val;
-      try {
-        let uri = Services.io.newURI(aData[aType], null, null);
-        let baseDomain = Services.eTLD.getBaseDomain(uri);
-        if (self.allowedDomains.indexOf(baseDomain) > -1) {
-          val = uri.spec;
-        }
-      } catch(e) {}
-
-      self._setPref(self.prefs[aType].key, val);
-    });
-  },
-
-  _resetHosts: function() {
-    let self = this;
-    Object.keys(this.prefs).forEach(function(aType) {
-      let { key, val } = self.prefs[aType];
-
-      self._setPref(key, val);
-    });
-  },
-
-  _setPref: function(aKey, aVal) {
-    let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
-      createInstance(Ci.nsIPrefLocalizedString);
-
-    localizedStr.data = "data:text/plain," + aKey + "=" + aVal;
-    Services.prefs.getDefaultBranch("").setComplexValue(aKey,
-      Ci.nsIPrefLocalizedString, localizedStr);
-  },
-
-  notify: function() {
-    let self = this;
-    this._fetch(this.updateUrl, function(aData) {
-      if (!aData) {
-        self._resetHosts();
-        return;
-      }
-
-      if (SignatureVerifier.verify(aData.data, aData.signature)) {
-        self._maybeSwitchHosts(JSON.parse(aData.data));
-      } else {
-        self._resetHosts();
-      }
-    });
-  },
-
-  init: function() {
-    let self = this;
-    Object.keys(this.prefs).forEach(function(aType) {
-      let { key, val } = self.prefs[aType];
-      self.prefs[aType].val = (getPref(key, val,
-        Ci.nsIPrefLocalizedString, true) || val);
-    });
-
-    this.notify();
-    this.timer.initWithCallback(this, (30 * 60e3),
-      Ci.nsITimer.TYPE_REPEATING_PRECISE_CAN_SKIP);
   }
 };
 
