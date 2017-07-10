@@ -174,32 +174,53 @@ let fxAccountsProxy = {
       "tooltiptext"
     ]
   },
-  // no gFxAccounts.button since Fx 41
-  generateKVs: function(gFxAccounts) {
+  getFxaOrSync: function(aWindow) {
+    if (!aWindow) {
+      return;
+    }
+    // Since Fx 55, see https://bugzil.la/1353571 & https://bugzil.la/1354084
+    if (aWindow.gSync) {
+      return {
+        container: aWindow.gSync.appMenuContainer,
+        label: aWindow.gSync.appMenuLabel,
+        status: aWindow.gSync.appMenuStatus
+      };
+    }
+    if (aWindow.gFxAccounts) {
+      return {
+        button: aWindow.gFxAccounts.button,
+        container: aWindow.gFxAccounts.panelUIFooter,
+        label: aWindow.gFxAccounts.panelUILabel,
+        status: aWindow.gFxAccounts.panelUIStatus
+      }
+    }
+  },
+  generateKVs: function(fxaOrSync) {
     let kvs = {};
 
-    if (gFxAccounts.button) {
+    // Before Fx 41
+    if (fxaOrSync.button) {
       this.mutationConfig.attributeFilter.forEach(function(aKey) {
-        if (gFxAccounts.button.hasAttribute(aKey)) {
-          kvs[aKey] = gFxAccounts.button.getAttribute(aKey);
+        if (fxaOrSync.button.hasAttribute(aKey)) {
+          kvs[aKey] = fxaOrSync.button.getAttribute(aKey);
         }
       });
-    } else if (gFxAccounts.panelUIFooter &&
-               gFxAccounts.panelUILabel &&
-               gFxAccounts.panelUIStatus) {
+    } else if (fxaOrSync.container &&
+               fxaOrSync.label &&
+               fxaOrSync.status) {
       ["disabled", "fxastatus"].forEach(function(aKey) {
-        if (gFxAccounts.panelUIFooter.hasAttribute(aKey)) {
-          kvs[aKey] = gFxAccounts.panelUIFooter.getAttribute(aKey);
+        if (fxaOrSync.container.hasAttribute(aKey)) {
+          kvs[aKey] = fxaOrSync.container.getAttribute(aKey);
         }
       });
       ["label"].forEach(function(aKey) {
-        if (gFxAccounts.panelUILabel.hasAttribute(aKey)) {
-          kvs[aKey] = gFxAccounts.panelUILabel.getAttribute(aKey);
+        if (fxaOrSync.label.hasAttribute(aKey)) {
+          kvs[aKey] = fxaOrSync.label.getAttribute(aKey);
         }
       });
       ["tooltiptext"].forEach(function(aKey) {
-        if (gFxAccounts.panelUIStatus.hasAttribute(aKey)) {
-          kvs[aKey] = gFxAccounts.panelUIStatus.getAttribute(aKey);
+        if (fxaOrSync.status.hasAttribute(aKey)) {
+          kvs[aKey] = fxaOrSync.status.getAttribute(aKey);
         }
       });
     }
@@ -207,10 +228,9 @@ let fxAccountsProxy = {
     return kvs;
   },
   maybeRegisterMutationObserver: function(aWindow) {
-    let gFxAccounts = aWindow.gFxAccounts;
+    let fxaOrSync = this.getFxaOrSync(aWindow);
     let windowMM = aWindow.messageManager;
-
-    if (!gFxAccounts || !windowMM) {
+    if (!fxaOrSync || !windowMM) {
       return;
     }
 
@@ -223,29 +243,28 @@ let fxAccountsProxy = {
           return;
         }
 
-        let kvs = self.generateKVs(gFxAccounts);
+        let kvs = self.generateKVs(fxaOrSync);
         windowMM.broadcastAsyncMessage(self.messageName, "mutation", kvs);
       });
     });
 
-    if (gFxAccounts.button) {
-      observer.observe(gFxAccounts.button, config);
+    // Before Fx 41
+    if (fxaOrSync.button) {
+      observer.observe(fxaOrSync.button, config);
     } else {
-      observer.observe(gFxAccounts.panelUIFooter, config);
-      observer.observe(gFxAccounts.panelUILabel, config);
-      observer.observe(gFxAccounts.panelUIStatus, config);
+      observer.observe(fxaOrSync.container, config);
+      observer.observe(fxaOrSync.label, config);
+      observer.observe(fxaOrSync.status, config);
     }
   },
   maybeInitContentButton: function(aBrowser) {
-    let gFxAccounts = aBrowser.ownerGlobal &&
-                      aBrowser.ownerGlobal.gFxAccounts;
+    let fxaOrSync = this.getFxaOrSync(aBrowser.ownerGlobal);
     let browserMM = aBrowser.messageManager;
-
-    if (!gFxAccounts || !browserMM) {
+    if (!fxaOrSync || !browserMM) {
       return;
     }
 
-    let kvs = this.generateKVs(gFxAccounts);
+    let kvs = this.generateKVs(fxaOrSync);
     browserMM.sendAsyncMessage(this.messageName, "init", kvs);
   },
   init: function() {
@@ -264,7 +283,9 @@ let fxAccountsProxy = {
         this.maybeInitContentButton(browser);
         break;
       case "action":
-        browser.ownerGlobal.gFxAccounts.onMenuPanelCommand(aMessage.objects);
+        let fxaOrSync = (browser.ownerGlobal.gSync ||
+                         browser.ownerGlobal.gFxAccounts);
+        fxaOrSync.onMenuPanelCommand(aMessage.objects);
         Tracking.track({
           type: "ntabsync",
           action: "click",
@@ -453,7 +474,7 @@ mozCNUtils.prototype = {
           case "setBaiduAsCurrentSearch":
             delayedSuggestBaidu.baidu.hidden = false;
             Services.search.currentEngine = delayedSuggestBaidu.baidu;
-            
+
             Tracking.track({
               type: "delayedsuggestbaidu",
               action: "submit",

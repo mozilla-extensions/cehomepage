@@ -83,6 +83,9 @@ let NTab = {
             sendAsyncMessage(msg);
           }, false, /** wantsUntrusted */false);
         });
+
+        // lazy load AboutHome.jsm on Fx 55+, see https://bugzil.la/1358921
+        sendAsyncMessage('AboutHome:RequestUpdate');
       }
     };
 
