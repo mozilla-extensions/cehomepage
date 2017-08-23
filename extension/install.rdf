@@ -3,7 +3,7 @@
 <RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:em="http://www.mozilla.org/2004/em-rdf#">
   <Description about="urn:mozilla:install-manifest">
     <em:id>cehomepage@mozillaonline.com</em:id>
-    <em:version>1.56.1</em:version>
+    <em:version>2.56b1</em:version>
     <em:name>Firefox Homepage</em:name>
     <em:description>Customizied Home Page for Firefox</em:description>
     <em:creator>Mozilla Online Limited</em:creator>
@@ -18,7 +18,7 @@
     <em:targetApplication>
       <Description>
         <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-        <em:minVersion>38.0</em:minVersion>
+        <em:minVersion>56.0</em:minVersion>
         <em:maxVersion>56.*</em:maxVersion>
       </Description>
     </em:targetApplication>
@@ -26,6 +26,8 @@
     <em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCd77P/ko6LTPMWcIjA5+0AJ7Y2w1CA31UYNTLA6OMwc9kcvO407SrE649A1ZUOi8bDPvJ6/KqVU9zPmv1XY1SjpEF8RlXP5SQ4KXirH4wnBk94cklYJTeDVuGOvCZS4KNazsjibERhRE7oGxg3X+rw+Ifu14AmAqXm4lyMrYIt/QIDAQAB</em:updateKey>
     <em:unpack>true</em:unpack>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
+    <em:bootstrap>true</em:bootstrap>
+    <em:hasEmbeddedWebExtension>true</em:hasEmbeddedWebExtension>
     <em:localized>
       <Description>
         <em:locale>zh-CN</em:locale>

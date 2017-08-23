@@ -1,0 +1,32 @@
+{
+  "applications": {
+    "gecko": {
+      "id": "cehomepage@mozillaonline.com",
+      "strict_min_version": "56.0"
+    }
+  },
+  "chrome_settings_overrides": {
+    // "homepage": "cehome/cehome.html",
+    "search_provider": {
+      "favicon_url": "https://www.zhihu.com/favicon.ico",
+      "name": "知乎",
+      "search_url": "https://www.zhihu.com/search?type=content&q={searchTerms}"
+    }
+  },
+  "chrome_url_overrides" : {
+    // "newtab": "ntab/ntab.html"
+  },
+  "default_locale": "en_US",
+  "description": "__MSG_extensionDescription__",
+  "homepage_url": "http://www.firefox.com.cn/",
+  "icons": {
+    "48": "icons/icon-48.png",
+    "64": "icons/icon-64.png"
+  },
+  "manifest_version": 2,
+  "name": "__MSG_extensionName__",
+  "permissions": [
+    "storage"
+  ],
+  "version": "2.56"
+}

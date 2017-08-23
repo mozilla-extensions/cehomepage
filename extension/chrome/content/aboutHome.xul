@@ -7,7 +7,7 @@
   <html:link rel="icon" href="chrome://ntab/skin/logo/firefox.ico" style="display:none"/>
   <browser id="content" type="content" src="" flex="1"/>
   <script type="text/javascript">
-  window.addEventListener("DOMContentLoaded", function() {
+  window.addEventListener("DOMContentLoaded", () => {
     var src = Components.utils.import("resource://ntab/mozCNUtils.jsm", {}).
       Homepage.aboutpage;
 

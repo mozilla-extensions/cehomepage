@@ -1,3 +1,5 @@
+/* eslint-env mozilla/frame-script */
+
 let {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -18,16 +20,10 @@ let mozCNWebChannelContent = {
     NTabDB.spec
   ],
   cachedWindows: new Map(),
+  channelID: "moz_cn_channel_v2",
   messageName: "mozCNUtils:WebChannel",
 
-  get channelID() {
-    let prefKey = "webchannel.allowObject.urlWhitelist";
-    delete this.channelID;
-    return this.channelID = Services.prefs.getPrefType(prefKey) ?
-                            "moz_cn_channel_v2" : "moz_cn_utils";
-  },
-
-  handleEvent: function(aEvt) {
+  handleEvent(aEvt) {
     switch (aEvt.type) {
       case "mozCNUtils:Register":
         switch (aEvt.detail.subType) {
@@ -37,48 +33,44 @@ let mozCNWebChannelContent = {
           case "searchEngine.maybeEnableSwitchToBaidu":
             this.maybeEnableSwitchToBaidu(aEvt);
             break;
-          case "startup.maybeHighlightSetHomepage":
-            this.maybeHighlightSetHomepage(aEvt);
-            break;
           /* tools ? */
         }
         break;
     }
   },
 
-  init: function() {
-    let self = this;
-    Services.obs.addObserver(this, "content-document-global-created", false);
-    addEventListener("unload", function() {
-      Services.obs.removeObserver(self, "content-document-global-created");
+  init() {
+    Services.obs.addObserver(this, "content-document-global-created");
+    addEventListener("unload", () => {
+      Services.obs.removeObserver(this, "content-document-global-created");
     });
 
     // relay WebChannel response to qualified inner windows
-    addEventListener("WebChannelMessageToContent", function (aEvt) {
+    addEventListener("WebChannelMessageToContent", aEvt => {
       if (aEvt.target !== content) {
         return;
       }
 
-      self.cachedWindows.forEach(function(aWindow) {
+      this.cachedWindows.forEach(aWindow => {
         try {
           let evt = new aWindow.CustomEvent("WebChannelMessageToContent", {
             detail: Cu.cloneInto(aEvt.detail, aWindow),
           });
           aWindow.dispatchEvent(evt);
-        } catch(e) {};
+        } catch (e) {}
       });
     }, true, true);
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case "content-document-global-created":
         if (!content || !aSubject || aSubject.top !== content) {
           return;
         }
 
-        if (!this.specs.some(function(aSpec) {
-          return Services.io.newURI(aSpec, null, null).prePath === aData;
+        if (!this.specs.some(aSpec => {
+          return Services.io.newURI(aSpec).prePath === aData;
         })) {
           return;
         }
@@ -91,17 +83,16 @@ let mozCNWebChannelContent = {
 
         let innerID = aSubject.QueryInterface(Ci.nsIInterfaceRequestor).
           getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-        let self = this;
-        aSubject.addEventListener("unload", function(aEvt) {
-          self.cachedWindows.delete(innerID);
-        }, false);
+        aSubject.addEventListener("unload", aEvt => {
+          this.cachedWindows.delete(innerID);
+        });
 
         this.cachedWindows.set(innerID, aSubject);
         break;
     }
   },
 
-  isElementVisible: function(aElement) {
+  isElementVisible(aElement) {
     if (aElement.hidden) {
       return false;
     }
@@ -116,7 +107,7 @@ let mozCNWebChannelContent = {
     return true;
   },
 
-  maybeEnableSetDefaultBrowser: function(aEvt) {
+  maybeEnableSetDefaultBrowser(aEvt) {
     if (aEvt.target.document.documentURI !== NTabDB.spec) {
       return;
     }
@@ -124,13 +115,13 @@ let mozCNWebChannelContent = {
     let self = this;
     let messageType = "isFxDefaultBrowser";
     let listener = {
-      receiveMessage: function(msg) {
+      receiveMessage(msg) {
         let data = msg.data || {};
         if (data.type !== messageType) {
           return;
         }
         removeMessageListener(msg.name, listener);
-        
+
         /* undefined: no shellService,
            true: is default,
            false: is not default */
@@ -138,13 +129,13 @@ let mozCNWebChannelContent = {
           return;
         }
         let { button } = aEvt.detail.elements;
-        button.addEventListener('click', function() {
+        button.addEventListener("click", () => {
           sendAsyncMessage(self.messageName, {
             type: "setFxAsDefaultBrowser"
           });
-          button.setAttribute('hidden', 'true');
+          button.setAttribute("hidden", "true");
         }, false, /** wantsUntrusted */false);
-        button.removeAttribute('hidden');
+        button.removeAttribute("hidden");
       }
     };
     addMessageListener(this.messageName, listener);
@@ -153,12 +144,11 @@ let mozCNWebChannelContent = {
     });
   },
 
-  maybeEnableSwitchToBaidu: function(aEvt) {
+  maybeEnableSwitchToBaidu(aEvt) {
     if (!aEvt.target.top.document.documentURI.startsWith("about:neterror")) {
       return;
     }
 
-    let self = this;
     let { form, text, check } = aEvt.detail.elements;
     let checkbox = check &&
       check.querySelector('input[type="checkbox"]');
@@ -166,9 +156,10 @@ let mozCNWebChannelContent = {
       return;
     }
 
+    let self = this;
     let messageType = "isBaiduCurrentSearch";
     let listener = {
-      receiveMessage: function(msg) {
+      receiveMessage(msg) {
         let data = msg.data || {};
         if (data.type !== messageType) {
           return;
@@ -182,7 +173,7 @@ let mozCNWebChannelContent = {
           return;
         }
         check.hidden = false;
-        form.addEventListener("submit", function() {
+        form.addEventListener("submit", () => {
           if (self.isElementVisible(check) && checkbox.checked) {
             sendAsyncMessage(self.messageName, {
               type: "setBaiduAsCurrentSearch"
@@ -195,28 +186,6 @@ let mozCNWebChannelContent = {
     sendAsyncMessage(this.messageName, {
       type: messageType
     });
-  },
-
-  maybeHighlightSetHomepage: function(aEvt) {
-    let win = aEvt.target;
-    let referenceURI = win.document.documentURIObject;
-    let { anchor } = aEvt.detail.elements;
-    let { confirmMsg, highlight, url } = aEvt.detail.extras;
-
-    anchor.addEventListener('click', function() {
-      if (confirmMsg && !win.confirm(confirmMsg)) {
-        return;
-      }
-
-      Homepage.setHomepage(url, referenceURI);
-      anchor.classList.remove(highlight);
-    }, false, /** wantsUntrusted */false);
-
-    if (Homepage.isHomepage(url, referenceURI)) {
-      anchor.classList.remove(highlight);
-    } else {
-      anchor.classList.add(highlight);
-    }
   }
 };
 mozCNWebChannelContent.init();

@@ -72,7 +72,7 @@ function NTabStore(name, engine) {
 NTabStore.prototype = {
   __proto__: Store.prototype,
 
-  getAllIDs: function() {
+  getAllIDs() {
     let ids = {};
     if (NTabSync.stagedData) {
       ids[NTAB_GUID] = 0;
@@ -80,15 +80,15 @@ NTabStore.prototype = {
     return ids;
   },
 
-  changeItemID: function(oldID, newID) {
+  changeItemID(oldID, newID) {
     this._log.trace("NTabStore GUID is constant!");
   },
 
-  itemExists: function(id) {
+  itemExists(id) {
     return (id === NTAB_GUID) && NTabSync.stagedData;
   },
 
-  createRecord: function(id, collection) {
+  createRecord(id, collection) {
     let record = new NTabRecord(collection, id);
 
     /**
@@ -104,15 +104,15 @@ NTabStore.prototype = {
     return record;
   },
 
-  create: function(record) {
+  create(record) {
     this.update(record);
   },
 
-  remove: function(record) {
+  remove(record) {
     this._log.trace("Ignoring remove request");
   },
 
-  update: function(record) {
+  update(record) {
     if (record.id !== NTAB_GUID) {
       return;
     }
@@ -122,7 +122,7 @@ NTabStore.prototype = {
     NTabSync.pendingImport = CommonUtils.generateUUID();
   },
 
-  wipe: function() {
+  wipe() {
     this._log.trace("Ignoring wipe request");
   }
 };
@@ -142,16 +142,16 @@ function NTabTracker(name, engine) {
 NTabTracker.prototype = {
   __proto__: Tracker.prototype,
 
-  startTracking: function() {
+  startTracking() {
     NTabSync.mm.addMessageListener(NTabSync.messageName, this);
 
     NTabSync.findFirstBrowser(NTabSync.triggerContentUpload, NTabSync);
   },
-  stopTracking: function() {
+  stopTracking() {
     NTabSync.mm.removeMessageListener(NTabSync.messageName, this);
   },
 
-  receiveMessage: function(aMessage) {
+  receiveMessage(aMessage) {
     if (aMessage.name != NTabSync.messageName ||
         !aMessage.target.currentURI.equals(NTabDB.uri)) {
       return;
@@ -215,7 +215,7 @@ NTabTracker.prototype = {
     }
   },
 
-  _triggerUpload: function() {
+  _triggerUpload() {
     // use 0 (very old) to make sure remote changes always win
     this.addChangedID(NTAB_GUID, 0);
     this.score += Weave.SCORE_INCREMENT_XLARGE;
@@ -229,7 +229,7 @@ let NTabSync = {
     let tmp = {};
     try {
       Cu.import("resource://services-sync/engines.js", tmp);
-    } catch (ex) {};
+    } catch (ex) {}
     delete this.Changeset;
     return this.Changeset = tmp.Changeset;
   },
@@ -286,7 +286,7 @@ let NTabSync = {
   },
 
   // no string <=> object conversion in _loadData/_dumpData
-  _loadData: function(aFile) {
+  _loadData(aFile) {
     let text = null;
     if (aFile.exists() && aFile.fileSize) {
       let fstream = Cc["@mozilla.org/network/file-input-stream;1"].
@@ -298,25 +298,25 @@ let NTabSync = {
     }
     try {
       JSON.parse(text);
-    } catch(e) {
+    } catch (e) {
       text = null;
       try {
         aFile.remove(false);
-      } catch(e) {};
+      } catch (e) {}
     }
 
     return text;
   },
 
-  _dumpData: function(aFile, aData, aCallback) {
+  _dumpData(aFile, aData, aCallback) {
     OS.File.open(aFile.path, {
       append: false,
       truncate: true
     }).then(function(aFile) {
       let encoder = new TextEncoder();
       let data = encoder.encode(aData);
-      aFile.write(data).then(function() {
-        aFile.close().then(function() {
+      aFile.write(data).then(() => {
+        aFile.close().then(() => {
           if (aCallback) {
             aCallback();
           }
@@ -325,7 +325,63 @@ let NTabSync = {
     }).then(null, Cu.reportError);
   },
 
-  findFirstBrowser: function(aCallback, aThisObj) {
+  get strings() {
+    let spec = "chrome://ntab/locale/sync.properties";
+    delete this.strings;
+    return this.strings = Services.strings.createBundle(spec);
+  },
+
+  _(key) {
+    return this.strings.GetStringFromName(key);
+  },
+
+  addPrefs(win) {
+    let self = this;
+    win.mozCNNTabSync = {
+      onSyncToEnablePref(checkbox) {
+        let cbWin = checkbox.ownerGlobal;
+        if (!checkbox.checked) {
+          if (cbWin.mozCNSyncHack && cbWin.mozCNSyncHack.onSyncToEnablePref) {
+            return cbWin.mozCNSyncHack.onSyncToEnablePref(checkbox);
+          }
+          return undefined;
+        }
+        let shouldEnable = Services.prompt.confirm(cbWin,
+          self._("ntabsync.notification.title"),
+          self._("ntabsync.notification.message"));
+
+        if (!shouldEnable) {
+          checkbox.checked = false;
+        }
+
+        return undefined;
+      }
+    };
+
+    let doc = win.document;
+
+    let prefs = doc.getElementById("syncEnginePrefs");
+    let pref = doc.createElement("preference");
+    pref.id = "engine.mozcn.ntab";
+    pref.name = "services.sync.engine.mozcn.ntab";
+    pref.type = "bool";
+    prefs.appendChild(pref);
+
+    let parentVBox = doc.querySelector("#fxaSyncEngines > vbox");
+    if (!parentVBox) {
+      return;
+    }
+
+    let checkbox = doc.createElement("checkbox");
+    checkbox.setAttribute("label", this._("engine.mozcn.ntab.label"));
+    checkbox.setAttribute("accesskey", this._("engine.mozcn.ntab.accesskey"));
+    checkbox.setAttribute("preference", pref.id);
+    checkbox.setAttribute("onsynctopreference",
+      "return mozCNNTabSync.onSyncToEnablePref(this);");
+    parentVBox.appendChild(checkbox);
+  },
+
+  findFirstBrowser(aCallback, aThisObj) {
     let winEnum = Services.wm.getEnumerator("navigator:browser");
     while (winEnum.hasMoreElements()) {
       let browserWin = winEnum.getNext();
@@ -348,13 +404,22 @@ let NTabSync = {
     }
   },
 
-  init: function() {
-    Services.obs.addObserver(this, "weave:engine:start-tracking", false);
-    Services.obs.addObserver(this, "weave:service:ready", false);
+  init() {
+    Services.obs.addObserver(this, "sync-pane-loaded");
+    Services.obs.addObserver(this, "weave:engine:start-tracking");
+    Services.obs.addObserver(this, "weave:service:ready");
   },
 
-  observe: function(aSubject, aTopic, aData) {
+  uninit() {
+    Weave.Service.engineManager.unregister(NTabEngine.name);
+    Services.obs.removeObserver(this, "sync-pane-loaded");
+  },
+
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
+      case "sync-pane-loaded":
+        this.addPrefs(aSubject);
+        break;
       case "weave:engine:start-tracking":
         this.prematureStartTracking = true;
         break;
@@ -367,7 +432,7 @@ let NTabSync = {
     }
   },
 
-  triggerContentImport: function(aBrowser) {
+  triggerContentImport(aBrowser) {
     aBrowser.messageManager.sendAsyncMessage(this.messageName, {
       id: this.pendingImport,
       type: "update",
@@ -375,7 +440,7 @@ let NTabSync = {
     });
   },
 
-  triggerContentUpload: function(aBrowser) {
+  triggerContentUpload(aBrowser) {
     aBrowser.messageManager.sendAsyncMessage(this.messageName, {
       id: Date.now(),
       type: "ready",

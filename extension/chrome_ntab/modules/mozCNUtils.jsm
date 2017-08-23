@@ -48,47 +48,48 @@ var delayedSuggestBaidu = {
     return (getPref(this.prefKey, 0) < this.version) && this.baidu;
   },
 
-  init: function() {
+  init() {
     Services.search.init();
   },
 
-  isGoogleSearch: function(aURI) {
+  isGoogleSearch(aURI) {
     try {
       let publicSuffix = Services.eTLD.getPublicSuffix(aURI);
-      let hostMatch = ["google.", "www.google."].some(function(aPrefix) {
+      let hostMatch = ["google.", "www.google."].some(aPrefix => {
         return (aPrefix + publicSuffix) == aURI.asciiHost;
       });
 
       if (!hostMatch) {
         return false;
       }
-    } catch(e) {
+    } catch (e) {
       return false;
     }
 
-    return (aURI.path == "/" || aURI.path.startsWith("/search?"));
+    return (aURI.pathQueryRef == "/" ||
+            aURI.pathQueryRef.startsWith("/search?"));
   },
 
-  attach: function(aBrowser, aRequest) {
-    this.remove(aBrowser, aRequest);
+  attach(aBrowser, aURI) {
+    this.remove(aBrowser);
     if (!this.enabled) {
       return;
     }
 
-    let timeoutId = setTimeout((function() {
-      this.notify(aBrowser, aRequest);
-    }).bind(this), this.delay);
+    let timeoutId = setTimeout(() => {
+      this.notify(aBrowser, aURI);
+    }, this.delay);
     aBrowser.setAttribute(this.attribute, timeoutId);
   },
 
-  remove: function(aBrowser, aRequest) {
+  remove(aBrowser, aStatus = Cr.NS_OK) {
     if (aBrowser.hasAttribute(this.attribute)) {
       let timeoutId = aBrowser.getAttribute(this.attribute);
       aBrowser.removeAttribute(this.attribute);
       clearTimeout(parseInt(timeoutId, 10));
     }
 
-    if (this.knownStatus.indexOf(aRequest.status) < 0) {
+    if (this.knownStatus.indexOf(aStatus) < 0) {
       let gBrowser = aBrowser.ownerGlobal.gBrowser;
       let notificationBox = gBrowser.getNotificationBox(aBrowser);
       let notification = notificationBox.
@@ -99,14 +100,14 @@ var delayedSuggestBaidu = {
     }
   },
 
-  extractKeyword: function(aURI) {
+  extractKeyword(aURI) {
     let keyword = "";
 
     try {
       let query = aURI.QueryInterface(Ci.nsIURL).query;
 
       if (query) {
-        query.split("&").some(function(aChunk) {
+        query.split("&").some(aChunk => {
           let pair = aChunk.split("=");
 
           let match = pair[0] == "q";
@@ -116,17 +117,17 @@ var delayedSuggestBaidu = {
           return match;
         })
       }
-    } catch(e) {}
+    } catch (e) {}
 
     return keyword;
   },
 
-  notify: function(aBrowser, aRequest) {
+  notify(aBrowser, aURI) {
     if (!this.enabled) {
       return;
     }
 
-    let keyword = this.extractKeyword(aRequest.URI);
+    let keyword = this.extractKeyword(aURI);
 
     let gBrowser = aBrowser.ownerGlobal.gBrowser;
     let notificationBox = gBrowser.getNotificationBox(aBrowser);
@@ -144,13 +145,13 @@ var delayedSuggestBaidu = {
       [{
         label: positive,
         accessKey: "Y",
-        callback: function() {
+        callback() {
           self.searchAndSwitchEngine(aBrowser, keyword);
         }
       }, {
         label: negative,
         accessKey: "N",
-        callback: function() {
+        callback() {
           self.markNomore()
         }
       }]);
@@ -162,7 +163,7 @@ var delayedSuggestBaidu = {
     });
   },
 
-  searchAndSwitchEngine: function(aBrowser, aKeyword) {
+  searchAndSwitchEngine(aBrowser, aKeyword) {
     let w = aBrowser.ownerGlobal;
     if (aKeyword) {
       let submission = this.baidu.getSubmission(aKeyword);
@@ -190,10 +191,10 @@ var delayedSuggestBaidu = {
     });
   },
 
-  markNomore: function() {
+  markNomore() {
     try {
       Services.prefs.setIntPref(this.prefKey, this.version);
-    } catch(e) {}
+    } catch (e) {}
 
     Tracking.track({
       type: "delayedsuggestbaidu",
@@ -215,7 +216,7 @@ var Frequent = {
   needsDeduplication: false,
   order: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING,
 
-  query: function(aCallback, aLimit) {
+  query(aCallback, aLimit) {
     let options = PlacesUtils.history.getNewQueryOptions();
     options.maxResults = aLimit + 16;
     options.sortingMode = this.order;
@@ -225,10 +226,10 @@ var Frequent = {
     let self = this;
 
     let callback = {
-      handleResult: function (aResultSet) {
-        let row;
+      handleResult(aResultSet) {
+        let row = aResultSet.getNextRow();
 
-        while (row = aResultSet.getNextRow()) {
+        for (; row; row = aResultSet.getNextRow()) {
           if (links.length >= aLimit) {
             break;
           }
@@ -242,19 +243,19 @@ var Frequent = {
             deduplication[title] = 1;
           }
 
-          if (!self.excludes.some(function(aExclude) {
+          if (!self.excludes.some(aExclude => {
             return aExclude.test(url);
           })) {
-            links.push({url: url, title: title});
+            links.push({url, title});
           }
         }
       },
 
-      handleError: function (aError) {
+      handleError(aError) {
         aCallback([]);
       },
 
-      handleCompletion: function (aReason) {
+      handleCompletion(aReason) {
         aCallback(links);
       }
     };
@@ -264,33 +265,33 @@ var Frequent = {
     db.asyncExecuteLegacyQueries([query], 1, options, callback);
   },
 
-  remove: function(aUrls) {
+  remove(aUrls) {
     let urls = [];
-    aUrls.forEach(function(aUrl) {
-      urls.push(Services.io.newURI(aUrl, null, null));
+    aUrls.forEach(aUrl => {
+      urls.push(Services.io.newURI(aUrl));
     });
     PlacesUtils.bhistory.removePages(urls, urls.length);
   },
 
-  topHosts: function(aCallback, aHosts) {
+  topHosts(aCallback, aHosts) {
     if (aHosts.length < 100) {
       aCallback([]);
       return;
     }
     let start = Date.now();
     let indexes = [];
-    PlacesUtils.promiseDBConnection().then(function(db) {
+    PlacesUtils.promiseDBConnection().then(db => {
       return db.execute(`SELECT :idx AS idx, count(v.id) As count
         FROM moz_historyvisits AS v JOIN moz_places AS h ON v.place_id = h.id
         WHERE v.visit_date >= strftime('%s', 'now', 'localtime', 'start of day', '-1 month', 'utc') * 1000000
           AND h.rev_host LIKE :rev_host;`,
-        aHosts.map(function(host, idx) {
+        aHosts.map((host, idx) => {
           return {
-            idx: idx,
+            idx,
             rev_host: (host.split("").reverse().join("") + ".%")
           }
         }),
-        function(row) {
+        row => {
           let item = {
             idx: row.getResultByName("idx"),
             count: row.getResultByName("count")
@@ -301,17 +302,17 @@ var Frequent = {
           indexes.push(item);
         }
       );
-    }).then(function() {
+    }).then(() => {
       let msg = "Frequent.topHosts: " + (Date.now() - start) + "ms";
       Services.console.logStringMessage(msg);
 
-      indexes.sort(function(x, y) {
+      indexes.sort((x, y) => {
         return (y.count - x.count) || (x.idx - y.idx);
       });
-      aCallback(indexes.slice(0, 20).map(function(item) {
+      aCallback(indexes.slice(0, 20).map(item => {
         return item.idx;
       }));
-    }, function(err) {
+    }, err => {
       Cu.reportError(err);
       aCallback([]);
     });
@@ -322,8 +323,8 @@ var DefaultPreferences = new Preferences({
   branch: "",
   defaultBranch: true
 });
-var getPref = function(prefName, defaultValue, valueType, useDefaultBranch) {
-  let prefs = !!useDefaultBranch ? DefaultPreferences : Preferences;
+var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
+  let prefs = useDefaultBranch ? DefaultPreferences : Preferences;
 
   return prefs.get(prefName, defaultValue, valueType);
 };
@@ -342,7 +343,6 @@ var Homepage = {
 
   distributionTopic: "distribution-customization-complete",
   homepagePref: "browser.startup.homepage",
-  pagePref: "browser.startup.page",
 
   // When an empty string is set as pref value, display this.defaultAboutpage.
   get aboutpage() {
@@ -353,76 +353,40 @@ var Homepage = {
     return getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString);
   },
-  get page() {
-    return getPref(this.pagePref, 1);
-  },
-  isHomepage: function(aSpec, aReferenceURI) {
-    if (this.page !== 1) {
-      return false;
-    }
-
-    aSpec = this.normalizeSpec(aSpec, aReferenceURI);
-    if (!aSpec) {
-      return true;
-    }
-
-    return (this.homepage === this.defaultHomepage ||
-            this.homepage.split("?")[0] === this.aboutpage.split("?")[0] ||
-            this.homepage === aSpec);
-  },
-  normalizeSpec: function(aSpec, aReferenceURI) {
+  normalizeSpec(aSpec) {
     try {
       let uri = Services.uriFixup.createFixupURI(aSpec,
         Services.uriFixup.FIXUP_FLAG_NONE);
-      if (aReferenceURI && (uri.prePath !== aReferenceURI.prePath)) {
-        return;
-      }
 
       // ignore the "?cachebust=***" when comparing with this.aboutpage etc.
       if (uri.spec.split("?")[0] === this.aboutpage.split("?")[0] ||
-          this.historicalAboutpages.some(function(historicalAboutpage) {
+          this.historicalAboutpages.some(historicalAboutpage => {
             return uri.spec.split("?")[0] === historicalAboutpage;
           })) {
         return this.defaultHomepage;
-      } else {
-        return uri.spec;
       }
-    } catch(e) {
-      return;
+      return uri.spec;
+    } catch (e) {
+      return "";
     }
   },
-  setHomepage: function(aSpec, aReferenceURI) {
-    aSpec = this.normalizeSpec(aSpec, aReferenceURI);
-    if (!aSpec) {
-      return;
-    }
-
-    Services.prefs.clearUserPref(this.homepagePref);
-    Services.prefs.clearUserPref(this.pagePref);
-
-    if (this.homepage === aSpec) {
-      return;
-    }
-    Services.prefs.setCharPref(this.homepagePref, aSpec);
-  },
-  init: function() {
+  init() {
     this.defaultPrefTweak();
 
     this.handleDistributionDefaults();
 
     this.initAddonListener();
   },
-  defaultPrefTweak: function() {
+  defaultPrefTweak() {
     let defaultHomepage = getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString, true);
 
-    let self = this;
-    let updatedHomepage = defaultHomepage.split("|").map(function(spec) {
+    let updatedHomepage = defaultHomepage.split("|").map(spec => {
       // for china repack installation
-      let normalizedSpec = self.normalizeSpec(spec) || spec;
+      let normalizedSpec = this.normalizeSpec(spec) || spec;
       // for vanilla installation
-      if (self.vanillaHomepages.indexOf(normalizedSpec) > -1) {
-        return self.defaultHomepage;
+      if (this.vanillaHomepages.indexOf(normalizedSpec) > -1) {
+        return this.defaultHomepage;
       }
 
       return normalizedSpec;
@@ -439,14 +403,14 @@ var Homepage = {
     Services.prefs.getDefaultBranch("").setComplexValue(this.homepagePref,
       Ci.nsIPrefLocalizedString, localizedStr);
   },
-  handleDistributionDefaults: function() {
-    Services.obs.addObserver(this, this.distributionTopic, false);
-    Services.prefs.addObserver(this.homepagePref, this, false);
+  handleDistributionDefaults() {
+    Services.obs.addObserver(this, this.distributionTopic);
+    Services.prefs.addObserver(this.homepagePref, this);
   },
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
       case this.distributionTopic:
-        Services.prefs.removeObserver(this.homepagePref, this, false);
+        Services.prefs.removeObserver(this.homepagePref, this);
         Services.obs.removeObserver(this, aTopic);
 
         this.maybeResetHomepage();
@@ -465,7 +429,7 @@ var Homepage = {
    * set as (part of ?) the user value with setCharPref. Try to reset any
    * unnecessary user value here.
    */
-  maybeResetHomepage: function() {
+  maybeResetHomepage() {
     if (!Services.prefs.prefHasUserValue(this.homepagePref)) {
       return;
     }
@@ -485,7 +449,7 @@ var Homepage = {
       sid: "startup"
     });
   },
-  maybeUpdateSession: function() {
+  maybeUpdateSession() {
     try {
       let state = JSON.parse(sessionStore.getBrowserState());
       let unchanged = true;
@@ -502,9 +466,9 @@ var Homepage = {
                   sid: "session"
                 });
               }
-            } catch(ex) {
+            } catch (ex) {
               Cu.reportError(ex);
-            };
+            }
           }
         }
       }
@@ -512,21 +476,21 @@ var Homepage = {
         return;
       }
       sessionStore.setBrowserState(JSON.stringify(state));
-    } catch(ex) {};
+    } catch (ex) {}
   },
-  initAddonListener: function() {
+  initAddonListener() {
     AddonManager.addAddonListener(this);
     AddonManager.shutdown.addBlocker("mozCNUtils.jsm:Homepage shutdown",
       this.uninit.bind(this)
     );
   },
-  uninit: function() {
+  uninit() {
     AddonManager.removeAddonListener(this);
   },
-  onUninstalling: function(addon) {
+  onUninstalling(addon) {
     return this.onDisabling(addon);
   },
-  onDisabling: function(addon) {
+  onDisabling(addon) {
     if (addon.id !== "cehomepage@mozillaonline.com") {
       return;
     }
@@ -553,13 +517,13 @@ var SignatureVerifier = {
 
   get key() {
     delete this.key;
-    return this.key = getPref('moa.signatureverifier.key', '');
+    return this.key = getPref("moa.signatureverifier.key", "");
   },
 
-  verify: function(aData, aSignature) {
+  verify(aData, aSignature) {
     try {
       return this.verifier.verifyData(aData, aSignature, this.key);
-    } catch(e) {
+    } catch (e) {
       return false;
     }
   }

@@ -1,10 +1,12 @@
+/* eslint-env mozilla/frame-script */
+
 let Cu = Components.utils;
 let Ci = Components.interfaces;
 let Cc = Components.classes;
 
-Cu.import('resource://gre/modules/XPCOMUtils.jsm');
-XPCOMUtils.defineLazyModuleGetter(this, 'Services',
-  'resource://gre/modules/Services.jsm');
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
@@ -12,9 +14,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
   "resource://ntab/NTabSync.jsm");
 
 let NTab = {
-  observe: function(aSubject, aTopic, aData) {
+  observe(aSubject, aTopic, aData) {
     switch (aTopic) {
-      case 'content-document-global-created':
+      case "content-document-global-created":
         if (!content || !aSubject || aSubject !== content) {
           return;
         }
@@ -33,18 +35,18 @@ let NTab = {
         break;
     }
   },
-  initTracking: function(aSubject) {
-    aSubject.addEventListener('mozCNUtils:Tracking', function(aEvt) {
-      sendAsyncMessage('mozCNUtils:Tracking', aEvt.detail);
+  initTracking(aSubject) {
+    aSubject.addEventListener("mozCNUtils:Tracking", aEvt => {
+      sendAsyncMessage("mozCNUtils:Tracking", aEvt.detail);
     }, true, true);
   },
-  init: function(aSubject) {
+  init(aSubject) {
     let document = aSubject.document;
 
     let Launcher = {
       get launcher() {
         delete this.launcher;
-        return this.launcher = document.querySelector('#launcher');
+        return this.launcher = document.querySelector("#launcher");
       },
       get tools() {
         delete this.tools;
@@ -55,27 +57,26 @@ let NTab = {
           return;
         }
 
-        this.tools.removeAttribute('hidden');
+        this.tools.removeAttribute("hidden");
 
-        let self = this;
-        [].forEach.call(document.querySelectorAll('#tools > li'), function(li) {
-          li.addEventListener('click', function(aEvt) {
-            self.launcher.classList.toggle('tools');
+        [].forEach.call(document.querySelectorAll("#tools > li"), li => {
+          li.addEventListener("click", aEvt => {
+            this.launcher.classList.toggle("tools");
 
             let id = aEvt.currentTarget.id;
-            sendAsyncMessage('mozCNUtils:Tracking', {
-              type: 'tools',
-              action: 'click',
+            sendAsyncMessage("mozCNUtils:Tracking", {
+              type: "tools",
+              action: "click",
               sid: id
             });
 
             let msg = {
-              'downloads': 'AboutHome:Downloads',
-              'bookmarks': 'AboutHome:Bookmarks',
-              'history': 'AboutHome:History',
-              'addons': 'AboutHome:Addons',
-              'sync': 'AboutHome:Sync',
-              'settings': 'AboutHome:Settings'
+              "downloads": "AboutHome:Downloads",
+              "bookmarks": "AboutHome:Bookmarks",
+              "history": "AboutHome:History",
+              "addons": "AboutHome:Addons",
+              "sync": "AboutHome:Sync",
+              "settings": "AboutHome:Settings"
             }[id];
             if (!msg) {
               return;
@@ -85,7 +86,7 @@ let NTab = {
         });
 
         // lazy load AboutHome.jsm on Fx 55+, see https://bugzil.la/1358921
-        sendAsyncMessage('AboutHome:RequestUpdate');
+        sendAsyncMessage("AboutHome:RequestUpdate");
       }
     };
 
@@ -93,7 +94,7 @@ let NTab = {
       _inited: false,
       _cachedMessages: [],
 
-      messageName: 'mozCNUtils:FxAccounts',
+      messageName: "mozCNUtils:FxAccounts",
       attributes: [
         "disabled",
         "failed",
@@ -107,10 +108,10 @@ let NTab = {
 
       get button() {
         delete this.button;
-        return this.button = document.querySelector('#fx-accounts');
+        return this.button = document.querySelector("#fx-accounts");
       },
 
-      receiveMessage: function(aMessage) {
+      receiveMessage(aMessage) {
         if (aMessage.name != this.messageName) {
           return;
         }
@@ -120,7 +121,7 @@ let NTab = {
           return;
         }
 
-        switch(aMessage.data) {
+        switch (aMessage.data) {
           case "init":
           case "mutation":
             this.updateFromKV(aMessage.objects, aMessage.data);
@@ -128,17 +129,17 @@ let NTab = {
         }
       },
 
-      init: function() {
+      init() {
         this._inited = true;
 
-        sendAsyncMessage(this.messageName, 'init');
+        sendAsyncMessage(this.messageName, "init");
 
         while (this._cachedMessages.length) {
           this.receiveMessage(this._cachedMessages.shift());
         }
       },
 
-      updateAttribute: function(aKV, aAttributeName) {
+      updateAttribute(aKV, aAttributeName) {
         if (aKV[aAttributeName]) {
           let attributeVal = aKV[aAttributeName];
           switch (aAttributeName) {
@@ -166,23 +167,22 @@ let NTab = {
           }
         }
       },
-      updateFromKV: function(aKV, aType) {
+      updateFromKV(aKV, aType) {
         if (!this.button) {
           return;
         }
 
-        if (aType == 'init') {
-          let self = this;
-          this.button.addEventListener('click', function(aEvt) {
+        if (aType == "init") {
+          this.button.addEventListener("click", aEvt => {
             let fxaStatus = aEvt.originalTarget.getAttribute("fxastatus");
-            sendAsyncMessage(self.messageName, 'action', {
+            sendAsyncMessage(this.messageName, "action", {
               originalTarget: {
-                getAttribute: function(aAttribute) {
-                  switch(aAttribute) {
+                getAttribute(aAttribute) {
+                  switch (aAttribute) {
                     case "fxastatus":
                       return fxaStatus;
                     default:
-                      return;
+                      return undefined;
                   }
                 }
               }
@@ -196,25 +196,17 @@ let NTab = {
       }
     };
 
-    aSubject.addEventListener('mozCNUtils:Diagnose', function(aEvt) {
-      switch(aEvt.detail) {
-        case 'UnknownError':
-          NTabDB.fixUnknownError('content');
-          break;
-      }
-    }, true, true);
-
-    aSubject.addEventListener(NTabSync.messageName, function(aEvt) {
-      if (aEvt.detail && aEvt.detail.dir == 'content2fs') {
+    aSubject.addEventListener(NTabSync.messageName, aEvt => {
+      if (aEvt.detail && aEvt.detail.dir == "content2fs") {
         sendAsyncMessage(NTabSync.messageName, aEvt.detail.data);
       }
     }, true, true);
 
-    let relaySyncMessage = function(aEvt) {
+    let relaySyncMessage = aEvt => {
       if (aEvt.data) {
         aSubject.dispatchEvent(new aSubject.CustomEvent(NTabSync.messageName, {
           detail: Cu.cloneInto({
-            dir: 'fs2content',
+            dir: "fs2content",
             data: {
               id: aEvt.data.id,
               type: aEvt.data.type,
@@ -228,15 +220,15 @@ let NTab = {
     addMessageListener(NTabSync.messageName, relaySyncMessage);
     addMessageListener(FxAccounts.messageName, FxAccounts);
 
-    aSubject.addEventListener('DOMContentLoaded', function() {
+    aSubject.addEventListener("DOMContentLoaded", () => {
       Launcher.init();
       FxAccounts.init();
-    }, false);
-    aSubject.addEventListener('unload', function() {
+    });
+    aSubject.addEventListener("unload", () => {
       removeMessageListener(NTabSync.messageName, relaySyncMessage);
       removeMessageListener(FxAccounts.messageName, FxAccounts);
-    }, false);
+    });
   }
 }
 
-Services.obs.addObserver(NTab, 'content-document-global-created', false);
+Services.obs.addObserver(NTab, "content-document-global-created");

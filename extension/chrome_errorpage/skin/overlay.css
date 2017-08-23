@@ -67,15 +67,9 @@ body
   background-color: #9ACE5C;
 }
 
-/* since Fx 48 */
 #netErrorButtonContainer > #goToHomePage {
   margin-left: 10px;
   margin-top: 1.2em;
-}
-
-/* override https://bugzil.la/1363046 in Fx 55 */
-#netErrorButtonContainer {
-  justify-content: start;
 }
 
 #errorPageContainer #goToHomePage:hover
