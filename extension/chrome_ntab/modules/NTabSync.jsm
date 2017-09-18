@@ -54,7 +54,11 @@ NTabEngine.prototype = {
 
     // clear |this._modified| here to prevent updating timestamp for no-op.
     if (shouldApply) {
-      this._modified = {};
+      if (NTabSync.Changeset && this._modified instanceof NTabSync.Changeset) {
+        this._modified.clear();
+      } else {
+        this._modified = {};
+      }
     }
 
     return shouldApply;
@@ -221,6 +225,14 @@ NTabTracker.prototype = {
 
 let NTabSync = {
   messageName: "mozCNUtils:NTabSync",
+  get Changeset() {
+    let tmp = {};
+    try {
+      Cu.import("resource://services-sync/engines.js", tmp);
+    } catch (ex) {};
+    delete this.Changeset;
+    return this.Changeset = tmp.Changeset;
+  },
   get mm() {
     delete this.mm;
     return this.mm = Cc["@mozilla.org/globalmessagemanager;1"].
