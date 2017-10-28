@@ -206,10 +206,10 @@ var delayedSuggestBaidu = {
 
 var Frequent = {
   excludes: [
-    /^http:\/\/[ein].firefoxchina.cn\/n(ew)?tab/,
-    /^http:\/\/[ein].firefoxchina.cn\/parts\/google_rdr/,
-    /^http:\/\/[ein].firefoxchina.cn\/redirect\/adblock/,
-    /^http:\/\/[ein].firefoxchina.cn\/(redirect\/)?search/,
+    /^http:\/\/[a-z]+.firefoxchina.cn\/n(ew)?tab/,
+    /^http:\/\/[a-z]+.firefoxchina.cn\/parts\/google_rdr/,
+    /^http:\/\/[a-z]+.firefoxchina.cn\/redirect\/adblock/,
+    /^http:\/\/[a-z]+.firefoxchina.cn\/(redirect\/)?search/,
     /^http:\/\/i.g-fox.cn\/(rd|search)/,
     /^http:\/\/www5.1616.net\/q/
   ],
@@ -330,12 +330,14 @@ var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
 };
 
 var Homepage = {
-  defaultAboutpage: "http://e.firefoxchina.cn/",
-  defaultHomepage: "about:cehome",
+  defaultAboutpage: "http://home.firefoxchina.cn/",
+  defaultHomepage: "http://home.firefoxchina.cn/",
   historicalAboutpages: [
-    "http://i.firefoxchina.cn/",
-    "http://n.firefoxchina.cn/"
+    "http://e.firefoxchina.cn/",
+    "http://n.firefoxchina.cn/",
+    "http://i.firefoxchina.cn/"
   ],
+  historicalHomepage: "about:cehome",
   vanillaHomepages: [
     "about:home",
     "http://start.firefoxchina.cn/"
@@ -344,10 +346,9 @@ var Homepage = {
   distributionTopic: "distribution-customization-complete",
   homepagePref: "browser.startup.homepage",
 
-  // When an empty string is set as pref value, display this.defaultAboutpage.
   get aboutpage() {
-    return getPref("extensions.cehomepage.abouturl", this.defaultAboutpage,
-      Ci.nsIPrefLocalizedString) || this.defaultAboutpage;
+    delete this.aboutpage;
+    return this.aboutpage = this.defaultAboutpage;
   },
   get homepage() {
     return getPref(this.homepagePref, this.defaultHomepage,
@@ -359,9 +360,11 @@ var Homepage = {
         Services.uriFixup.FIXUP_FLAG_NONE);
 
       // ignore the "?cachebust=***" when comparing with this.aboutpage etc.
-      if (uri.spec.split("?")[0] === this.aboutpage.split("?")[0] ||
+      let uriWithoutQS = uri.spec.split("?")[0];
+      if (uriWithoutQS === this.aboutpage ||
+          uriWithoutQS === this.historicalHomepage ||
           this.historicalAboutpages.some(historicalAboutpage => {
-            return uri.spec.split("?")[0] === historicalAboutpage;
+            return uriWithoutQS === historicalAboutpage;
           })) {
         return this.defaultHomepage;
       }
@@ -370,14 +373,12 @@ var Homepage = {
       return "";
     }
   },
-  init() {
-    this.defaultPrefTweak();
+  init(isAppStartup) {
+    this.defaultPrefTweak(isAppStartup);
 
-    this.handleDistributionDefaults();
-
-    this.initAddonListener();
+    this.handleDistributionDefaults(isAppStartup);
   },
-  defaultPrefTweak() {
+  defaultPrefTweak(isAppStartup) {
     let defaultHomepage = getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString, true);
 
@@ -385,7 +386,7 @@ var Homepage = {
       // for china repack installation
       let normalizedSpec = this.normalizeSpec(spec) || spec;
       // for vanilla installation
-      if (this.vanillaHomepages.indexOf(normalizedSpec) > -1) {
+      if (this.vanillaHomepages.includes(normalizedSpec)) {
         return this.defaultHomepage;
       }
 
@@ -398,12 +399,21 @@ var Homepage = {
 
     let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
       createInstance(Ci.nsIPrefLocalizedString);
-    let prefix = "data:text/plain," + this.homepagePref + "=";
-    localizedStr.data = prefix + updatedHomepage;
+    localizedStr.
+      data = `data:text/plain,${this.homepagePref}=${updatedHomepage}`;
     Services.prefs.getDefaultBranch("").setComplexValue(this.homepagePref,
       Ci.nsIPrefLocalizedString, localizedStr);
+
+    // isAppStartup here could be true/false/undefined
+    if (isAppStartup === false) {
+      this.maybeResetHomepage();
+    }
   },
-  handleDistributionDefaults() {
+  handleDistributionDefaults(isAppStartup) {
+    if (!isAppStartup) {
+      return;
+    }
+
     Services.obs.addObserver(this, this.distributionTopic);
     Services.prefs.addObserver(this.homepagePref, this);
   },
@@ -424,11 +434,7 @@ var Homepage = {
         break;
     }
   },
-  /*
-   * In several older versions of cehomepage, about:cehome might be incorrectlly
-   * set as (part of ?) the user value with setCharPref. Try to reset any
-   * unnecessary user value here.
-   */
+  // Try to reset any unnecessary user value here.
   maybeResetHomepage() {
     if (!Services.prefs.prefHasUserValue(this.homepagePref)) {
       return;
@@ -448,54 +454,6 @@ var Homepage = {
       action: "reset",
       sid: "startup"
     });
-  },
-  maybeUpdateSession() {
-    try {
-      let state = JSON.parse(sessionStore.getBrowserState());
-      let unchanged = true;
-      for (let win of state.windows) {
-        for (let tab of win.tabs) {
-          for (let entry of tab.entries) {
-            try {
-              if (entry.url === this.defaultHomepage) {
-                entry.url = this.defaultAboutpage;
-                unchanged = false;
-                Tracking.track({
-                  type: "homepage",
-                  action: "replace",
-                  sid: "session"
-                });
-              }
-            } catch (ex) {
-              Cu.reportError(ex);
-            }
-          }
-        }
-      }
-      if (unchanged) {
-        return;
-      }
-      sessionStore.setBrowserState(JSON.stringify(state));
-    } catch (ex) {}
-  },
-  initAddonListener() {
-    AddonManager.addAddonListener(this);
-    AddonManager.shutdown.addBlocker("mozCNUtils.jsm:Homepage shutdown",
-      this.uninit.bind(this)
-    );
-  },
-  uninit() {
-    AddonManager.removeAddonListener(this);
-  },
-  onUninstalling(addon) {
-    return this.onDisabling(addon);
-  },
-  onDisabling(addon) {
-    if (addon.id !== "cehomepage@mozillaonline.com") {
-      return;
-    }
-
-    this.maybeUpdateSession();
   }
 };
 

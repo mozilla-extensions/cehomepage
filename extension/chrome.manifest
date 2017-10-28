@@ -1,7 +1,3 @@
-content	cehomepage         chrome/content/	contentaccessible=yes
-locale  cehomepage  en-US  chrome/locale/en-US/
-locale  cehomepage  zh-CN  chrome/locale/zh-CN/
-
 content ceerrorpage               chrome_errorpage/content/
 skin    ceerrorpage  classic/1.0  chrome_errorpage/skin/
 locale  ceerrorpage  en-US        chrome_errorpage/locale/en-US/

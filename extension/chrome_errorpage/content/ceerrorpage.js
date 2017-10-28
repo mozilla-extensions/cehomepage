@@ -55,7 +55,7 @@ let mozCNErrorPage = {
         createBundle("chrome://ceerrorpage/locale/overlay.properties").
         GetStringFromName("goToHomePage");
       goToHomePageBtn.addEventListener("click", () => {
-        contentWin.location = "http://e.firefoxchina.cn/?from_err_btn";
+        contentWin.location = "http://home.firefoxchina.cn/?from_err_btn";
       });
       btnChildren.parentNode.insertBefore(goToHomePageBtn, btnChildren);
     }

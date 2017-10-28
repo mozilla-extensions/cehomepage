@@ -1,3 +1,5 @@
+/* globals APP_STARTUP */
+
 const {
   classes: Cc, interfaces: Ci, manager: Cm,
   results: Cr, utils: Cu
@@ -268,6 +270,7 @@ this.mozCNUtils = {
       NTabDB.prePath,
       "http://i.g-fox.cn",
       "http://e.firefoxchina.cn",
+      "http://home.firefoxchina.cn",
       "http://i.firefoxchina.cn",
       "http://n.firefoxchina.cn"
     ].indexOf(channel.URI.prePath) == -1 ||
@@ -403,8 +406,6 @@ this.mozCNUtils = {
   initDefaultPrefs() {
     let defBranch = Services.prefs.getDefaultBranch("");
 
-    defBranch.setCharPref("extensions.cehomepage.abouturl",
-      "chrome://cehomepage/locale/cehomepage.properties");
     defBranch.setCharPref("moa.signatureverifier.key",
       "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDbjn89QtfQeDfU1KDdHsy7dWEZxixJSvaAOGX05NOvLbh7Uo6tlMKFJyYZ7unxlfMAsewZBOCaMxEYgU4h5J0PAgUs+zTg3MzCnDA0Ku1zQrvoa1iaTsVxzpHTFeOK29HSGX2qC4sVUP+ZRqa11oaBaIjpuJ3szo9nGy4CWvHMLQIDAQAB");
 
@@ -466,7 +467,7 @@ this.mozCNUtils = {
     NTabWindow.onWindowClosed(win);
   },
 
-  init() {
+  init(isAppStartup) {
     Services.obs.addObserver(this, "http-on-examine-response");
     Services.obs.addObserver(this, "http-on-examine-cached-response");
     Services.obs.addObserver(this, "http-on-examine-merged-response");
@@ -480,7 +481,7 @@ this.mozCNUtils = {
 
     delayedSuggestBaidu.init();
     fxAccountsProxy.init();
-    Homepage.init();
+    Homepage.init(isAppStartup);
     mozCNWebChannels.init();
     NTabDB.init();
     NTabSync.init();
@@ -500,7 +501,6 @@ this.mozCNUtils = {
     this.uninitWindowListener();
 
     fxAccountsProxy.uninit();
-    Homepage.uninit();
     mozCNWebChannels.uninit();
     NTabDB.uninit();
     NTabSync.uninit();
@@ -648,6 +648,7 @@ this.mozCNWebChannels = {
   contentURL: "chrome://ntab/content/mozCNWebChannelContent.js",
   specs: {
     "http://e.firefoxchina.cn/": "",
+    "http://home.firefoxchina.cn/": "",
     "http://i.firefoxchina.cn/": "",
     "http://n.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",
@@ -672,10 +673,10 @@ this.mozCNWebChannels = {
 };
 
 function install() {}
-async function startup({ webExtension }) {
-  let { browser } = await webExtension.startup();
+async function startup({ webExtension }, reason) {
+  mozCNUtils.init(reason === APP_STARTUP);
 
-  mozCNUtils.init(browser);
+  /* let { browser } = */await webExtension.startup();
 }
 function shutdown() {
   mozCNUtils.uninit();

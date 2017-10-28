@@ -6,14 +6,13 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
-  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 
 let mozCNWebChannelContent = {
   specs: [
     "http://e.firefoxchina.cn/",
+    "http://home.firefoxchina.cn/",
     "http://i.firefoxchina.cn/",
     "http://n.firefoxchina.cn/",
     "http://newtab.firefoxchina.cn/",
