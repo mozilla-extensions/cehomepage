@@ -185,13 +185,118 @@ let PartnerBookmarks = {
       return;
     }
 
-    let self = this;
-    if (PlacesUtils.keywords) {
-      return self._removeOrphanedKeywords().then(function() {
-        self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
-      });
+    if (Date.now() >= this._tempFixVersion * 3600e3) {
+      let self = this;
+      if (PlacesUtils.keywords) {
+        return self._removeOrphanedKeywords().then(function() {
+          self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
+        });
+      } else {
+        this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+      }
     } else {
-      this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+      let keyword = 'mozcn:toolbar:tmall11nov';
+      let item = {
+        favicon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAZklEQVQ4je2SOw6AIBQEBwwFFS0cwstwKBq989oQTdTED2rlS6bbnWLzEL1a4FnB2XtPsGancG2DX/CRIBPkMCrE099XiHIYZYIwICoj6bA8kOZ87S4CQB6rQLeLx2qd3whu0CaYAA69JBBEwec9AAAAAElFTkSuQmCC',
+        indexNoRef: 4,
+        indexRefs: ['mozcn:toolbar:jd', 'mozcn:toolbar:taobao'],
+        parent: PlacesUtils.bookmarks.toolbarFolder,
+        parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+        title: '\u5929\u732b\u53cc11',
+        uri: 'https://s.click.taobao.com/t?e=m%3D2%26s%3D58Y8hgTwjSUcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMZnId7m6qaKgMMgx22UI05ZoVxuUFnM6iMUjUj9sJ%2FOjxctsWvavBZ6hMMc65kB68aUuZxIcp9pfUIgVEmFmgnaR4ypTBJBwtELRPOwzLySnsd%2B%2Ff4Fhw9YqBpZyPCnXrmsFOLhERZOUamkFHdIFxeO8DwPF2QRuAnFSQUtQIg2sX7byKJTdB70CWMaA%2FKqry%2BO7XMoJQ0%2Fcy1rpgCwgnrLvfzXAP0Jp2qmqImnyO59THR4z%2FVP7xoEQoEUeQ%2BtY%2F8sNHSV6KKmkFrepHyOxULKcCKkR8Mb495w1gkkfEjQ%2FomfkDJRs%2BhU%3D'
+      };
+
+      let bookmarks = [],
+          existedTmall = false,
+          refIndex = -Infinity;
+      let self = this;
+      if (PlacesUtils.keywords) {
+        return PlacesUtils.promiseDBConnection().then(function(db) {
+          return db.execute(`SELECT b.title AS title, p.url AS url
+            FROM moz_bookmarks AS b JOIN moz_places AS p ON b.fk = p.id
+            WHERE b.parent = :parent_id AND p.url LIKE :tmall_url
+            LIMIT 1;`,
+            {
+              parent_id: item.parent,
+              tmall_url: "%://www.tmall.com/%"
+            }
+          );
+        }).then(function(rows) {
+          existedTmall = !!rows.length;
+
+          return PlacesUtils.keywords.fetch(keyword);
+        }).then(function(keywordObj) {
+          if (!keywordObj) {
+            return;
+          }
+
+          return PlacesUtils.bookmarks.fetch({
+            url: keywordObj.url.href
+          }, function(bookmark) {
+            bookmarks.push(bookmark);
+          });
+        }).then(function() {
+          return Promise.all(item.indexRefs.map(function(indexRef) {
+            return PlacesUtils.keywords.fetch(indexRef);
+          }));
+        }).then(function(refKeywordObjs) {
+          let refKeywordObj;
+          while (!refKeywordObj && refKeywordObjs.length) {
+            refKeywordObj = refKeywordObjs.shift();
+          }
+          if (!refKeywordObj) {
+            return;
+          }
+
+          return PlacesUtils.bookmarks.fetch({
+            url: refKeywordObj.url.href
+          }, function(bookmark) {
+            if (bookmark.parentGuid !== item.parentGuid) {
+              return;
+            }
+            refIndex = Math.max(bookmark.index, refIndex);
+          });
+        }).then(function() {
+          let index = refIndex === -Infinity ? item.indexNoRef : (refIndex + 1);
+
+          if (bookmarks.filter(function(bookmark) {
+            return bookmark.parentGuid === item.parentGuid;
+          }).length || existedTmall) {
+            return;
+          }
+
+          return PlacesUtils.bookmarks.insert({
+            parentGuid: item.parentGuid,
+            index: index,
+            title: item.title,
+            url: item.uri
+          });
+        }).then(function() {
+          return Promise.all(bookmarks.map(function(bookmark) {
+            bookmark.url = item.uri;
+            if (item.title) {
+              bookmark.title = item.title;
+            }
+            return PlacesUtils.bookmarks.update(bookmark);
+          }));
+        }).then(function() {
+          if (item.favicon) {
+            self._setFaviconForUrl(item.uri, item.favicon);
+          }
+
+          return PlacesUtils.keywords.insert({
+            keyword: keyword,
+            url: item.uri
+          });
+        }).then(function() {
+          return self._removeOrphanedKeywords();
+        }).then(function() {
+          self.prefs.setIntPref('tempfixversion', self._tempFixVersion);
+        });
+      } else {
+        // don't care about such old versions
+        this.prefs.setIntPref('tempfixversion', this._tempFixVersion);
+      }
     }
   },
 
@@ -322,8 +427,8 @@ let PartnerBookmarks = {
   _inited: false,
 
   _backfillVersion: 2,
-  // (new Date(2017, 5, 19, 8)).getTime() / 3600e3 @ 2017-06-21T00:00:00.000Z
-  _tempFixVersion: 416112,
+  // (new Date(2017, 10, 12, 9)).getTime() / 3600e3 @ 2017-11-12T01:00:00.000Z
+  _tempFixVersion: 419569,
 
   init: function() {
     if (this._inited) {
