@@ -24,7 +24,6 @@
     </em:targetApplication>
     <em:updateURL><![CDATA[http://g-fox.cn/chinaedition/addons/cehomepage-iii/update.rdf?version=%ITEM_VERSION%&pt=%CEHP_PREF_TRACKING%]]></em:updateURL>
     <em:updateKey>MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCd77P/ko6LTPMWcIjA5+0AJ7Y2w1CA31UYNTLA6OMwc9kcvO407SrE649A1ZUOi8bDPvJ6/KqVU9zPmv1XY1SjpEF8RlXP5SQ4KXirH4wnBk94cklYJTeDVuGOvCZS4KNazsjibERhRE7oGxg3X+rw+Ifu14AmAqXm4lyMrYIt/QIDAQAB</em:updateKey>
-    <em:unpack>true</em:unpack>
     <em:multiprocessCompatible>true</em:multiprocessCompatible>
     <em:bootstrap>true</em:bootstrap>
     <em:hasEmbeddedWebExtension>true</em:hasEmbeddedWebExtension>
