@@ -13,6 +13,7 @@ let mozCNWebChannelContent = {
   specs: [
     "http://e.firefoxchina.cn/",
     "http://home.firefoxchina.cn/",
+    "https://home.firefoxchina.cn/",
     "http://i.firefoxchina.cn/",
     "http://n.firefoxchina.cn/",
     "http://newtab.firefoxchina.cn/",

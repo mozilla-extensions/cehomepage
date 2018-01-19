@@ -206,10 +206,10 @@ var delayedSuggestBaidu = {
 
 var Frequent = {
   excludes: [
-    /^http:\/\/[a-z]+.firefoxchina.cn\/n(ew)?tab/,
-    /^http:\/\/[a-z]+.firefoxchina.cn\/parts\/google_rdr/,
-    /^http:\/\/[a-z]+.firefoxchina.cn\/redirect\/adblock/,
-    /^http:\/\/[a-z]+.firefoxchina.cn\/(redirect\/)?search/,
+    /^https?:\/\/[a-z]+.firefoxchina.cn\/n(ew)?tab/,
+    /^https?:\/\/[a-z]+.firefoxchina.cn\/parts\/google_rdr/,
+    /^https?:\/\/[a-z]+.firefoxchina.cn\/redirect\/adblock/,
+    /^https?:\/\/[a-z]+.firefoxchina.cn\/(redirect\/)?search/,
     /^http:\/\/i.g-fox.cn\/(rd|search)/,
     /^http:\/\/www5.1616.net\/q/
   ],
@@ -337,10 +337,14 @@ var Homepage = {
     "http://n.firefoxchina.cn/",
     "http://i.firefoxchina.cn/"
   ],
-  historicalHomepage: "about:cehome",
+  historicalHomepages: [
+    "about:cehome",
+    "https://home.firefoxchina.cn/" // hack for compat with distribution.ini
+  ],
   vanillaHomepages: [
     "about:home",
-    "http://start.firefoxchina.cn/"
+    "http://start.firefoxchina.cn/",
+    "https://start.firefoxchina.cn/"
   ],
 
   distributionTopic: "distribution-customization-complete",
@@ -362,10 +366,8 @@ var Homepage = {
       // ignore the "?cachebust=***" when comparing with this.aboutpage etc.
       let uriWithoutQS = uri.spec.split("?")[0];
       if (uriWithoutQS === this.aboutpage ||
-          uriWithoutQS === this.historicalHomepage ||
-          this.historicalAboutpages.some(historicalAboutpage => {
-            return uriWithoutQS === historicalAboutpage;
-          })) {
+          this.historicalHomepages.includes(uriWithoutQS) ||
+          this.historicalAboutpages.includes(uriWithoutQS)) {
         return this.defaultHomepage;
       }
       return uri.spec;

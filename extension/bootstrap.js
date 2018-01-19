@@ -271,6 +271,7 @@ this.mozCNUtils = {
       "http://i.g-fox.cn",
       "http://e.firefoxchina.cn",
       "http://home.firefoxchina.cn",
+      "https://home.firefoxchina.cn",
       "http://i.firefoxchina.cn",
       "http://n.firefoxchina.cn"
     ].indexOf(channel.URI.prePath) == -1 ||
@@ -649,6 +650,7 @@ this.mozCNWebChannels = {
   specs: {
     "http://e.firefoxchina.cn/": "",
     "http://home.firefoxchina.cn/": "",
+    "https://home.firefoxchina.cn/": "",
     "http://i.firefoxchina.cn/": "",
     "http://n.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",

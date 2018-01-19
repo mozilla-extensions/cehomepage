@@ -99,7 +99,7 @@ this.homepageReset = {
 
   defaultHomepage: "http://home.firefoxchina.cn/",
   defaultHomepages: [
-    /^http:\/\/[a-z]+\.firefoxchina\.cn/
+    /^https?:\/\/[a-z]+\.firefoxchina\.cn/
   ],
 
   otherNavs: [
