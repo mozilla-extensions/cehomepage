@@ -97,7 +97,7 @@ this.homepageReset = {
   REASON_OTHER_NAV: 2,
   REASON_POTENTIAL_HIJACK: 3,
 
-  defaultHomepage: "http://home.firefoxchina.cn/",
+  defaultHomepage: "https://home.firefoxchina.cn/",
   defaultHomepages: [
     /^https?:\/\/[a-z]+\.firefoxchina\.cn/
   ],

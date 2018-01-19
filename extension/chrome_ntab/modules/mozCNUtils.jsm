@@ -330,8 +330,8 @@ var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
 };
 
 var Homepage = {
-  defaultAboutpage: "http://home.firefoxchina.cn/",
-  defaultHomepage: "http://home.firefoxchina.cn/",
+  defaultAboutpage: "https://home.firefoxchina.cn/",
+  defaultHomepage: "https://home.firefoxchina.cn/",
   historicalAboutpages: [
     "http://e.firefoxchina.cn/",
     "http://n.firefoxchina.cn/",
@@ -339,7 +339,7 @@ var Homepage = {
   ],
   historicalHomepages: [
     "about:cehome",
-    "https://home.firefoxchina.cn/" // hack for compat with distribution.ini
+    "http://home.firefoxchina.cn/"
   ],
   vanillaHomepages: [
     "about:home",

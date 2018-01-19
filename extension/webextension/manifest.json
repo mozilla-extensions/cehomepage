@@ -6,7 +6,7 @@
     }
   },
   "chrome_settings_overrides": {
-    // "homepage": "http://home.firefoxchina.cn/"
+    // "homepage": "https://home.firefoxchina.cn/"
   },
   "chrome_url_overrides" : {
     // "newtab": "ntab/ntab.html"
