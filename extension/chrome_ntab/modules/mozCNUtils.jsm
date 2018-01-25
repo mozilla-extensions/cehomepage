@@ -270,7 +270,7 @@ var Frequent = {
     aUrls.forEach(aUrl => {
       urls.push(Services.io.newURI(aUrl));
     });
-    PlacesUtils.bhistory.removePages(urls, urls.length);
+    PlacesUtils.history.remove(urls).catch(Cu.reportError);
   },
 
   topHosts(aCallback, aHosts) {
