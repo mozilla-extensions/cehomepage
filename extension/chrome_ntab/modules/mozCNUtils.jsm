@@ -265,12 +265,12 @@ var Frequent = {
     db.asyncExecuteLegacyQueries([query], 1, options, callback);
   },
 
-  remove(aUrls) {
+  remove(aCallback, aUrls) {
     let urls = [];
     aUrls.forEach(aUrl => {
       urls.push(Services.io.newURI(aUrl));
     });
-    PlacesUtils.history.remove(urls).catch(Cu.reportError);
+    PlacesUtils.history.remove(urls).then(aCallback, Cu.reportError);
   },
 
   topHosts(aCallback, aHosts) {

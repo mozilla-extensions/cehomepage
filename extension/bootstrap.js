@@ -526,7 +526,12 @@ this.mozCNWebChannel.prototype = {
         }, aMessage.parameters.limit);
         break;
       case "frequent.remove":
-        Frequent.remove([aMessage.parameters.url]);
+        Frequent.remove(() => {
+          this.channel.send({
+            id: aMessage.id,
+            key: aMessage.key
+          }, aSender);
+        }, [aMessage.parameters.url]);
         break;
       case "frequent.tophosts":
         Frequent.topHosts(aEntries => {
@@ -547,7 +552,12 @@ this.mozCNWebChannel.prototype = {
         }, aMessage.parameters.limit);
         break;
       case "last.remove":
-        Session.remove([aMessage.parameters.url]);
+        Session.remove(() => {
+          this.channel.send({
+            id: aMessage.id,
+            key: aMessage.key
+          }, aSender);
+        }, [aMessage.parameters.url]);
         break;
       case "startup.channelid":
         this.channel.send({
