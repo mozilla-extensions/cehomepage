@@ -360,12 +360,22 @@ let NTabSync = {
 
     let doc = win.document;
 
+    // Since Fx 59, https://bugzil.la/1379338
     let prefs = doc.getElementById("syncEnginePrefs");
-    let pref = doc.createElement("preference");
-    pref.id = "engine.mozcn.ntab";
-    pref.name = "services.sync.engine.mozcn.ntab";
-    pref.type = "bool";
-    prefs.appendChild(pref);
+    let id = "engine.mozcn.ntab";
+    let name = "services.sync.engine.mozcn.ntab";
+    let type = "bool";
+    if (!prefs) {
+      win.Preferences.addAll([
+        { id, name, type }
+      ]);
+    } else {
+      let pref = doc.createElement("preference");
+      pref.id = id;
+      pref.name = name;
+      pref.type = type;
+      prefs.appendChild(pref);
+    }
 
     let parentVBox = doc.querySelector("#fxaSyncEngines > vbox");
     if (!parentVBox) {
@@ -375,7 +385,7 @@ let NTabSync = {
     let checkbox = doc.createElement("checkbox");
     checkbox.setAttribute("label", this._("engine.mozcn.ntab.label"));
     checkbox.setAttribute("accesskey", this._("engine.mozcn.ntab.accesskey"));
-    checkbox.setAttribute("preference", pref.id);
+    checkbox.setAttribute("preference", id);
     checkbox.setAttribute("onsynctopreference",
       "return mozCNNTabSync.onSyncToEnablePref(this);");
     parentVBox.appendChild(checkbox);
