@@ -3,6 +3,7 @@ var EXPORTED_SYMBOLS = ["Tracking"];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
@@ -69,8 +70,7 @@ let Tracking = {
 
     args.push("cid=" + this.cid);
 
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].
-                createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = new XMLHttpRequest();
     xhr.open("GET", ((option.altBase || url) + "?" + args.join("&")), true);
     xhr.send();
   }

@@ -3,6 +3,7 @@ var EXPORTED_SYMBOLS = ["PartnerBookmarks"];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+Cu.importGlobalProperties(["XMLHttpRequest"]);
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -34,8 +35,7 @@ let PartnerBookmarks = {
     if (!aUrl) {
       return;
     }
-    let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
-                .createInstance(Ci.nsIXMLHttpRequest);
+    let xhr = new XMLHttpRequest();
     xhr.open("GET", aUrl, true);
     xhr.onload = evt => {
       if (xhr.status == 200) {
