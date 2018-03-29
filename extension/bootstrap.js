@@ -457,7 +457,13 @@ this.mozCNUtils = {
   },
 
   onWindowOpened(win) {
-    win.gBrowser.addTabsProgressListener(this);
+    if (win.gBrowser) {
+      win.gBrowser.addTabsProgressListener(this);
+    } else if (win._gBrowser) {
+      win._gBrowser.addTabsProgressListener(this);
+    } else {
+      win.console.error("Neither gBrowser or _gBrowser ?");
+    }
     fxAccountsProxy.maybeRegisterMutationObserver(win);
     NTabWindow.onWindowOpened(win);
   },
