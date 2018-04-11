@@ -217,7 +217,25 @@ this.homepageReset = {
     } catch (e) {}
   },
 
+  handleEvent(evt) {
+    switch (evt.type) {
+      case "DOMContentLoaded":
+        let win = evt.target.defaultView;
+        win.setTimeout(() => {
+          this.check(win);
+        }, 0);
+        break;
+      default:
+        break;
+    }
+  },
+
   check(aWindow) {
+    if (!aWindow.gBrowser) {
+      aWindow.addEventListener("DOMContentLoaded", this, { once: true });
+      return;
+    }
+
     var reason = this.shouldNotify();
     var shownCallback = this.markShown.bind(this);
     var nomoreCallback = this.markNomore.bind(this);

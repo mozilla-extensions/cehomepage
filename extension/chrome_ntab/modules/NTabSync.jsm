@@ -359,23 +359,9 @@ let NTabSync = {
     };
 
     let doc = win.document;
-
-    // Since Fx 59, https://bugzil.la/1379338
-    let prefs = doc.getElementById("syncEnginePrefs");
     let id = "engine.mozcn.ntab";
     let name = "services.sync.engine.mozcn.ntab";
     let type = "bool";
-    if (!prefs) {
-      win.Preferences.addAll([
-        { id, name, type }
-      ]);
-    } else {
-      let pref = doc.createElement("preference");
-      pref.id = id;
-      pref.name = name;
-      pref.type = type;
-      prefs.appendChild(pref);
-    }
 
     let parentVBox = doc.querySelector("#fxaSyncEngines > vbox");
     if (!parentVBox) {
@@ -389,6 +375,20 @@ let NTabSync = {
     checkbox.setAttribute("onsynctopreference",
       "return mozCNNTabSync.onSyncToEnablePref(this);");
     parentVBox.appendChild(checkbox);
+
+    // Since Fx 59, https://bugzil.la/1379338
+    let prefs = doc.getElementById("syncEnginePrefs");
+    if (!prefs) {
+      win.Preferences.addAll([
+        { id, name, type }
+      ]);
+    } else {
+      let pref = doc.createElement("preference");
+      pref.id = id;
+      pref.name = name;
+      pref.type = type;
+      prefs.appendChild(pref);
+    }
   },
 
   findFirstBrowser(aCallback, aThisObj) {

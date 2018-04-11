@@ -164,14 +164,14 @@ let PartnerBookmarks = {
   onBeforeItemRemoved() {},
   onItemRemoved() {},
   onItemChanged() {},
-  onItemVisited(aItemId, b, c, d, aURI, f, g, h) {
-    let keyword = PlacesUtils.bookmarks.getKeywordForBookmark(aItemId);
+  async onItemVisited(a, b, c, d, aURI, f, g, h) {
+    let keyword = await PlacesUtils.keywords.fetch({ url: aURI.spec });
     let prefix = "mozcn:toolbar:";
-    if (keyword && keyword.indexOf(prefix) == 0) {
+    if (keyword && keyword.keyword.indexOf(prefix) == 0) {
       Tracking.track({
         type: "bookmarks",
         action: "click",
-        sid: keyword.substring(prefix.length)
+        sid: keyword.keyword.substring(prefix.length)
       });
     }
   },
