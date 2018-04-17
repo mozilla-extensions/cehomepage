@@ -5,12 +5,8 @@
       "strict_min_version": "56.0"
     }
   },
-  "chrome_settings_overrides": {
-    // "homepage": "https://home.firefoxchina.cn/"
-  },
-  "chrome_url_overrides" : {
-    // "newtab": "ntab/ntab.html"
-  },
+  "chrome_settings_overrides": {},
+  "chrome_url_overrides" : {},
   "default_locale": "en_US",
   "description": "__MSG_extensionDescription__",
   "homepage_url": "http://www.firefox.com.cn/",
@@ -23,5 +19,5 @@
   "permissions": [
     "storage"
   ],
-  "version": "2.59.1"
+  "version": "2.60"
 }
