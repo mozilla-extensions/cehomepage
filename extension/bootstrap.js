@@ -29,7 +29,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
 
 XPCOMUtils.defineLazyGetter(this, "gMM", () => {
   return Cc["@mozilla.org/globalmessagemanager;1"].
-    getService(Ci.nsIMessageListenerManager);
+    getService(Ci.nsIMessageListenerManager || Ci.nsISupports);
 });
 
 XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
@@ -59,6 +59,11 @@ XPCOMUtils.defineLazyModuleGetter(this, "AboutCEhome",
   "resource://ntab/AboutCEhome.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CehpUpdateParams",
   "resource://ntab/CehpUpdateParams.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "resProto",
+                                   "@mozilla.org/network/protocol;1?name=resource",
+                                   "nsISubstitutingProtocolHandler");
+const RESOURCE_HOST = "ntab";
 
 this.searchEngines = {
   expected: /^https?:\/\/www\.baidu\.com\/baidu\?wd=TEST&tn=monline(?:_|_4_)dg(?:&ie=utf-8)?$/,
@@ -691,12 +696,17 @@ this.mozCNWebChannels = {
 };
 
 function install() {}
-async function startup({ webExtension }, reason) {
+async function startup({ resourceURI, webExtension }, reason) {
+  resProto.setSubstitution(RESOURCE_HOST,
+    Services.io.newURI("chrome_ntab/modules/", null, resourceURI));
+
   mozCNUtils.init(reason === APP_STARTUP);
 
   /* let { browser } = */await webExtension.startup();
 }
 function shutdown() {
   mozCNUtils.uninit();
+
+  resProto.setSubstitution(RESOURCE_HOST, null);
 }
 function uninstall() {}
