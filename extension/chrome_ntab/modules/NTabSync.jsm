@@ -236,7 +236,7 @@ let NTabSync = {
   get mm() {
     delete this.mm;
     return this.mm = Cc["@mozilla.org/globalmessagemanager;1"].
-      getService(Ci.nsIMessageListenerManager);
+      getService(Ci.nsIMessageListenerManager || Ci.nsISupports);
   },
 
   get _stagedFile() {
