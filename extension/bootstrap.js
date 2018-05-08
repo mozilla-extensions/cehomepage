@@ -57,8 +57,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
 
 XPCOMUtils.defineLazyModuleGetter(this, "AboutCEhome",
   "resource://ntab/AboutCEhome.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CehpUpdateParams",
-  "resource://ntab/CehpUpdateParams.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
                                    "@mozilla.org/network/protocol;1?name=resource",
@@ -418,7 +416,7 @@ this.mozCNUtils = {
   initFactories() {
     Cm.QueryInterface(Ci.nsIComponentRegistrar);
 
-    [AboutCEhome, CehpUpdateParams].forEach(targetConstructor => {
+    [AboutCEhome].forEach(targetConstructor => {
       let proto = targetConstructor.prototype;
       let factory = XPCOMUtils._getFactory(targetConstructor);
       this.factories.set(proto.classID, factory);
