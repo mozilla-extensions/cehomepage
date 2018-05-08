@@ -11,12 +11,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
 
 let mozCNWebChannelContent = {
   specs: [
-    "http://e.firefoxchina.cn/",
-    "http://home.firefoxchina.cn/",
     "https://home.firefoxchina.cn/",
-    "http://i.firefoxchina.cn/",
-    "http://n.firefoxchina.cn/",
     "http://newtab.firefoxchina.cn/",
+    "https://newtab.firefoxchina.cn/",
     NTabDB.spec
   ],
   cachedWindows: new Map(),

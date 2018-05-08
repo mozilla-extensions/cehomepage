@@ -274,11 +274,7 @@ this.mozCNUtils = {
     if ([
       NTabDB.prePath,
       "http://i.g-fox.cn",
-      "http://e.firefoxchina.cn",
-      "http://home.firefoxchina.cn",
-      "https://home.firefoxchina.cn",
-      "http://i.firefoxchina.cn",
-      "http://n.firefoxchina.cn"
+      "https://home.firefoxchina.cn"
     ].indexOf(channel.URI.prePath) == -1 ||
         !(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI)) {
       return;
@@ -669,12 +665,9 @@ this.mozCNWebChannels = {
   channelID: "moz_cn_channel_v2",
   contentURL: "chrome://ntab/content/mozCNWebChannelContent.js",
   specs: {
-    "http://e.firefoxchina.cn/": "",
-    "http://home.firefoxchina.cn/": "",
     "https://home.firefoxchina.cn/": "",
-    "http://i.firefoxchina.cn/": "",
-    "http://n.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",
+    "https://newtab.firefoxchina.cn/": "",
     "http://offlintab.firefoxchina.cn/": "offlintabListener"
   },
   webChannels: [],

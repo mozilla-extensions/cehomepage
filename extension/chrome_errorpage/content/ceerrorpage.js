@@ -72,7 +72,7 @@ let mozCNErrorPage = {
       recomendIframe.id = "recomendIframe";
       recomendIframe.height = "0px";
       errorPageBody.appendChild(recomendIframe);
-      recomendIframe.src = "http://newtab.firefoxchina.cn/error-tab-rec.html";
+      recomendIframe.src = "https://newtab.firefoxchina.cn/error-tab-rec.html";
       recomendIframe.addEventListener("load", () => {
         if (recomendIframe.contentWindow.document.URL.match(/^about:neterror/)) {
           errorPageBody.removeChild(recomendIframe);

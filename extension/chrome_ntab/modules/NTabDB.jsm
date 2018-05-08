@@ -51,7 +51,8 @@ let NTabDB = {
   get extraPrincipals() {
     let extraPrincipals = [];
     [
-      "http://newtab.firefoxchina.cn/"
+      "http://newtab.firefoxchina.cn/",
+      "https://newtab.firefoxchina.cn/"
     ].forEach(aSpec => {
       extraPrincipals.push(Services.scriptSecurityManager.
         createCodebasePrincipal(Services.io.newURI(aSpec), {}));
