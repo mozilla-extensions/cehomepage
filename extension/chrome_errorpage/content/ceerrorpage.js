@@ -8,6 +8,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 
 let mozCNErrorPage = {
   init() {
+    if (Services.vc.compare(Services.appinfo.version, "60.*") > 0) {
+      return;
+    }
+
     Services.obs.addObserver(this, "content-document-global-created");
     addEventListener("unload", () => {
       Services.obs.removeObserver(this, "content-document-global-created");
@@ -72,7 +76,7 @@ let mozCNErrorPage = {
       recomendIframe.id = "recomendIframe";
       recomendIframe.height = "0px";
       errorPageBody.appendChild(recomendIframe);
-      recomendIframe.src = "https://newtab.firefoxchina.cn/error-tab-rec.html";
+      recomendIframe.src = "http://newtab.firefoxchina.cn/error-tab-rec.html";
       recomendIframe.addEventListener("load", () => {
         if (recomendIframe.contentWindow.document.URL.match(/^about:neterror/)) {
           errorPageBody.removeChild(recomendIframe);
