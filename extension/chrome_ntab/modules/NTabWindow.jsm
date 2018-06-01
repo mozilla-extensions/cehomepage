@@ -7,6 +7,8 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
   "@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PREFERENCES_LOADED_EVENT",
+  "resource://activity-stream/lib/AboutPreferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
@@ -341,12 +343,24 @@ this.newTabPref = {
     Services.prefs.addObserver(this.extPrefKey, this);
 
     this.refresh(Services.prefs.getBoolPref(this.extPrefKey));
+
+    try {
+      Services.obs.addObserver(this, PREFERENCES_LOADED_EVENT);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
   },
 
   uninit() {
     Services.prefs.removeObserver(this.extPrefKey, this);
 
     this.refresh(false);
+
+    try {
+      Services.obs.removeObserver(this, PREFERENCES_LOADED_EVENT);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
   },
 
   onWindowOpened(win) {
@@ -383,12 +397,26 @@ this.newTabPref = {
   },
 
   observe(aSubject, aTopic, aData) {
-    if (aTopic == "nsPref:changed") {
-      switch (aData) {
-        case newTabPref.extPrefKey:
-          newTabPref.refresh(Services.prefs.getBoolPref(aData));
+    switch (aTopic) {
+      case "nsPref:changed":
+        if (aData !== newTabPref.extPrefKey) {
           break;
-      }
+        }
+        newTabPref.refresh(Services.prefs.getBoolPref(aData));
+        break;
+      case PREFERENCES_LOADED_EVENT:
+        let doc = aSubject.document;
+        let encodedCSS = encodeURIComponent(`
+#homeContentsGroup {
+  display: none;
+}
+`);
+        doc.insertBefore(doc.createProcessingInstruction("xml-stylesheet",
+          `href="data:text/css,${encodedCSS}" type="text/css"`),
+          doc.documentElement);
+        break;
+      default:
+        break;
     }
   },
 
@@ -488,12 +516,10 @@ this.permanentPB = {
 
     var brandName = win.document.getElementById("bundle_brand").
       getString("brandShortName");
-    var bundle = Services.strings.createBundle(
-      "chrome://browser/locale/preferences/preferences.properties");
-    var msg = bundle.formatStringFromName("featureDisableRequiresRestart",
-                                          [brandName], 1);
-    var title = bundle.formatStringFromName("shouldRestartTitle",
+    var msg = gStrings.formatStringFromName("featureDisableRequiresRestart",
                                             [brandName], 1);
+    var title = gStrings.formatStringFromName("shouldRestartTitle",
+                                              [brandName], 1);
     var shouldProceed = Services.prompt.confirm(win, title, msg)
     if (shouldProceed) {
       var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
