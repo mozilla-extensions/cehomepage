@@ -17,11 +17,103 @@ XPCOMUtils.defineLazyModuleGetter(this, "getPref",
 
 Cu.importGlobalProperties(["indexedDB"]);
 
+class NTabDBInternal {
+  constructor(prePath) {
+    this.prePath = prePath;
+  }
+
+  get spec() {
+    let value = this.prePath + "/";
+    Object.defineProperty(this, "spec", { value });
+    return this.spec;
+  }
+
+  get uri() {
+    let value = Services.io.newURI(this.spec);
+    Object.defineProperty(this, "uri", { value });
+    return this.uri;
+  }
+
+  get principal() {
+    let value = Services.scriptSecurityManager.
+      createCodebasePrincipal(this.uri, {});
+    Object.defineProperty(this, "principal", { value });
+    return this.principal;
+  }
+
+  get localStorage() {
+    this.storageManager.precacheStorage(this.principal);
+    let value = this.storageManager.getStorage(null, this.principal);
+    Object.defineProperty(this, "localStorage", { value });
+    return this.localStorage;
+  }
+
+  get storageManager() {
+    let value = Cc["@mozilla.org/dom/localStorage-manager;1"].
+      getService(Ci.nsIDOMStorageManager);
+    Object.defineProperty(this, "storageManager", { value });
+    return this.storageManager;
+  }
+
+  exportFromLocalStorage() {
+    let dataMap = new Map();
+    for (let i = 0, l = this.localStorage.length; i < l; i++) {
+      let key = this.localStorage.key(i);
+      dataMap.set(key, this.localStorage.getItem(key));
+    }
+    return dataMap;
+  }
+
+  importIntoLocalStorage(dataMap) {
+    for (let [aKey, aValue] of dataMap) {
+      this.localStorage.setItem(aKey, aValue);
+    }
+  }
+}
+
+let insecureNTabDB = new NTabDBInternal("http://offlintab.firefoxchina.cn");
+let secureNTabDB = new NTabDBInternal("https://offlintab.firefoxchina.cn");
+
 let NTabDB = {
-  prePath: "http://offlintab.firefoxchina.cn",
+  messageName: "mozCNUtils:NTabDB",
+  get _internalDB() {
+    if (!Services.prefs.getBoolPref("moa.ntab.useSecure", false)) {
+      if (!insecureNTabDB.localStorage ||
+          !insecureNTabDB.localStorage.length) {
+        Services.prefs.setBoolPref("moa.ntab.useSecure", true);
+      } else if (this._useDefaultDials) {
+        let dataMap = insecureNTabDB.exportFromLocalStorage();
+        secureNTabDB.importIntoLocalStorage(dataMap);
+
+        Services.prefs.setBoolPref("moa.ntab.useSecure", true);
+      } else {
+        delete this._internalDB;
+        return this._internalDB = insecureNTabDB;
+      }
+    }
+    delete this._internalDB;
+    return this._internalDB = secureNTabDB;
+  },
+  // `_useDefaultDials` is set based on messages from offlintab, and only
+  // checked on subsequent initialization of `_internalDB`
+  get _useDefaultDials() {
+    return Services.prefs.getBoolPref("moa.ntab.useDefaultDials", false);
+  },
+  set _useDefaultDials(val) {
+    Services.prefs.setBoolPref("moa.ntab.useDefaultDials", !!val);
+  },
+  get mm() {
+    delete this.mm;
+    return this.mm = Cc["@mozilla.org/globalmessagemanager;1"].
+      getService(Ci.nsIMessageListenerManager || Ci.nsISupports);
+  },
+  get prePath() {
+    delete this.prePath;
+    return this.prePath = this._internalDB.prePath;
+  },
   get spec() {
     delete this.spec;
-    return this.spec = this.prePath + "/";
+    return this.spec = this._internalDB.spec;
   },
   get privateSpec() {
     delete this.privateSpec;
@@ -33,20 +125,7 @@ let NTabDB = {
   },
   get uri() {
     delete this.uri;
-    return this.uri = Services.io.newURI(this.spec);
-  },
-  get privateUri() {
-    delete this.privateUri;
-    return this.privateUri = Services.io.newURI(this.privateSpec);
-  },
-  get readOnlyUri() {
-    delete this.readOnlyUri;
-    return this.readOnlyUri = Services.io.newURI(this.readOnlySpec);
-  },
-  get principal() {
-    delete this.principal;
-    return this.principal = Services.scriptSecurityManager.
-      createCodebasePrincipal(this.uri, {});
+    return this.uri = this._internalDB.uri;
   },
   get extraPrincipals() {
     let extraPrincipals = [];
@@ -61,37 +140,13 @@ let NTabDB = {
     return this.extraPrincipals = extraPrincipals;
   },
 
-  get localStorage() {
-    this.storageManager.precacheStorage(this.principal);
-    let localStorage = this.storageManager.getStorage(null, this.principal);
-    delete this.localStorage;
-    return this.localStorage = localStorage;
-  },
-  get storageManager() {
-    delete this.storageManager;
-    return this.storageManager = Cc["@mozilla.org/dom/localStorage-manager;1"].
-      getService(Ci.nsIDOMStorageManager);
-  },
-
   _backupAndRestoreLocalStorage() {
-    let temp = new Map();
-    for (let i = 0, l = this.localStorage.length; i < l; i++) {
-      let key = this.localStorage.key(i);
-      temp.set(key, this.localStorage.getItem(key));
-    }
+    let dataMap = this._internalDB.exportFromLocalStorage();
 
-    // use |_executeSoon| to make this run after nsIDOMStorageManager's observe
-    this._executeSoon(() => {
-      temp.forEach((aValue, aKey) => {
-        this.localStorage.setItem(aKey, aValue);
-      });
-    });
-  },
-
-  _executeSoon(callback) {
-    if (!callback)
-      return;
-    Services.tm.mainThread.dispatch(callback, Ci.nsIThread.DISPATCH_NORMAL);
+    // Trigger the import asynchronously, after nsIDOMStorageManager's observe
+    Services.tm.mainThread.dispatch(() => {
+      this._internalDB.importIntoLocalStorage(dataMap);
+    }, Ci.nsIThread.DISPATCH_NORMAL);
   },
 
   _initKeepLocalStorageOnClearingCookie() {
@@ -103,7 +158,7 @@ let NTabDB = {
   },
 
   _addPermission(aPrincipal) {
-    let principal = aPrincipal || this.principal;
+    let principal = aPrincipal || this._internalDB.principal;
     [
       Ci.nsIPermissionManager.ALLOW_ACTION,
       Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN
@@ -113,15 +168,8 @@ let NTabDB = {
   },
 
   _addExtraPermission() {
-    this.extraPrincipals.forEach(aPrincipal => {
+    for (let aPrincipal of this.extraPrincipals) {
       this._addPermission(aPrincipal);
-    });
-  },
-
-  _initLocalStorage() {
-    if (!this.localStorage) {
-      this.localStorage = this.storageManager.
-        createStorage(null, this.principal, this.spec);
     }
   },
 
@@ -129,25 +177,20 @@ let NTabDB = {
     this._addPermission();
     this._addExtraPermission();
     this._initKeepLocalStorageOnClearingCookie();
-    this._initLocalStorage();
+
+    if (this.spec === secureNTabDB.spec) {
+      return;
+    }
+    this.mm.addMessageListener(this.messageName, this);
   },
 
   uninit() {
     this._uninitKeepLocalStorageOnClearingCookie();
-  },
 
-  getPref(aKey, aDefault) {
-    try {
-      let item = this.localStorage.getItem(aKey);
-      if (typeof(item) === "string") {
-        try {
-          return JSON.parse(item);
-        } catch (e) {}
-      }
-      return item || aDefault;
-    } catch (e) {
-      return aDefault;
+    if (this.spec === secureNTabDB.spec) {
+      return;
     }
+    this.mm.removeMessageListener(this.messageName, this);
   },
 
   /**
@@ -164,5 +207,14 @@ let NTabDB = {
         this._backupAndRestoreLocalStorage();
         break;
     }
+  },
+
+  receiveMessage(message) {
+    if (message.name != this.messageName ||
+        !message.target.currentURI.equals(this.uri)) {
+      return;
+    }
+
+    this._useDefaultDials = message.data.useDefaultDials;
   }
 };

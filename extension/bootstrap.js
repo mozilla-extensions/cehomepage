@@ -666,7 +666,8 @@ this.mozCNWebChannels = {
     "https://home.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",
     "https://newtab.firefoxchina.cn/": "",
-    "http://offlintab.firefoxchina.cn/": "offlintabListener"
+    "http://offlintab.firefoxchina.cn/": "offlintabListener",
+    "https://offlintab.firefoxchina.cn/": "offlintabListener"
   },
   webChannels: [],
   init() {
