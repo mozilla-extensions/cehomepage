@@ -199,7 +199,7 @@ let NTab = {
     for (let messageObj of [NTabDB, NTabSync]) {
       aSubject.addEventListener(messageObj.messageName, aEvt => {
         if (aEvt.detail && aEvt.detail.dir == "content2fs") {
-          sendAsyncMessage(NTabSync.messageName, aEvt.detail.data);
+          sendAsyncMessage(messageObj.messageName, aEvt.detail.data);
         }
       }, true, true);
     }
