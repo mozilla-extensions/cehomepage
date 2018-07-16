@@ -251,7 +251,6 @@ this.mozCNUtils = {
   },
 
   frameScripts: [
-    "chrome://ceerrorpage/content/ceerrorpage.js",
     "chrome://ntab/content/ntabContent.js"
   ],
   initFrameScripts() {
