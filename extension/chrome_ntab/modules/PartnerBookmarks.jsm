@@ -8,8 +8,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "SignatureVerifier",
-  "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
@@ -146,7 +144,7 @@ let PartnerBookmarks = {
 
   update() {
     this._fetch(this.updateUrl, aData => {
-      if (SignatureVerifier.verify(aData.data, aData.signature)) {
+      if (false) { // signature verifier no longer available
         this._realUpdate(JSON.parse(aData.data), aData.signature);
       }
     });

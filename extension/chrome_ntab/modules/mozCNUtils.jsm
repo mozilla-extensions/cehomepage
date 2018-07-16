@@ -1,6 +1,5 @@
 this.EXPORTED_SYMBOLS = [
-  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage",
-  "Session", "SignatureVerifier"
+  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session"
 ];
 
 const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
@@ -472,24 +471,3 @@ var Session = Object.create(Frequent, {
     value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
   }
 });
-
-var SignatureVerifier = {
-  get verifier() {
-    delete this.verifier;
-    return this.verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
-      getService(Ci.nsIDataSignatureVerifier);
-  },
-
-  get key() {
-    delete this.key;
-    return this.key = getPref("moa.signatureverifier.key", "");
-  },
-
-  verify(aData, aSignature) {
-    try {
-      return this.verifier.verifyData(aData, aSignature, this.key);
-    } catch (e) {
-      return false;
-    }
-  }
-};
