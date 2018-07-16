@@ -300,37 +300,12 @@ this.mozCNUtils = {
         break;
       case "mozCNUtils:WebChannel":
         switch ((aMessage.data && aMessage.data.type)) {
-          case "isBaiduCurrentSearch":
-            let topURI = aMessage.target.currentURI;
-            aMessage.target.messageManager.sendAsyncMessage(aMessage.name, {
-              type: aMessage.data.type,
-              data: {
-                exists: !!delayedSuggestBaidu.baidu,
-                isCurrent: (delayedSuggestBaidu.baidu &&
-                            (Services.search.currentEngine ===
-                             delayedSuggestBaidu.baidu)),
-                searchText: (delayedSuggestBaidu.isGoogleSearch(topURI) ?
-                             delayedSuggestBaidu.extractKeyword(topURI) :
-                             topURI.spec)
-              }
-            });
-            break;
           case "isFxDefaultBrowser":
             // a response should be sent even shellService not available
             aMessage.target.messageManager.sendAsyncMessage(aMessage.name, {
               type: aMessage.data.type,
               data: (this.shellService &&
                      this.shellService.isDefaultBrowser(false, false))
-            });
-            break;
-          case "setBaiduAsCurrentSearch":
-            delayedSuggestBaidu.baidu.hidden = false;
-            Services.search.currentEngine = delayedSuggestBaidu.baidu;
-
-            Tracking.track({
-              type: "delayedsuggestbaidu",
-              action: "submit",
-              sid: "switch"
             });
             break;
           case "setFxAsDefaultBrowser":
