@@ -27,9 +27,6 @@ let mozCNWebChannelContent = {
           case "defaultBrowser.maybeEnableSetDefaultBrowser":
             this.maybeEnableSetDefaultBrowser(aEvt);
             break;
-          case "searchEngine.maybeEnableSwitchToBaidu":
-            this.maybeEnableSwitchToBaidu(aEvt);
-            break;
           /* tools ? */
         }
         break;
@@ -89,21 +86,6 @@ let mozCNWebChannelContent = {
     }
   },
 
-  isElementVisible(aElement) {
-    if (aElement.hidden) {
-      return false;
-    }
-    let style = aElement.style;
-    if (style.display === "none" || style.visibility === "hidden") {
-      return false;
-    }
-    let rect = aElement.getBoundingClientRect();
-    if (!rect.height || !rect.width) {
-      return false;
-    }
-    return true;
-  },
-
   maybeEnableSetDefaultBrowser(aEvt) {
     if (aEvt.target.document.documentURI !== NTabDB.spec) {
       return;
@@ -133,50 +115,6 @@ let mozCNWebChannelContent = {
           button.setAttribute("hidden", "true");
         }, false, /** wantsUntrusted */false);
         button.removeAttribute("hidden");
-      }
-    };
-    addMessageListener(this.messageName, listener);
-    sendAsyncMessage(this.messageName, {
-      type: messageType
-    });
-  },
-
-  maybeEnableSwitchToBaidu(aEvt) {
-    if (!aEvt.target.top.document.documentURI.startsWith("about:neterror")) {
-      return;
-    }
-
-    let { form, text, check } = aEvt.detail.elements;
-    let checkbox = check &&
-      check.querySelector('input[type="checkbox"]');
-    if (!form || !text || !checkbox) {
-      return;
-    }
-
-    let self = this;
-    let messageType = "isBaiduCurrentSearch";
-    let listener = {
-      receiveMessage(msg) {
-        let data = msg.data || {};
-        if (data.type !== messageType) {
-          return;
-        }
-        removeMessageListener(msg.name, listener);
-        text.value = data.data.searchText;
-        if (data.data.isCurrent) {
-          return;
-        }
-        if (!data.data.exists) {
-          return;
-        }
-        check.hidden = false;
-        form.addEventListener("submit", () => {
-          if (self.isElementVisible(check) && checkbox.checked) {
-            sendAsyncMessage(self.messageName, {
-              type: "setBaiduAsCurrentSearch"
-            });
-          }
-        }, false, /** wantsUntrusted */false);
       }
     };
     addMessageListener(this.messageName, listener);
