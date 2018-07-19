@@ -376,19 +376,9 @@ let NTabSync = {
       "return mozCNNTabSync.onSyncToEnablePref(this);");
     parentVBox.appendChild(checkbox);
 
-    // Since Fx 59, https://bugzil.la/1379338
-    let prefs = doc.getElementById("syncEnginePrefs");
-    if (!prefs) {
-      win.Preferences.addAll([
-        { id, name, type }
-      ]);
-    } else {
-      let pref = doc.createElement("preference");
-      pref.id = id;
-      pref.name = name;
-      pref.type = type;
-      prefs.appendChild(pref);
-    }
+    win.Preferences.addAll([
+      { id, name, type }
+    ]);
   },
 
   findFirstBrowser(aCallback, aThisObj) {
