@@ -53,6 +53,10 @@ let NTab = {
         return this.tools = document.querySelector('li[data-menu="tools"]');
       },
       init: function Launcher_init() {
+        if (Services.vc.compare(Services.appinfo.version, "61.*") > 0) {
+          return;
+        }
+
         if (!this.tools) {
           return;
         }

@@ -260,7 +260,7 @@ var Frequent = {
     };
 
     let query = PlacesUtils.history.getNewQuery();
-    let db = PlacesUtils.history.QueryInterface(Ci.nsPIPlacesDatabase);
+    let db = PlacesUtils.history;
     // Fx 61, https://bugzil.la/1446951
     if (db.asyncExecuteLegacyQuery) {
       db.asyncExecuteLegacyQuery(query, options, callback);
