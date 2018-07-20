@@ -1,0 +1,69 @@
+{
+  "extensionDescription": {
+    "message": "火狐定制主页，包括最近访问页面、最常访问页面以及新标签页等"
+  },
+  "extensionName": {
+    "message": "火狐主页"
+  },
+  "delayedSuggestBaidu.notification.message": {
+    "message": "您访问的服务当前连接过慢，可能无法使用。是否首选百度进行搜索？"
+  },
+  "delayedSuggestBaidu.notification.negative": {
+    "message": "不再显示此提醒"
+  },
+  "delayedSuggestBaidu.notification.positive": {
+    "message": "立即搜索"
+  },
+  "homepageReset.notification.message": {
+    "message": "您的火狐主页已被修改，需要立即恢复。"
+  },
+  "homepageReset.notification.message_alt": {
+    "message": "您的火狐主页已被篡改，需要立即恢复。"
+  },
+  "homepageReset.notification.no": {
+    "message": "否"
+  },
+  "homepageReset.notification.nomore": {
+    "message": "不再提示"
+  },
+  "homepageReset.notification.reset": {
+    "message": "是"
+  },
+  "NTabSync.engine.accesskey": {
+    "message": "N"
+  },
+  "NTabSync.engine.label": {
+    "message": "新标签页：九宫格及设置"
+  },
+  "NTabSync.notification.message": {
+    "message": "选择同步新标签页，所有用本账号登录同步\n的火狐浏览器，都将统一使用当前新标签页\n的内容。\n\n是否确定同步新标签页？"
+  },
+  "NTabSync.notification.title": {
+    "message": "新标签页同步"
+  },
+  "permanentPB.notification.message": {
+    "message": "您正处于永久隐私浏览模式，建议恢复为正常浏览模式，只在需要时使用隐私浏览窗口。是否恢复？"
+  },
+  "permanentPB.notification.more": {
+    "message": "了解详情"
+  },
+  "permanentPB.notification.yes": {
+    "message": "是"
+  },
+  "permanentPB.restart.message": {
+    "message": "$appname$ 必须重新启动才能禁用此功能。",
+    "placeholders": {
+      "appname": {
+        "content": "$1"
+      }
+    }
+  },
+  "permanentPB.restart.title": {
+    "message": "重新启动 $appname$",
+    "placeholders": {
+      "appname": {
+        "content": "$1"
+      }
+    }
+  }
+}

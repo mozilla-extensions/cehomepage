@@ -1,4 +1,4 @@
-/* globals APP_STARTUP */
+this.EXPORTED_SYMBOLS = ["mozCNUtils"];
 
 const {
   classes: Cc, interfaces: Ci, manager: Cm,
@@ -60,10 +60,26 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
 XPCOMUtils.defineLazyModuleGetter(this, "AboutCEhome",
   "resource://ntab/AboutCEhome.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(this, "resProto",
-                                   "@mozilla.org/network/protocol;1?name=resource",
-                                   "nsISubstitutingProtocolHandler");
-const RESOURCE_HOST = "ntab";
+this.strings = {
+  _ctx: null,
+
+  init(context) {
+    this._ctx = context;
+  },
+
+  uninit() {
+    delete this._ctx;
+  },
+
+  _(name, subs) {
+    if (!this._ctx) {
+      return "";
+    }
+
+    let cloneScope = this._ctx.cloneScope;
+    return this._ctx.extension.localizeMessage(name, subs, {cloneScope});
+  }
+};
 
 this.searchEngines = {
   expected: /^https?:\/\/www\.baidu\.com\/baidu\?wd=TEST&tn=monline(?:_|_4_)dg(?:&ie=utf-8)?$/,
@@ -253,7 +269,7 @@ this.mozCNUtils = {
   },
 
   frameScripts: [
-    "chrome://ntab/content/ntabContent.js"
+    "resource://ntab/ntabContent.js"
   ],
   initFrameScripts() {
     this.frameScripts.forEach(frameScript => {
@@ -446,7 +462,10 @@ this.mozCNUtils = {
     NTabWindow.onWindowClosed(win);
   },
 
-  init(isAppStartup) {
+  init(context) {
+    let isAppStartup = context.extension.startupReason === "APP_STARTUP";
+    strings.init(context);
+
     Services.obs.addObserver(this, "http-on-examine-response");
     Services.obs.addObserver(this, "http-on-examine-cached-response");
     Services.obs.addObserver(this, "http-on-examine-merged-response");
@@ -458,13 +477,13 @@ this.mozCNUtils = {
     this.initMessageListener();
     this.initWindowListener();
 
-    delayedSuggestBaidu.init();
+    delayedSuggestBaidu.init(strings);
     fxAccountsProxy.init();
     Homepage.init(isAppStartup);
     mozCNWebChannels.init();
     NTabDB.init();
-    NTabSync.init();
-    NTabWindow.init();
+    NTabSync.init(strings);
+    NTabWindow.init(strings);
     searchEngines.init();
   },
 
@@ -631,7 +650,7 @@ this.mozCNWebChannel.prototype = {
 
 this.mozCNWebChannels = {
   channelID: "moz_cn_channel_v2",
-  contentURL: "chrome://ntab/content/mozCNWebChannelContent.js",
+  contentURL: "resource://ntab/mozCNWebChannelContent.js",
   specs: {
     "https://home.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",
@@ -656,19 +675,3 @@ this.mozCNWebChannels = {
     gMM.removeDelayedFrameScript(this.contentURL);
   }
 };
-
-function install() {}
-async function startup({ resourceURI, webExtension }, reason) {
-  resProto.setSubstitution(RESOURCE_HOST,
-    Services.io.newURI("chrome_ntab/modules/", null, resourceURI));
-
-  mozCNUtils.init(reason === APP_STARTUP);
-
-  /* let { browser } = */await webExtension.startup();
-}
-function shutdown() {
-  mozCNUtils.uninit();
-
-  resProto.setSubstitution(RESOURCE_HOST, null);
-}
-function uninstall() {}

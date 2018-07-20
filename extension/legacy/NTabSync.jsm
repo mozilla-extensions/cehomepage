@@ -325,14 +325,8 @@ let NTabSync = {
     }).then(null, Cu.reportError);
   },
 
-  get strings() {
-    let spec = "chrome://ntab/locale/sync.properties";
-    delete this.strings;
-    return this.strings = Services.strings.createBundle(spec);
-  },
-
   _(key) {
-    return this.strings.GetStringFromName(key);
+    return this._strings._(key);
   },
 
   addPrefs(win) {
@@ -347,8 +341,8 @@ let NTabSync = {
           return undefined;
         }
         let shouldEnable = Services.prompt.confirm(cbWin,
-          self._("ntabsync.notification.title"),
-          self._("ntabsync.notification.message"));
+          self._("NTabSync.notification.title"),
+          self._("NTabSync.notification.message"));
 
         if (!shouldEnable) {
           checkbox.checked = false;
@@ -369,8 +363,8 @@ let NTabSync = {
     }
 
     let checkbox = doc.createElement("checkbox");
-    checkbox.setAttribute("label", this._("engine.mozcn.ntab.label"));
-    checkbox.setAttribute("accesskey", this._("engine.mozcn.ntab.accesskey"));
+    checkbox.setAttribute("label", this._("NTabSync.engine.label"));
+    checkbox.setAttribute("accesskey", this._("NTabSync.engine.accesskey"));
     checkbox.setAttribute("preference", id);
     checkbox.setAttribute("onsynctopreference",
       "return mozCNNTabSync.onSyncToEnablePref(this);");
@@ -404,7 +398,8 @@ let NTabSync = {
     }
   },
 
-  init() {
+  init(strings) {
+    this._strings = strings;
     Services.obs.addObserver(this, "sync-pane-loaded");
     Services.obs.addObserver(this, "weave:engine:start-tracking");
     Services.obs.addObserver(this, "weave:service:ready");
@@ -413,6 +408,7 @@ let NTabSync = {
   uninit() {
     Weave.Service.engineManager.unregister(NTabEngine.name);
     Services.obs.removeObserver(this, "sync-pane-loaded");
+    delete this._strings;
   },
 
   observe(aSubject, aTopic, aData) {

@@ -1,0 +1,69 @@
+{
+  "extensionDescription": {
+    "message": "Customizied Home Page for Firefox"
+  },
+  "extensionName": {
+    "message": "Firefox Homepage"
+  },
+  "delayedSuggestBaidu.notification.message": {
+    "message": "The service you are trying to access may not be available. Search with Baidu?"
+  },
+  "delayedSuggestBaidu.notification.negative": {
+    "message": "Don't ask again"
+  },
+  "delayedSuggestBaidu.notification.positive": {
+    "message": "Search Now"
+  },
+  "homepageReset.notification.message": {
+    "message": "Your homepage seems to be changed, reset it now."
+  },
+  "homepageReset.notification.message_alt": {
+    "message": "Your homepage seems to be hijacked, reset it now."
+  },
+  "homepageReset.notification.no": {
+    "message": "No"
+  },
+  "homepageReset.notification.nomore": {
+    "message": "Don't ask again"
+  },
+  "homepageReset.notification.reset": {
+    "message": "Reset"
+  },
+  "NTabSync.engine.accesskey": {
+    "message": "N"
+  },
+  "NTabSync.engine.label": {
+    "message": "NTab：Dials and settings"
+  },
+  "NTabSync.notification.message": {
+    "message": "After checking “NTab: Dials and settings”,\nthe current quick dials and settings will be\nuploaded to the server and synchronized with\nother devices.\n\nContinue with checking “NTab: Dials and settings”?"
+  },
+  "NTabSync.notification.title": {
+    "message": "NTab Sync"
+  },
+  "permanentPB.notification.message": {
+    "message": "You may be accidentally using permanent private browsing mode, do you want Firefox to remember your browsing history? Separate private browsing window is always available if necessary."
+  },
+  "permanentPB.notification.more": {
+    "message": "Learn More"
+  },
+  "permanentPB.notification.yes": {
+    "message": "Yes"
+  },
+  "permanentPB.restart.message": {
+    "message": "$appname$ must restart to disable this feature.",
+    "placeholders": {
+      "appname": {
+        "content": "$1"
+      }
+    }
+  },
+  "permanentPB.restart.title": {
+    "message": "Restart $appname$",
+    "placeholders": {
+      "appname": {
+        "content": "$1"
+      }
+    }
+  }
+}

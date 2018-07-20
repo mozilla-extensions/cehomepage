@@ -19,11 +19,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "gStrings", () => {
-  return Services.strings.
-    createBundle("chrome://ntab/locale/overlay.properties");
-});
-
 this.overrideInstallation = {
   prefKey: "moa.ntab.oldinstalldate",
 
@@ -268,13 +263,13 @@ this.homepageReset = {
   },
 
   notify(aWindow, aReason, aShownCallback, aNomoreCallback) {
-    var message = gStrings.GetStringFromName("homepagereset.notification.message");
+    var message = NTabWindow._("homepageReset.notification.message");
     if (aReason == this.REASON_POTENTIAL_HIJACK) {
-      message = gStrings.GetStringFromName("homepagereset.notification.message_alt");
+      message = NTabWindow._("homepageReset.notification.message_alt");
     }
-    var resetText = gStrings.GetStringFromName("homepagereset.notification.reset");
-    var noText = gStrings.GetStringFromName("homepagereset.notification.no");
-    var nomoreText = gStrings.GetStringFromName("homepagereset.notification.nomore");
+    var resetText = NTabWindow._("homepageReset.notification.reset");
+    var noText = NTabWindow._("homepageReset.notification.no");
+    var nomoreText = NTabWindow._("homepageReset.notification.nomore");
 
     var self = this;
     var buttons = [{
@@ -463,9 +458,9 @@ this.permanentPB = {
       return;
     }
 
-    var message = gStrings.GetStringFromName("permanent-pb.notification.message");
-    var yesText = gStrings.GetStringFromName("permanent-pb.notification.yes");
-    var moreText = gStrings.GetStringFromName("permanent-pb.notification.more");
+    var message = NTabWindow._("permanentPB.notification.message");
+    var yesText = NTabWindow._("permanentPB.notification.yes");
+    var moreText = NTabWindow._("permanentPB.notification.more");
 
     var self = this;
     var buttons = [{
@@ -516,10 +511,8 @@ this.permanentPB = {
 
     var brandName = win.document.getElementById("bundle_brand").
       getString("brandShortName");
-    var msg = gStrings.formatStringFromName("featureDisableRequiresRestart",
-                                            [brandName], 1);
-    var title = gStrings.formatStringFromName("shouldRestartTitle",
-                                              [brandName], 1);
+    var msg = NTabWindow._("permanentPB.restart.message", [brandName]);
+    var title = NTabWindow._("permanentPB.restart.title", [brandName]);
     var shouldProceed = Services.prompt.confirm(win, title, msg)
     if (shouldProceed) {
       var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
@@ -589,12 +582,18 @@ this.browserOpenTab = function(evt) {
 };
 
 this.NTabWindow = {
-  init() {
+  _(key, args) {
+    return this._strings._(key, args);
+  },
+
+  init(strings) {
+    this._strings = strings;
     newTabPref.init();
   },
 
   uninit() {
     newTabPref.uninit();
+    delete this.strings;
   },
 
   onWindowOpened(win) {

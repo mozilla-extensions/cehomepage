@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
 var delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
   delay: 10e3,
-  icon: "chrome://ntab/skin/delayed-suggest-baidu.png",
+  icon: "resource://ntab/skin/delayed-suggest-baidu.png",
   knownStatus: [Cr.NS_ERROR_NET_RESET, Cr.NS_ERROR_NET_TIMEOUT],
   notificationKey: "mozcn-delayed-suggest-baidu",
   prefKey: "moa.delayedsuggest.baidu",
@@ -37,17 +37,12 @@ var delayedSuggestBaidu = {
     return this.baidu = Services.search.getEngineByName("\u767e\u5ea6");
   },
 
-  get bundle() {
-    let url = "chrome://ntab/locale/overlay.properties";
-    delete this.bundle;
-    return this.bundle = Services.strings.createBundle(url);
-  },
-
   get enabled() {
     return (getPref(this.prefKey, 0) < this.version) && this.baidu;
   },
 
-  init() {
+  init(strings) {
+    this._strings = strings;
     Services.search.init();
   },
 
@@ -132,10 +127,10 @@ var delayedSuggestBaidu = {
     let notificationBox = gBrowser.getNotificationBox(aBrowser);
 
     let self = this;
-    let prefix = "delayedsuggestbaidu.notification.";
-    let message = this.bundle.GetStringFromName(prefix + "message");
-    let positive = this.bundle.GetStringFromName(prefix + "positive");
-    let negative = this.bundle.GetStringFromName(prefix + "negative");
+    let prefix = "delayedSuggestBaidu.notification.";
+    let message = this._strings._(prefix + "message");
+    let positive = this._strings._(prefix + "positive");
+    let negative = this._strings._(prefix + "negative");
 
     let notificationBar = notificationBox.appendNotification(message,
       this.notificationKey,
