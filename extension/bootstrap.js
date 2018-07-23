@@ -16,6 +16,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
@@ -579,10 +581,7 @@ this.mozCNWebChannel.prototype = {
     let self = this;
     switch (aMessage.key) {
       case "bookmark.query":
-        let db = Cc["@mozilla.org/browser/nav-history-service;1"].
-                   getService(Ci.nsINavHistoryService).
-                   QueryInterface(Ci.nsPIPlacesDatabase).
-                   DBConnection;
+        let db = PlacesUtils.history.DBConnection;
         let sql = ("SELECT b.title as title, p.url as url " +
                    "FROM moz_bookmarks b, moz_places p " +
                    "WHERE b.type = 1 AND b.fk = p.id AND p.hidden = 0");
