@@ -583,7 +583,7 @@ this.browserOpenTab = function(evt) {
 
 this.NTabWindow = {
   _(key, args) {
-    return this._strings._(key, args);
+    return this._strings ? this._strings._(key, args) : "";
   },
 
   init(strings) {

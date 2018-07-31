@@ -475,7 +475,6 @@ this.mozCNUtils = {
     this.initFactories();
     this.initFrameScripts();
     this.initMessageListener();
-    this.initWindowListener();
 
     delayedSuggestBaidu.init(strings);
     fxAccountsProxy.init();
@@ -485,6 +484,9 @@ this.mozCNUtils = {
     NTabSync.init(strings);
     NTabWindow.init(strings);
     searchEngines.init();
+
+    // this needs to run after NTabWindow.init for strings
+    this.initWindowListener();
   },
 
   uninit() {
