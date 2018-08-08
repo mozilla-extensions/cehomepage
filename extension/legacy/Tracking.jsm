@@ -16,6 +16,7 @@ let _extend = function(src, target) {
 }
 
 let Tracking = {
+  _cachedOptions: [],
   get cid() {
     delete this.cid;
     return this.cid = Services.prefs.getCharPref("app.chinaedition.channel",
@@ -24,10 +25,27 @@ let Tracking = {
 
   track(option) {
     let tracker = Cc["@mozilla.com.cn/tracking;1"];
-    if (!tracker || !tracker.getService().wrappedJSObject.ude) {
+    if (!tracker) {
+      this._cachedOptions.push(option);
+      while (this._cachedOptions.length > 8) {
+        this._cachedOptions.shift();
+      }
       return;
     }
 
+    if (!tracker.getService().wrappedJSObject.ude) {
+      this._cachedOptions.length = 0;
+      return;
+    }
+
+    while (this._cachedOptions.length) {
+      this._track(this._cachedOptions.shift());
+    }
+
+    this._track(option);
+  },
+
+  _track(option) {
     option = _extend(option, {
       type: "",
       action: "",
