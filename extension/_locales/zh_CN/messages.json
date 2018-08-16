@@ -29,18 +29,6 @@
   "homepageReset.notification.reset": {
     "message": "是"
   },
-  "NTabSync.engine.accesskey": {
-    "message": "N"
-  },
-  "NTabSync.engine.label": {
-    "message": "新标签页：九宫格及设置"
-  },
-  "NTabSync.notification.message": {
-    "message": "选择同步新标签页，所有用本账号登录同步\n的火狐浏览器，都将统一使用当前新标签页\n的内容。\n\n是否确定同步新标签页？"
-  },
-  "NTabSync.notification.title": {
-    "message": "新标签页同步"
-  },
   "permanentPB.notification.message": {
     "message": "您正处于永久隐私浏览模式，建议恢复为正常浏览模式，只在需要时使用隐私浏览窗口。是否恢复？"
   },

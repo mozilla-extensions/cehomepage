@@ -29,18 +29,6 @@
   "homepageReset.notification.reset": {
     "message": "Reset"
   },
-  "NTabSync.engine.accesskey": {
-    "message": "N"
-  },
-  "NTabSync.engine.label": {
-    "message": "NTab：Dials and settings"
-  },
-  "NTabSync.notification.message": {
-    "message": "After checking “NTab: Dials and settings”,\nthe current quick dials and settings will be\nuploaded to the server and synchronized with\nother devices.\n\nContinue with checking “NTab: Dials and settings”?"
-  },
-  "NTabSync.notification.title": {
-    "message": "NTab Sync"
-  },
   "permanentPB.notification.message": {
     "message": "You may be accidentally using permanent private browsing mode, do you want Firefox to remember your browsing history? Separate private browsing window is always available if necessary."
   },

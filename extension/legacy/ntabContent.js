@@ -10,8 +10,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
 
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
-  "resource://ntab/NTabSync.jsm");
 
 let NTab = {
   observe(aSubject, aTopic, aData) {
@@ -200,7 +198,7 @@ let NTab = {
       }
     };
 
-    for (let messageObj of [NTabDB, NTabSync]) {
+    for (let messageObj of [NTabDB]) {
       aSubject.addEventListener(messageObj.messageName, aEvt => {
         if (aEvt.detail && aEvt.detail.dir == "content2fs") {
           sendAsyncMessage(messageObj.messageName, aEvt.detail.data);
@@ -208,22 +206,6 @@ let NTab = {
       }, true, true);
     }
 
-    let relaySyncMessage = aEvt => {
-      if (aEvt.data) {
-        aSubject.dispatchEvent(new aSubject.CustomEvent(NTabSync.messageName, {
-          detail: Cu.cloneInto({
-            dir: "fs2content",
-            data: {
-              id: aEvt.data.id,
-              type: aEvt.data.type,
-              state: aEvt.data.state
-            }
-          }, aSubject)
-        }));
-      }
-    };
-
-    addMessageListener(NTabSync.messageName, relaySyncMessage);
     addMessageListener(FxAccounts.messageName, FxAccounts);
 
     aSubject.addEventListener("DOMContentLoaded", () => {
@@ -231,7 +213,6 @@ let NTab = {
       FxAccounts.init();
     });
     aSubject.addEventListener("unload", () => {
-      removeMessageListener(NTabSync.messageName, relaySyncMessage);
       removeMessageListener(FxAccounts.messageName, FxAccounts);
     });
   }

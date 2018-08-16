@@ -46,8 +46,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "getPref",
   "resource://ntab/mozCNUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NTabSync",
-  "resource://ntab/NTabSync.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabWindow",
   "resource://ntab/NTabWindow.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PartnerBookmarks",
@@ -481,7 +479,6 @@ this.mozCNUtils = {
     Homepage.init(isAppStartup);
     mozCNWebChannels.init();
     NTabDB.init();
-    NTabSync.init(strings);
     NTabWindow.init(strings);
     searchEngines.init();
 
@@ -503,7 +500,6 @@ this.mozCNUtils = {
     fxAccountsProxy.uninit();
     mozCNWebChannels.uninit();
     NTabDB.uninit();
-    NTabSync.uninit();
     NTabWindow.uninit();
   }
 };
