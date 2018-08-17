@@ -333,132 +333,122 @@ var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
 };
 
 var Homepage = {
-  defaultAboutpage: "https://home.firefoxchina.cn/",
   defaultHomepage: "https://home.firefoxchina.cn/",
-  historicalAboutpages: [
-    "http://e.firefoxchina.cn/",
-    "http://n.firefoxchina.cn/",
-    "http://i.firefoxchina.cn/"
-  ],
+  distributionTopic: "distribution-customization-complete",
   historicalHomepages: [
-    "about:cehome",
-    "http://home.firefoxchina.cn/"
+    "http://home.firefoxchina.cn/",
+    "http://home.firefoxchina.cn",
+    "http://e.firefoxchina.cn",
+    "http://n.firefoxchina.cn",
+    "http://i.firefoxchina.cn",
+    "about:cehome"
   ],
+  homepagePref: "browser.startup.homepage",
+  originalHomepage: "",
   vanillaHomepages: [
     "about:home",
-    "http://start.firefoxchina.cn/",
-    "https://start.firefoxchina.cn/"
+    "http://start.firefoxchina.cn",
+    "https://start.firefoxchina.cn"
   ],
 
-  distributionTopic: "distribution-customization-complete",
-  homepagePref: "browser.startup.homepage",
+  init(isAppStartup) {
+    if (!isAppStartup) {
+      return;
+    }
 
-  get aboutpage() {
-    delete this.aboutpage;
-    return this.aboutpage = this.defaultAboutpage;
-  },
-  get homepage() {
-    return getPref(this.homepagePref, this.defaultHomepage,
-      Ci.nsIPrefLocalizedString);
-  },
-  normalizeSpec(aSpec) {
-    try {
-      let uri = Services.uriFixup.createFixupURI(aSpec,
-        Services.uriFixup.FIXUP_FLAG_NONE);
-
-      // ignore the "?cachebust=***" when comparing with this.aboutpage etc.
-      let uriWithoutQS = uri.spec.split("?")[0];
-      if (uriWithoutQS === this.aboutpage ||
-          this.historicalHomepages.includes(uriWithoutQS) ||
-          this.historicalAboutpages.includes(uriWithoutQS)) {
-        return this.defaultHomepage;
-      }
-      return uri.spec;
-    } catch (e) {
-      return "";
+    let observers = Services.obs.enumerateObservers(this.distributionTopic);
+    if (observers.hasMoreElements()) {
+      Services.obs.addObserver(this, this.distributionTopic);
+    } else {
+      this.maybeOverrideHomepage();
     }
   },
-  init(isAppStartup) {
-    this.defaultPrefTweak(isAppStartup);
 
-    this.handleDistributionDefaults(isAppStartup);
-  },
-  defaultPrefTweak(isAppStartup) {
+  maybeOverrideHomepage() {
     let defaultHomepage = getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString, true);
+    if (defaultHomepage === this.defaultHomepage) {
+      this.track("defaultVal");
+      return;
+    }
 
-    let updatedHomepage = defaultHomepage.split("|").map(spec => {
-      // for china repack installation
-      let normalizedSpec = this.normalizeSpec(spec) || spec;
-      // for vanilla installation
-      if (this.vanillaHomepages.includes(normalizedSpec)) {
-        return this.defaultHomepage;
-      }
+    let userHomepage = getPref(this.homepagePref, this.defaultHomepage,
+      Ci.nsIPrefLocalizedString);
+    if (userHomepage === this.defaultHomepage) {
+      this.overrideHomepage("userVal");
+      return;
+    }
 
-      return normalizedSpec;
-    }).join("|");
+    if (this.historicalHomepages.includes(defaultHomepage)) {
+      this.overrideHomepage("legacyDist");
+      return;
+    }
 
-    if (updatedHomepage === defaultHomepage) {
+    if (this.vanillaHomepages.includes(defaultHomepage)) {
+      this.overrideHomepage("vanilla");
+      return;
+    }
+
+    this.track("otherDefault");
+
+    try {
+      Services.obs.removeObserver(this, this.distributionTopic);
+    } catch (ex) {}
+  },
+
+  observe(aSubject, aTopic, aData) {
+    switch (aTopic) {
+      case this.distributionTopic:
+        this.maybeOverrideHomepage();
+        break;
+      default:
+        break;
+    }
+  },
+
+  overrideHomepage(reason) {
+    if (!Services.prefs.prefHasUserValue(this.homepagePref)) {
+      Services.prefs.setCharPref(this.homepagePref, this.defaultHomepage);
+      reason = `${reason}Write`
+    }
+
+    this.originalHomepage = getPref(this.homepagePref, this.defaultHomepage,
+      Ci.nsIPrefLocalizedString, true);
+    this.setAsDefault(this.defaultHomepage);
+
+    this.track(reason);
+  },
+
+  setAsDefault(homepage) {
+    if (!homepage) {
       return;
     }
 
     let localizedStr = Cc["@mozilla.org/pref-localizedstring;1"].
       createInstance(Ci.nsIPrefLocalizedString);
-    localizedStr.
-      data = `data:text/plain,${this.homepagePref}=${updatedHomepage}`;
+    localizedStr.data = `data:text/plain,${this.homepagePref}=${homepage}`;
     Services.prefs.getDefaultBranch("").setComplexValue(this.homepagePref,
       Ci.nsIPrefLocalizedString, localizedStr);
-
-    // isAppStartup here could be true/false/undefined
-    if (isAppStartup === false) {
-      this.maybeResetHomepage();
-    }
   },
-  handleDistributionDefaults(isAppStartup) {
-    if (!isAppStartup) {
-      return;
-    }
 
-    Services.obs.addObserver(this, this.distributionTopic);
-    Services.prefs.addObserver(this.homepagePref, this);
-  },
-  observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case this.distributionTopic:
-        Services.prefs.removeObserver(this.homepagePref, this);
-        Services.obs.removeObserver(this, aTopic);
-
-        this.maybeResetHomepage();
-        break;
-      case "nsPref:changed":
-        if (aData !== this.homepagePref) {
-          break;
-        }
-
-        this.defaultPrefTweak();
-        break;
-    }
-  },
-  // Try to reset any unnecessary user value here.
-  maybeResetHomepage() {
-    if (!Services.prefs.prefHasUserValue(this.homepagePref)) {
-      return;
-    }
-
-    let defaultHomepage = getPref(this.homepagePref, this.defaultHomepage,
-      Ci.nsIPrefLocalizedString, true);
-
-    if (this.homepage !== defaultHomepage &&
-        this.homepage !== this.defaultHomepage) {
-      return;
-    }
-
-    Services.prefs.clearUserPref(this.homepagePref);
+  track(reason) {
     Tracking.track({
       type: "homepage",
-      action: "reset",
-      sid: "startup"
+      action: "override",
+      sid: reason
     });
+  },
+
+  uninit(isAppShutdown) {
+    // revert on disable/uninstall ?
+    if (!isAppShutdown) {
+      return;
+    }
+
+    if (this.originalHomepage) {
+      // so that this.defaultHomepage can be saved on user branch
+      this.setAsDefault(this.originalHomepage);
+    }
   }
 };
 

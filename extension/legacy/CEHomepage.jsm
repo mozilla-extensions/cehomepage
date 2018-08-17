@@ -486,7 +486,7 @@ this.mozCNUtils = {
     this.initWindowListener();
   },
 
-  uninit() {
+  uninit(isAppShutdown) {
     Services.obs.removeObserver(this, "http-on-examine-response");
     Services.obs.removeObserver(this, "http-on-examine-cached-response");
     Services.obs.removeObserver(this, "http-on-examine-merged-response");
@@ -498,6 +498,7 @@ this.mozCNUtils = {
     this.uninitWindowListener();
 
     fxAccountsProxy.uninit();
+    Homepage.uninit(isAppShutdown);
     mozCNWebChannels.uninit();
     NTabDB.uninit();
     NTabWindow.uninit();
