@@ -336,19 +336,14 @@ var Homepage = {
   defaultHomepage: "https://home.firefoxchina.cn/",
   distributionTopic: "distribution-customization-complete",
   historicalHomepages: [
-    "http://home.firefoxchina.cn/",
-    "http://home.firefoxchina.cn",
-    "http://e.firefoxchina.cn",
-    "http://n.firefoxchina.cn",
-    "http://i.firefoxchina.cn",
-    "about:cehome"
+    /^http:\/\/(home|e|n|i)\.firefoxchina\.cn\/?$/,
+    /^about:cehome$/
   ],
   homepagePref: "browser.startup.homepage",
   originalHomepage: "",
   vanillaHomepages: [
-    "about:home",
-    "http://start.firefoxchina.cn",
-    "https://start.firefoxchina.cn"
+    /^https?:\/\/start\.firefoxchina\.cn\/?$/,
+    /^about:home$/
   ],
 
   init(isAppStartup) {
@@ -379,12 +374,12 @@ var Homepage = {
       return;
     }
 
-    if (this.historicalHomepages.includes(defaultHomepage)) {
+    if (this.historicalHomepages.some(h => h.test(defaultHomepage))) {
       this.overrideHomepage("legacyDist");
       return;
     }
 
-    if (this.vanillaHomepages.includes(defaultHomepage)) {
+    if (this.vanillaHomepages.some(v => v.test(defaultHomepage))) {
       this.overrideHomepage("vanilla");
       return;
     }
