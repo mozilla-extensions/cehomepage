@@ -7,13 +7,19 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
   "resource://ntab/mozCNUtils.jsm");
+XPCOMUtils.defineLazyGetter(this, "generateQI", () => {
+  // ChromeUtils one introduced in Fx 61, mandatory in https://bugzil.la/1484466
+  return XPCOMUtils.generateQI ?
+    XPCOMUtils.generateQI.bind(XPCOMUtils) :
+    ChromeUtils.generateQI.bind(ChromeUtils);
+});
 
 function AboutCEhome() {}
 AboutCEhome.prototype = {
   classDescription: "China Edition New Home about:cehome",
   contractID: "@mozilla.org/network/protocol/about;1?what=cehome",
   classID: Components.ID("c0a76f7d-8214-4476-afe3-b34f9051cb99"),
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIAboutModule]),
+  QueryInterface: generateQI([Ci.nsIAboutModule]),
 
   getURIFlags(uri) {
     return (Ci.nsIAboutModule.ALLOW_SCRIPT |

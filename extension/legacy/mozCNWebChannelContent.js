@@ -16,7 +16,6 @@ let mozCNWebChannelContent = {
     "https://newtab.firefoxchina.cn/",
     NTabDB.spec
   ],
-  cachedWindows: new Map(),
   channelID: "moz_cn_channel_v2",
   messageName: "mozCNUtils:WebChannel",
 
@@ -38,22 +37,6 @@ let mozCNWebChannelContent = {
     addEventListener("unload", () => {
       Services.obs.removeObserver(this, "content-document-global-created");
     });
-
-    // relay WebChannel response to qualified inner windows
-    addEventListener("WebChannelMessageToContent", aEvt => {
-      if (aEvt.target !== content) {
-        return;
-      }
-
-      this.cachedWindows.forEach(aWindow => {
-        try {
-          let evt = new aWindow.CustomEvent("WebChannelMessageToContent", {
-            detail: Cu.cloneInto(aEvt.detail, aWindow),
-          });
-          aWindow.dispatchEvent(evt);
-        } catch (e) {}
-      });
-    }, true, true);
   },
 
   observe(aSubject, aTopic, aData) {
@@ -71,17 +54,6 @@ let mozCNWebChannelContent = {
 
         aSubject.wrappedJSObject.mozCNChannel = this.channelID;
         aSubject.addEventListener("mozCNUtils:Register", this, true, true);
-        if (aSubject.top === aSubject) {
-          return;
-        }
-
-        let innerID = aSubject.QueryInterface(Ci.nsIInterfaceRequestor).
-          getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
-        aSubject.addEventListener("unload", aEvt => {
-          this.cachedWindows.delete(innerID);
-        });
-
-        this.cachedWindows.set(innerID, aSubject);
         break;
     }
   },

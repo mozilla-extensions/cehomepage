@@ -33,6 +33,12 @@ XPCOMUtils.defineLazyGetter(this, "gMM", () => {
   return Cc["@mozilla.org/globalmessagemanager;1"].
     getService(Ci.nsIMessageListenerManager || Ci.nsISupports);
 });
+XPCOMUtils.defineLazyGetter(this, "generateQI", () => {
+  // ChromeUtils one introduced in Fx 61, mandatory in https://bugzil.la/1484466
+  return XPCOMUtils.generateQI ?
+    XPCOMUtils.generateQI.bind(XPCOMUtils) :
+    ChromeUtils.generateQI.bind(ChromeUtils);
+});
 
 XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
   "resource://ntab/mozCNUtils.jsm");
@@ -249,8 +255,8 @@ this.fxAccountsProxy = {
 this.mozCNUtils = {
   factories: new Map(),
 
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsIMessageListener]),
+  QueryInterface: generateQI([Ci.nsIObserver,
+                              Ci.nsIMessageListener]),
 
   // nsIObserver
   observe(aSubject, aTopic, aData) {
