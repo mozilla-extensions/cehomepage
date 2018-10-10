@@ -92,112 +92,6 @@ let NTab = {
       }
     };
 
-    let FxAccounts = {
-      _inited: false,
-      _cachedMessages: [],
-
-      messageName: "mozCNUtils:FxAccounts",
-      attributes: [
-        "disabled",
-        "failed",
-        "fxastatus",
-        "hidden",
-        "label",
-        "signedin",
-        "status",
-        "tooltiptext"
-      ],
-
-      get button() {
-        delete this.button;
-        return this.button = document.querySelector("#fx-accounts");
-      },
-
-      receiveMessage(aMessage) {
-        if (aMessage.name != this.messageName) {
-          return;
-        }
-
-        if (!this._inited) {
-          this._cachedMessages.push(aMessage);
-          return;
-        }
-
-        switch (aMessage.data) {
-          case "init":
-          case "mutation":
-            this.updateFromKV(aMessage.objects, aMessage.data);
-            break;
-        }
-      },
-
-      init() {
-        this._inited = true;
-
-        sendAsyncMessage(this.messageName, "init");
-
-        while (this._cachedMessages.length) {
-          this.receiveMessage(this._cachedMessages.shift());
-        }
-      },
-
-      updateAttribute(aKV, aAttributeName) {
-        if (aKV[aAttributeName]) {
-          let attributeVal = aKV[aAttributeName];
-          switch (aAttributeName) {
-            case "label":
-              this.button.textContent = attributeVal;
-              break;
-            case "tooltiptext":
-              this.button.setAttribute("title", attributeVal);
-              break;
-            default:
-              this.button.setAttribute(aAttributeName, attributeVal);
-              break;
-          }
-        } else {
-          switch (aAttributeName) {
-            case "label":
-              this.button.textContent = "";
-              break;
-            case "tooltiptext":
-              this.button.removeAttribute("title");
-              break;
-            default:
-              this.button.removeAttribute(aAttributeName);
-              break;
-          }
-        }
-      },
-      updateFromKV(aKV, aType) {
-        if (!this.button) {
-          return;
-        }
-
-        if (aType == "init") {
-          this.button.addEventListener("click", aEvt => {
-            let fxaStatus = aEvt.originalTarget.getAttribute("fxastatus");
-            sendAsyncMessage(this.messageName, "action", {
-              originalTarget: {
-                getAttribute(aAttribute) {
-                  switch (aAttribute) {
-                    case "fxastatus":
-                      return fxaStatus;
-                    default:
-                      return undefined;
-                  }
-                }
-              }
-            });
-          }, false, /** wantsUntrusted */false);
-        }
-
-        for (let i = 0, l = this.attributes.length; i < l; i++) {
-          this.updateAttribute(aKV, this.attributes[i]);
-        }
-      }
-    };
-
     for (let messageObj of [NTabDB]) {
       aSubject.addEventListener(messageObj.messageName, aEvt => {
         if (aEvt.detail && aEvt.detail.dir == "content2fs") {
@@ -206,14 +100,8 @@ let NTab = {
       }, true, true);
     }
 
-    addMessageListener(FxAccounts.messageName, FxAccounts);
-
     aSubject.addEventListener("DOMContentLoaded", () => {
       Launcher.init();
-      FxAccounts.init();
-    });
-    aSubject.addEventListener("unload", () => {
-      removeMessageListener(FxAccounts.messageName, FxAccounts);
     });
   }
 }

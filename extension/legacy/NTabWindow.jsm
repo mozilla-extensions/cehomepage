@@ -553,7 +553,9 @@ this.browserOpenTab = function(evt) {
     }
 
     var spec = newTabPref.specForWindow(win);
-    win.openUILinkIn(spec, where, { relatedToCurrent });
+    // Available since Fx 61 <https://bugzil.la/1374741>, required since Fx 63 <https://bugzil.la/1362034>
+    var openLinkIn = (win.openWebLinkIn || win.openUILinkIn).bind(win);
+    openLinkIn(spec, where, { relatedToCurrent });
 
     // focus automatically for cases not covered by openUILinkIn
     if (!win.isBlankPageURL(spec)) {

@@ -22,8 +22,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
   "resource://gre/modules/PageThumbs.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "OS",
   "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
-  "resource://gre/modules/FxAccounts.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
@@ -117,139 +115,6 @@ this.searchEngines = {
       this.reportUnexpected("baidu", "detect", baidu, true);
     });
   }
-};
-
-this.fxAccountsProxy = {
-  messageName: "mozCNUtils:FxAccounts",
-  mutationConfig: {
-    attributes: true,
-    attributeFilter: [
-      "disabled",
-      "failed",
-      "fxastatus",
-      "hidden",
-      "label",
-      "signedin",
-      "status",
-      "tooltiptext"
-    ]
-  },
-  observers: new WeakMap(),
-  getFxaOrSync(aWindow) {
-    if (!aWindow || !aWindow.gSync) {
-      return null;
-    }
-
-    return {
-      container: aWindow.gSync.appMenuContainer,
-      label: aWindow.gSync.appMenuLabel,
-      status: aWindow.gSync.appMenuStatus
-    };
-  },
-  generateKVs(fxaOrSync) {
-    let kvs = {};
-
-    if (fxaOrSync.container &&
-        fxaOrSync.label &&
-        fxaOrSync.status) {
-      ["disabled", "fxastatus"].forEach(aKey => {
-        if (fxaOrSync.container.hasAttribute(aKey)) {
-          kvs[aKey] = fxaOrSync.container.getAttribute(aKey);
-        }
-      });
-      ["label"].forEach(aKey => {
-        if (fxaOrSync.label.hasAttribute(aKey)) {
-          kvs[aKey] = fxaOrSync.label.getAttribute(aKey);
-        }
-      });
-      ["tooltiptext"].forEach(aKey => {
-        if (fxaOrSync.status.hasAttribute(aKey)) {
-          kvs[aKey] = fxaOrSync.status.getAttribute(aKey);
-        }
-      });
-    }
-
-    return kvs;
-  },
-  maybeRegisterMutationObserver(aWindow) {
-    let fxaOrSync = this.getFxaOrSync(aWindow);
-    let windowMM = aWindow.messageManager;
-    if (!fxaOrSync || !windowMM) {
-      return;
-    }
-
-    let config = this.mutationConfig;
-    let observer = new aWindow.MutationObserver(mutations => {
-      mutations.forEach(mutation => {
-        if (mutation.type != "attributes" ||
-            config.attributeFilter.indexOf(mutation.attributeName) < 0) {
-          return;
-        }
-
-        let kvs = this.generateKVs(fxaOrSync);
-        windowMM.broadcastAsyncMessage(this.messageName, "mutation", kvs);
-      });
-    });
-
-    this.observers.set(aWindow, observer);
-
-    if (fxaOrSync.container &&
-        fxaOrSync.label &&
-        fxaOrSync.status) {
-      observer.observe(fxaOrSync.container, config);
-      observer.observe(fxaOrSync.label, config);
-      observer.observe(fxaOrSync.status, config);
-    }
-  },
-  maybeInitContentButton(aBrowser) {
-    let fxaOrSync = this.getFxaOrSync(aBrowser.ownerGlobal);
-    let browserMM = aBrowser.messageManager;
-    if (!fxaOrSync || !browserMM) {
-      return;
-    }
-
-    let kvs = this.generateKVs(fxaOrSync);
-    browserMM.sendAsyncMessage(this.messageName, "init", kvs);
-  },
-  maybeUnregisterMutationObserver(aWindow) {
-    let observer = this.observers.get(aWindow);
-    if (!observer) {
-      return;
-    }
-
-    observer.disconnect();
-    this.observers.delete(aWindow);
-  },
-  init() {
-    gMM.addMessageListener(this.messageName, this);
-  },
-  uninit() {
-    gMM.removeMessageListener(this.messageName, this);
-  },
-  // nsIMessageListener
-  receiveMessage(aMessage) {
-    let browser = aMessage.target;
-    if (aMessage.name !== this.messageName ||
-        !browser.currentURI.equals(NTabDB.uri)) {
-      return;
-    }
-
-    switch (aMessage.data) {
-      case "init":
-        this.maybeInitContentButton(browser);
-        break;
-      case "action":
-        let fxaOrSync = (browser.ownerGlobal.gSync ||
-                         browser.ownerGlobal.gFxAccounts);
-        fxaOrSync.onMenuPanelCommand(aMessage.objects);
-        Tracking.track({
-          type: "ntabsync",
-          action: "click",
-          sid: "in-content"
-        });
-        break;
-    }
-  },
 };
 
 this.mozCNUtils = {
@@ -456,13 +321,11 @@ this.mozCNUtils = {
     } else {
       win.console.error("Neither gBrowser or _gBrowser ?");
     }
-    fxAccountsProxy.maybeRegisterMutationObserver(win);
     NTabWindow.onWindowOpened(win);
   },
 
   onWindowClosed(win) {
     win.gBrowser.removeTabsProgressListener(this);
-    fxAccountsProxy.maybeUnregisterMutationObserver(win);
     NTabWindow.onWindowClosed(win);
   },
 
@@ -481,7 +344,6 @@ this.mozCNUtils = {
     this.initMessageListener();
 
     delayedSuggestBaidu.init(strings);
-    fxAccountsProxy.init();
     Homepage.init(isAppStartup);
     mozCNWebChannels.init();
     NTabDB.init();
@@ -503,7 +365,6 @@ this.mozCNUtils = {
     this.uninitMessageListener();
     this.uninitWindowListener();
 
-    fxAccountsProxy.uninit();
     Homepage.uninit(isAppShutdown);
     mozCNWebChannels.uninit();
     NTabDB.uninit();
