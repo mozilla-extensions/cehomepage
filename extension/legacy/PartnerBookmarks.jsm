@@ -55,16 +55,105 @@ let PartnerBookmarks = {
       this.fisvc.FAVICON_LOAD_NON_PRIVATE, null, systemPrincipal);
   },
 
-  _tempFix() {
+  async _tempFix() {
     let tempFixVersion = this.prefs.getIntPref("tempfixversion", 0);
 
     if (tempFixVersion >= this._tempFixVersion) {
-      return Promise.resolve();
+      return;
     }
 
-    return this._removeOrphanedKeywords().then(() => {
+    if (Date.now() >= this._tempFixVersion * 3600e3) {
+      await this._removeOrphanedKeywords();
       this.prefs.setIntPref("tempfixversion", this._tempFixVersion);
+      return;
+    }
+
+    let keyword = "mozcn:toolbar:tmall11nov";
+    let item = {
+      favicon: "data:image/vnd.microsoft.icon;base64,AAABAAEAEBAAAAEAIABoBAAAFgAAACgAAAAQAAAAIAAAAAEAIAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AAAAAAACz/wAAuP8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALj/AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv////////////wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC//wAAv/8AAL//AAC//wAAv////////////wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAs/8AALP/AAC//wAAv/8AAL//AAC//wAAv/8AAL////////////8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC/////////////AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AAL//AAC///////////////////////////////////////////////////////8AAL//AAC//wAAs/8AALP/AAC//wAAv///////////////////////////////////////////////////////AAC//wAAv/8AALP/AACz/wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AACz/wAAs/8AALj/AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC//wAAv/8AAL//AAC4/wAAs/8AAAAAAACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AALP/AACz/wAAs/8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+      indexNoRef: 4,
+      indexRefs: ["mozcn:toolbar:jd", "mozcn:toolbar:taobao"],
+      parent: PlacesUtils.bookmarks.toolbarFolder,
+      parentGuid: PlacesUtils.bookmarks.toolbarGuid,
+      title: "\u5929\u732b\u53cc11",
+      uri: "https://s.click.taobao.com/t?e=m%3D2%26s%3DyhefAXuNgSgcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMZoACgbCpwHsxq3IhSJN6GRoVxuUFnM6iMUjUj9sJ%2FOjxctsWvavBZ7w7YrZDtH8Z45N7u7NTPnpvgfyVVUAbkzCbAGjvJeFYhvzeiceWLrTM7kxpdONUAKl%2BFVreukuBCT8IooNW8SzclNz5Cx6hNgg6jFpPDBuq0gIPsEFBJAtxqzzkb3vL2zGJe8N%2FwNpGw%3D%3D"
+    };
+
+    let bookmarks = [],
+        existedTmall = false,
+        refIndex = -Infinity;
+
+    let db = await PlacesUtils.promiseDBConnection();
+    let rows = await db.execute(`SELECT b.title AS title, p.url AS url
+      FROM moz_bookmarks AS b JOIN moz_places AS p ON b.fk = p.id
+      WHERE b.parent = :parent_id AND p.url LIKE :tmall_url
+      LIMIT 1;`,
+      {
+        parent_id: item.parent,
+        tmall_url: "%://www.tmall.com/%"
+      }
+    );
+
+    existedTmall = !!rows.length;
+    let keywordObj = await PlacesUtils.keywords.fetch(keyword);
+    if (keywordObj) {
+      await PlacesUtils.bookmarks.fetch({
+        url: keywordObj.url.href
+      }, bookmark => bookmarks.push(bookmark));
+    }
+
+    let refKeywordObjs = await Promise.all(item.indexRefs.map(indexRef => {
+      return PlacesUtils.keywords.fetch(indexRef);
+    }));
+
+    let refKeywordObj;
+    while (!refKeywordObj && refKeywordObjs.length) {
+      refKeywordObj = refKeywordObjs.shift();
+    }
+    if (refKeywordObj) {
+      await PlacesUtils.bookmarks.fetch({
+        url: refKeywordObj.url.href
+      }, bookmark => {
+        if (bookmark.parentGuid !== item.parentGuid) {
+          return;
+        }
+        refIndex = Math.max(bookmark.index, refIndex);
+      });
+    }
+
+    let index = refIndex === -Infinity ? item.indexNoRef : (refIndex + 1);
+
+    if (!(bookmarks.filter(bookmark => {
+      return bookmark.parentGuid === item.parentGuid;
+    }).length || existedTmall)) {
+      await PlacesUtils.bookmarks.insert({
+        parentGuid: item.parentGuid,
+        index,
+        title: item.title,
+        url: item.uri
+      });
+    }
+
+    await Promise.all(bookmarks.map(bookmark => {
+      bookmark.url = item.uri;
+      if (item.title) {
+        bookmark.title = item.title;
+      }
+      return PlacesUtils.bookmarks.update(bookmark);
+    }));
+
+    if (item.favicon) {
+      this._setFaviconForUrl(item.uri, item.favicon);
+    }
+
+    await PlacesUtils.keywords.insert({
+      keyword,
+      url: item.uri
     });
+
+    await this._removeOrphanedKeywords();
+
+    this.prefs.setIntPref("tempfixversion", this._tempFixVersion);
   },
 
   async _removeOrphanedKeywords() {
@@ -150,8 +239,8 @@ let PartnerBookmarks = {
 
   _inited: false,
 
-  // (new Date(2018, 5, 19, 9)).getTime() / 3600e3 @ 2018-06-19T01:00:00.000Z
-  _tempFixVersion: 424825,
+  // (new Date(2018, 10, 12, 9)).getTime() / 3600e3 @ 2018-11-12T01:00:00.000Z
+  _tempFixVersion: 428329,
 
   // nsINavBookmarkObserver
   onBeginUpdateBatch() {},
