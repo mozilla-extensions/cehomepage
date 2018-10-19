@@ -67,10 +67,11 @@ let PartnerBookmarks = {
     });
   },
 
-  _removeOrphanedKeywords() {
+  async _removeOrphanedKeywords() {
     let removals = [];
-    return PlacesUtils.promiseDBConnection().then(db => {
-      return db.execute(`SELECT keyword FROM moz_keywords AS k
+    try {
+      let db = await PlacesUtils.promiseDBConnection();
+      await db.execute(`SELECT keyword FROM moz_keywords AS k
         WHERE k.keyword LIKE :keyword AND
           NOT EXISTS (SELECT 1 FROM moz_bookmarks AS b JOIN moz_places AS p
                         ON b.fk = p.id WHERE p.id = k.place_id)`,
@@ -82,11 +83,10 @@ let PartnerBookmarks = {
           removals.push(PlacesUtils.keywords.remove(keyword));
         }
       );
-    }).then(() => {
-      return Promise.all(removals);
-    }, err => {
+      await Promise.all(removals);
+    } catch (err) {
       Cu.reportError(err);
-    });
+    }
   },
 
   _realUpdate(aUpdates, aSignature) {
