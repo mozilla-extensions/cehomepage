@@ -29,20 +29,15 @@ let PartnerBookmarks = {
     return this.updateUrl = "https://bookmarks-ssl.firefoxchina.cn/bookmarks/updates.json";
   },
 
-  _fetch(aUrl, aCallback) {
-    if (!aUrl) {
-      return;
+  async _fetch(url) {
+    if (!url) {
+      throw new Error("Cannot fetch nothing from an empty url");
     }
-    let xhr = new XMLHttpRequest();
-    xhr.open("GET", aUrl, true);
-    xhr.onload = evt => {
-      if (xhr.status == 200) {
-        let data = JSON.parse(xhr.responseText);
-        aCallback(data);
-      }
-    };
-    xhr.onerror = evt => {};
-    xhr.send();
+    let response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Got "${response.status} ${response.statusText}" for "${url}"`);
+    }
+    return response.json();
   },
 
   _setFaviconForUrl(uri, iconData) {
@@ -178,63 +173,67 @@ let PartnerBookmarks = {
     }
   },
 
-  _realUpdate(aUpdates, aSignature) {
+  async _realUpdate(aUpdates, aSignature) {
     if (this.prefs.getCharPref("signature", "") == aSignature) {
-      return Promise.reject();
+      return;
     }
 
     let keywords = Object.keys(aUpdates);
 
-    return Promise.all(keywords.map(keyword => {
-      return PlacesUtils.keywords.fetch(keyword).then(keywordObj => {
-        if (!keywordObj) {
-          return Promise.resolve();
-        }
+    await Promise.all(keywords.map(async keyword => {
+      let keywordObj = await PlacesUtils.keywords.fetch(keyword);
+      if (!keywordObj) {
+        return;
+      }
 
-        let item = aUpdates[keyword];
-        let bookmarks = [];
-        return PlacesUtils.bookmarks.fetch({
-          url: keywordObj.url.href
-        }, bookmark => {
-          bookmarks.push(bookmark);
-        }).then(() => {
-          return Promise.all(bookmarks.map(bookmark => {
-            if (item.uri) {
-              bookmark.url = item.uri;
-              if (item.title) {
-                bookmark.title = item.title;
-              }
-              return PlacesUtils.bookmarks.update(bookmark);
-            }
-            /* an empty object could be used to remove bookmarks:
-                ... "mozcn:***:***": {}, ... */
-            return PlacesUtils.bookmarks.remove(bookmark);
-          })).then(() => {
-            if (!item.uri) {
-              return Promise.resolve();
-            }
-
-            if (item.favicon) {
-              this._setFaviconForUrl(item.uri, item.favicon);
-            }
-            return PlacesUtils.keywords.insert({
-              keyword: (item.keyword || keyword),
-              url: item.uri
-            });
-          });
-        });
+      let item = aUpdates[keyword];
+      let bookmarks = [];
+      await PlacesUtils.bookmarks.fetch({
+        url: keywordObj.url.href
+      }, bookmark => {
+        bookmarks.push(bookmark);
       });
-    })).then(() => {
-      return this._removeOrphanedKeywords();
-    }).then(() => {
-      this.prefs.setCharPref("signature", aSignature);
-    });
+
+      await Promise.all(bookmarks.map(bookmark => {
+        if (item.uri) {
+          bookmark.url = item.uri;
+          if (item.title) {
+            bookmark.title = item.title;
+          }
+          return PlacesUtils.bookmarks.update(bookmark);
+        }
+        /* an empty object could be used to remove bookmarks:
+            ... "mozcn:***:***": {}, ... */
+        return PlacesUtils.bookmarks.remove(bookmark);
+      }));
+
+      if (!item.uri) {
+        return;
+      }
+
+      if (item.favicon) {
+        this._setFaviconForUrl(item.uri, item.favicon);
+      }
+      await PlacesUtils.keywords.insert({
+        keyword: (item.keyword || keyword),
+        url: item.uri
+      });
+    }));
+    await this._removeOrphanedKeywords();
+    this.prefs.setCharPref("signature", aSignature);
   },
 
-  update() {
-    this._fetch(this.updateUrl, aData => {
-      this._realUpdate(JSON.parse(aData.data), aData.signature);
-    });
+  async update() {
+    try {
+      let data = await this._fetch(this.updateUrl);
+      if (!data.data || !data.signature) {
+        return;
+      }
+
+      await this._realUpdate(JSON.parse(data.data), data.signature);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
   },
 
   _inited: false,
