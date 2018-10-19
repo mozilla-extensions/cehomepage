@@ -71,7 +71,7 @@ let PartnerBookmarks = {
       parent: PlacesUtils.bookmarks.toolbarFolder,
       parentGuid: PlacesUtils.bookmarks.toolbarGuid,
       title: "\u5929\u732b\u53cc11",
-      uri: "https://s.click.taobao.com/t?e=m%3D2%26s%3DyhefAXuNgSgcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMZoACgbCpwHsxq3IhSJN6GRoVxuUFnM6iMUjUj9sJ%2FOjxctsWvavBZ7w7YrZDtH8Z45N7u7NTPnpvgfyVVUAbkzCbAGjvJeFYhvzeiceWLrTM7kxpdONUAKl%2BFVreukuBCT8IooNW8SzclNz5Cx6hNgg6jFpPDBuq0gIPsEFBJAtxqzzkb3vL2zGJe8N%2FwNpGw%3D%3D"
+      uri: "https://s.click.taobao.com/t?e=m%3D2%26s%3D%2BulQNWTwEekcQipKwQzePCperVdZeJviK7Vc7tFgwiFRAdhuF14FMQxKT50GIEenJ1gyddu7kN9oVxuUFnM6iMUjUj9sJ%2FOjxctsWvavBZ7w7YrZDtH8Z45N7u7NTPnpvgfyVVUAbkzCbAGjvJeFYhvzeiceWLrTM7kxpdONUAKl%2BFVreukuBCT8IooNW8SzclNz5Cx6hNgg6jFpPDBuq0gIPsEFBJAtxqzzkb3vL2zGJe8N%2FwNpGw%3D%3D"
     };
 
     let bookmarks = [],
