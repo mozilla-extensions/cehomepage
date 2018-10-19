@@ -19,11 +19,19 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
     resProto.setSubstitution(RESOURCE_HOST,
       Services.io.newURI("legacy/", null, extension.rootURI));
 
-    ChromeUtils.import("resource://ntab/CEHomepage.jsm", this);
-    this.mozCNUtils.init({ extension });
+    try {
+      ChromeUtils.import("resource://ntab/CEHomepage.jsm", this);
+      this.mozCNUtils.init({ extension });
+    } catch (ex) {
+      console.error(ex);
+    }
   }
   onShutdown(reason) {
-    this.mozCNUtils.uninit(reason === "APP_SHUTDOWN");
+    try {
+      this.mozCNUtils.uninit(reason === "APP_SHUTDOWN");
+    } catch (ex) {
+      console.error(ex);
+    }
 
     resProto.setSubstitution(RESOURCE_HOST, null);
   }
