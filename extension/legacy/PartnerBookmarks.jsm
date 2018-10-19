@@ -26,7 +26,7 @@ let PartnerBookmarks = {
 
   get updateUrl() {
     delete this.updateUrl;
-    return this.updateUrl = "http://bookmarks.firefoxchina.cn/bookmarks/updates.json";
+    return this.updateUrl = "https://bookmarks-ssl.firefoxchina.cn/bookmarks/updates.json";
   },
 
   _fetch(aUrl, aCallback) {
@@ -144,9 +144,7 @@ let PartnerBookmarks = {
 
   update() {
     this._fetch(this.updateUrl, aData => {
-      if (false) { // signature verifier no longer available
-        this._realUpdate(JSON.parse(aData.data), aData.signature);
-      }
+      this._realUpdate(JSON.parse(aData.data), aData.signature);
     });
   },
 
