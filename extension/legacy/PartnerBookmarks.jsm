@@ -3,13 +3,20 @@ var EXPORTED_SYMBOLS = ["PartnerBookmarks"];
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.importGlobalProperties(["XMLHttpRequest"]);
+
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
   "resource://ntab/Tracking.jsm");
+
+// Available since Fx 62, https://bugzil.la/1464548
+if (XPCOMUtils.defineLazyGlobalGetters) {
+  XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
+} else {
+  Cu.importGlobalProperties(["fetch"]);
+}
 
 let PartnerBookmarks = {
   get fisvc() {
