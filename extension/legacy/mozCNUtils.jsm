@@ -167,9 +167,10 @@ var delayedSuggestBaidu = {
       (w.openWebLinkIn || w.openUILinkIn)(this.baidu.searchForm, "current");
     }
 
-    if (Services.search.currentEngine.name == "Google") {
+    // See https://bugzil.la/1237648,1493483
+    if (Services.search.defaultEngine.name == "Google") {
       this.baidu.hidden = false;
-      Services.search.currentEngine = this.baidu;
+      Services.search.defaultEngine = this.baidu;
 
       Tracking.track({
         type: "delayedsuggestbaidu",

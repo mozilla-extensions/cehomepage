@@ -109,7 +109,8 @@ this.searchEngines = {
 
   init() {
     Services.search.init(() => {
-      let current = Services.search.currentEngine,
+      // See https://bugzil.la/1237648,1493483
+      let current = Services.search.defaultEngine,
           baidu = Services.search.getEngineByName("\u767e\u5ea6");
       this.reportUnexpected("current", "detect", current, true);
       this.reportUnexpected("baidu", "detect", baidu, true);
