@@ -1,6 +1,6 @@
 {
   "name": "cehomepage",
-  "version": "3.63.3",
+  "version": "3.65.0",
   "description": "Customizied Home Page for Firefox",
   "scripts": {
     "lint": "eslint --ext .js,.jsm extension"
