@@ -1,1 +1,17 @@
-[]
+[{
+  "namespace": "mozillaonline.chinaEditionHomepage",
+  "description": "China Edition Homepage",
+  "functions": [{
+    "name": "getLegacyPartnerBookmarks",
+    "type": "function",
+    "parameters": [{
+      "type": "function",
+      "name": "callback",
+      "parameters": [{
+        "type": "any",
+        "name": "response"
+      }]
+    }],
+    "async": "callback"
+  }]
+}]

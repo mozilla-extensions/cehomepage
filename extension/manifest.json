@@ -6,6 +6,11 @@
       "update_url": "https://addons.firefox.com.cn/chinaedition/addons/updates.json?reqVersion=%REQ_VERSION%&id=%ITEM_ID%&version=%ITEM_VERSION%&maxAppVersion=%ITEM_MAXAPPVERSION%&status=%ITEM_STATUS%&appID=%APP_ID%&appVersion=%APP_VERSION%&appOS=%APP_OS%&appABI=%APP_ABI%&locale=%APP_LOCALE%&currentAppVersion=%CURRENT_APP_VERSION%&updateType=%UPDATE_TYPE%&compatMode=%COMPATIBILITY_MODE%"
     }
   },
+  "background": {
+    "scripts": [
+      "bg/partnerBookmarks.js"
+    ]
+  },
   "chrome_settings_overrides": {},
   "chrome_url_overrides" : {},
   "default_locale": "en_US",
@@ -31,7 +36,9 @@
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
   "permissions": [
-    "storage"
+    "bookmarks",
+    "storage",
+    "https://*.firefoxchina.cn/*"
   ],
   "version": "3.65"
 }

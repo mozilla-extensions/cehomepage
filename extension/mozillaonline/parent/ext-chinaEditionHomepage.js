@@ -7,6 +7,8 @@
 /* global ExtensionAPI, Services, XPCOMUtils */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
+  "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
   "@mozilla.org/network/protocol;1?name=resource",
   "nsISubstitutingProtocolHandler");
@@ -26,6 +28,7 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
       console.error(ex);
     }
   }
+
   onShutdown(reason) {
     try {
       this.mozCNUtils.uninit(reason === "APP_SHUTDOWN");
@@ -34,5 +37,51 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
     }
 
     resProto.setSubstitution(RESOURCE_HOST, null);
+  }
+
+  async getLegacyPartnerBookmarks() {
+    let updates = {};
+    try {
+      let db = await PlacesUtils.promiseDBConnection();
+      await db.execute(`
+SELECT
+  b.guid,
+  k.keyword
+FROM
+  moz_bookmarks AS b
+JOIN
+  moz_keywords AS k
+ON
+  b.fk = k.place_id
+WHERE
+  k.keyword LIKE :keyword;
+`,
+        { keyword: "mozcn:%" },
+        row => {
+          let guid = row.getResultByName("guid");
+          let keyword = row.getResultByName("keyword");
+          // Possible duplication ?
+          updates[keyword.replace(/^mozcn/, "partnerbookmarks")] = guid;
+        }
+      );
+      return updates;
+    } catch (err) {
+      console.error(err);
+      return {};
+    }
+  }
+
+  getAPI() {
+    let chinaEditionHomepage = this;
+
+    return {
+      mozillaonline: {
+        chinaEditionHomepage: {
+          async getLegacyPartnerBookmarks() {
+            return chinaEditionHomepage.getLegacyPartnerBookmarks();
+          }
+        },
+      },
+    };
   }
 };

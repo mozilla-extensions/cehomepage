@@ -52,8 +52,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "NTabWindow",
   "resource://ntab/NTabWindow.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PartnerBookmarks",
-  "resource://ntab/PartnerBookmarks.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "QuickDialData",
   "resource://ntab/QuickDialData.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
@@ -131,9 +129,6 @@ this.mozCNUtils = {
       case "http-on-examine-cached-response":
       case "http-on-examine-merged-response":
         this.trackHTTPStatus(aSubject, aTopic);
-        break;
-      case "places-browser-init-complete":
-        PartnerBookmarks.init();
         break;
     }
   },
@@ -337,7 +332,6 @@ this.mozCNUtils = {
     Services.obs.addObserver(this, "http-on-examine-response");
     Services.obs.addObserver(this, "http-on-examine-cached-response");
     Services.obs.addObserver(this, "http-on-examine-merged-response");
-    Services.obs.addObserver(this, "places-browser-init-complete");
 
     this.initDefaultPrefs();
     this.initFactories();
@@ -359,7 +353,6 @@ this.mozCNUtils = {
     Services.obs.removeObserver(this, "http-on-examine-response");
     Services.obs.removeObserver(this, "http-on-examine-cached-response");
     Services.obs.removeObserver(this, "http-on-examine-merged-response");
-    Services.obs.removeObserver(this, "places-browser-init-complete");
 
     this.uninitFactories();
     this.uninitFrameScripts();
