@@ -141,7 +141,7 @@ this.homepageReset = {
   },
 
   // for comparison, using int instead of string
-  currentCheck: 20170113,
+  currentCheck: 20190304,
 
   get latestCheck() {
     return Services.prefs.getIntPref(this.prefKeyOtherNav, 0);
