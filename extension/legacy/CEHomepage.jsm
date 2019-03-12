@@ -26,6 +26,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
   "resource:///modules/CustomizableUI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
   "resource://gre/modules/BackgroundPageThumbs.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
+  "resource://gre/modules/AddonManager.jsm");
 
 XPCOMUtils.defineLazyGetter(this, "gMM", () => {
   return Cc["@mozilla.org/globalmessagemanager;1"].
@@ -113,6 +115,66 @@ this.searchEngines = {
       this.reportUnexpected("current", "detect", current, true);
       this.reportUnexpected("baidu", "detect", baidu, true);
     });
+  }
+};
+
+this.morePermissionPromptHack = {
+  extensionId: "",
+  prefKey: "extensions.chinaEditionHomepage.pendingNextVersion",
+  topic: "webextension-update-permissions",
+
+  get nextVersion() {
+    return Services.prefs.getCharPref(this.prefKey, "0");
+  },
+  set nextVersion(version) {
+    if (version) {
+      Services.prefs.setCharPref(this.prefKey, version);
+    } else {
+      Services.prefs.clearUserPref(this.prefKey);
+    }
+  },
+
+  async init({extension}) {
+    this.extensionId = extension.id;
+    Services.obs.addObserver(this, this.topic);
+
+    if (this.nextVersion &&
+        Services.vc.compare(extension.version, this.nextVersion) >= 0) {
+      this.nextVersion = null;
+      return;
+    }
+
+    let addon = await AddonManager.getAddonByID(this.extensionId);
+    addon.findUpdates({
+      onUpdateAvailable(addon, install) {
+        if (addon.permissions & AddonManager.PERM_CAN_UPGRADE &&
+            AddonManager.shouldAutoUpdate(addon)) {
+          // Trigger the installation w/o the permission prompt
+          install.install();
+        }
+      },
+    }, AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
+  },
+
+  observe(subject, topic, data) {
+    if (topic !== this.topic) {
+      return;
+    }
+
+    let { addon, type } = subject.wrappedJSObject;
+    if (addon.id !== this.extensionId || type !== "update") {
+      return;
+    }
+
+    this.nextVersion = addon.version;
+  },
+
+  uninit(isAppShutdown) {
+    if (isAppShutdown) {
+      return;
+    }
+
+    Services.obs.removeObserver(this, this.topic);
   }
 };
 
@@ -326,6 +388,7 @@ this.mozCNUtils = {
   },
 
   init(context) {
+    morePermissionPromptHack.init(context);
     let isAppStartup = context.extension.startupReason === "APP_STARTUP";
     strings.init(context);
 
@@ -361,6 +424,7 @@ this.mozCNUtils = {
 
     Homepage.uninit(isAppShutdown);
     mozCNWebChannels.uninit();
+    morePermissionPromptHack.uninit(isAppShutdown);
     NTabDB.uninit();
     NTabWindow.uninit();
   }
