@@ -4,7 +4,7 @@
 
 "use strict";
 
-/* global ExtensionAPI, Services, XPCOMUtils */
+/* global Cu, ExtensionAPI, Services, XPCOMUtils */
 ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
@@ -32,11 +32,12 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
   onShutdown(reason) {
     try {
       this.mozCNUtils.uninit(reason === "APP_SHUTDOWN");
+      Cu.unload("resource://ntab/CEHomepage.jsm");
+
+      resProto.setSubstitution(RESOURCE_HOST, null);
     } catch (ex) {
       console.error(ex);
     }
-
-    resProto.setSubstitution(RESOURCE_HOST, null);
   }
 
   async getLegacyPartnerBookmarks() {

@@ -427,6 +427,21 @@ this.mozCNUtils = {
     morePermissionPromptHack.uninit(isAppShutdown);
     NTabDB.uninit();
     NTabWindow.uninit();
+
+    for (let jsModule of [
+      "AboutCEhome",
+      "mozCNUtils",
+      "NTabDB",
+      "NTabWindow",
+      "QuickDialData",
+      "Tracking",
+    ]) {
+      try {
+        Cu.unload(`resource://ntab/${jsModule}.jsm`);
+      } catch (ex) {
+        Cu.reportError(ex);
+      }
+    }
   }
 };
 
