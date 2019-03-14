@@ -51,6 +51,7 @@
         return signature;
       }
 
+      await new Promise(resolve => setTimeout(resolve, 15e3));
       let updates = this.updatesFromTree(await browser.bookmarks.getTree());
       if (!Object.keys(updates).length) {
         return "";
