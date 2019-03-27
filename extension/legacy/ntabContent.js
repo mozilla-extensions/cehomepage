@@ -1,14 +1,7 @@
 /* eslint-env mozilla/frame-script */
 
-let Cu = Components.utils;
-let Ci = Components.interfaces;
-let Cc = Components.classes;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
+/* global Services, XPCOMUtils */
+ChromeUtils.defineModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 
 let NTab = {
@@ -104,6 +97,6 @@ let NTab = {
       Launcher.init();
     });
   }
-}
+};
 
 Services.obs.addObserver(NTab, "content-document-global-created");

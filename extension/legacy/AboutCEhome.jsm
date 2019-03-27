@@ -1,12 +1,12 @@
 this.EXPORTED_SYMBOLS = ["AboutCEhome"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
+  "resource://gre/modules/XPCOMUtils.jsm");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
-  "resource://ntab/mozCNUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "Homepage": "resource://ntab/mozCNUtils.jsm", /* global Homepage */
+  "Services": "resource://gre/modules/Services.jsm" /* global Services */
+});
 XPCOMUtils.defineLazyGetter(this, "generateQI", () => {
   // ChromeUtils one introduced in Fx 61, mandatory in https://bugzil.la/1484466
   return XPCOMUtils.generateQI ?

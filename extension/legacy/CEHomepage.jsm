@@ -1,33 +1,23 @@
 this.EXPORTED_SYMBOLS = ["mozCNUtils"];
 
-const {
-  classes: Cc, interfaces: Ci, manager: Cm,
-  results: Cr, utils: Cu
-} = Components;
+const { manager: Cm } = Components;
 
 Cu.importGlobalProperties(["Blob"]);
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "WebChannel",
-  "resource://gre/modules/WebChannel.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
-  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "BackgroundPageThumbs",
-  "resource://gre/modules/BackgroundPageThumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-  "resource://gre/modules/AddonManager.jsm");
+ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
+  "resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "AddonManager": "resource://gre/modules/AddonManager.jsm", /* global AddonManager */
+  "BackgroundPageThumbs": "resource://gre/modules/BackgroundPageThumbs.jsm", /* global BackgroundPageThumbs */
+  "clearTimeout": "resource://gre/modules/Timer.jsm", /* global clearTimeout */
+  "CustomizableUI": "resource:///modules/CustomizableUI.jsm", /* global CustomizableUI */
+  "OS": "resource://gre/modules/osfile.jsm", /* global OS */
+  "PageThumbs": "resource://gre/modules/PageThumbs.jsm", /* global PageThumbs */
+  "PlacesUtils": "resource://gre/modules/PlacesUtils.jsm", /* global PlacesUtils */
+  "Services": "resource://gre/modules/Services.jsm", /* global Services */
+  "setTimeout": "resource://gre/modules/Timer.jsm", /* global setTimeout */
+  "WebChannel": "resource://gre/modules/WebChannel.jsm" /* global WebChannel */
+});
 
 XPCOMUtils.defineLazyGetter(this, "gMM", () => {
   return Cc["@mozilla.org/globalmessagemanager;1"].
@@ -40,27 +30,19 @@ XPCOMUtils.defineLazyGetter(this, "generateQI", () => {
     ChromeUtils.generateQI.bind(ChromeUtils);
 });
 
-XPCOMUtils.defineLazyModuleGetter(this, "delayedSuggestBaidu",
-  "resource://ntab/mozCNUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Frequent",
-  "resource://ntab/mozCNUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Homepage",
-  "resource://ntab/mozCNUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Session",
-  "resource://ntab/mozCNUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "getPref",
-  "resource://ntab/mozCNUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
-  "resource://ntab/NTabDB.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "NTabWindow",
-  "resource://ntab/NTabWindow.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "QuickDialData",
-  "resource://ntab/QuickDialData.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
-  "resource://ntab/Tracking.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "AboutCEhome",
-  "resource://ntab/AboutCEhome.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "AboutCEhome": "resource://ntab/AboutCEhome.jsm", /* global AboutCEhome */
+  "delayedSuggestBaidu": "resource://ntab/mozCNUtils.jsm", /* global delayedSuggestBaidu */
+  "Frequent": "resource://ntab/mozCNUtils.jsm", /* global Frequent */
+  "getPref": "resource://ntab/mozCNUtils.jsm", /* global getPref */
+  "Homepage": "resource://ntab/mozCNUtils.jsm", /* global Homepage */
+  "NTabDB": "resource://ntab/NTabDB.jsm", /* global NTabDB */
+  "NTabWindow": "resource://ntab/NTabWindow.jsm", /* global NTabWindow */
+  "QuickDialData": "resource://ntab/QuickDialData.jsm", /* global QuickDialData */
+  "Session": "resource://ntab/mozCNUtils.jsm", /* global Session */
+  "Tracking": "resource://ntab/Tracking.jsm" /* global Tracking */
+});
 
 this.strings = {
   _ctx: null,
@@ -213,16 +195,16 @@ this.mozCNUtils = {
     let channel = aSubject;
     channel.QueryInterface(Ci.nsIHttpChannel);
 
-    if ([
+    if (![
       NTabDB.prePath,
       "http://i.g-fox.cn",
       "https://home.firefoxchina.cn"
-    ].indexOf(channel.URI.prePath) == -1 ||
+    ].includes(channel.URI.prePath) ||
         !(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI)) {
       return;
     }
 
-    if ([200, 302, 304].indexOf(channel.responseStatus) == -1) {
+    if (![200, 302, 304].includes(channel.responseStatus)) {
       Tracking.track({
         type: "http-status",
         sid: channel.responseStatus,
@@ -235,7 +217,7 @@ this.mozCNUtils = {
 
   // nsIMessageListener
   receiveMessage(aMessage) {
-    if (this.MESSAGES.indexOf(aMessage.name) < 0) {
+    if (!this.MESSAGES.includes(aMessage.name)) {
       return;
     }
 

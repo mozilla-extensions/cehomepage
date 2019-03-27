@@ -2,26 +2,19 @@ this.EXPORTED_SYMBOLS = [
   "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session"
 ];
 
-const {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "AddonManager",
-  "resource://gre/modules/AddonManager.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
-  "resource://gre/modules/Preferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
-  "resource://gre/modules/Timer.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
-  "resource://gre/modules/Timer.jsm");
+ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
+  "resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "AddonManager": "resource://gre/modules/AddonManager.jsm", /* global AddonManager */
+  "clearTimeout": "resource://gre/modules/Timer.jsm", /* global clearTimeout */
+  "PlacesUtils": "resource://gre/modules/PlacesUtils.jsm", /* global PlacesUtils */
+  "Preferences": "resource://gre/modules/Preferences.jsm", /* global Preferences */
+  "Services": "resource://gre/modules/Services.jsm", /* global Services */
+  "setTimeout": "resource://gre/modules/Timer.jsm", /* global setTimeout */
+  "Tracking": "resource://ntab/Tracking.jsm" /* global Tracking */
+});
 XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
   "@mozilla.org/browser/sessionstore;1", "nsISessionStore");
-
-XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
-  "resource://ntab/Tracking.jsm");
 
 var delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
@@ -83,7 +76,7 @@ var delayedSuggestBaidu = {
       clearTimeout(parseInt(timeoutId, 10));
     }
 
-    if (this.knownStatus.indexOf(aStatus) < 0) {
+    if (!this.knownStatus.includes(aStatus)) {
       let gBrowser = aBrowser.ownerGlobal.gBrowser;
       let notificationBox = gBrowser.getNotificationBox(aBrowser);
       let notification = notificationBox.
@@ -109,7 +102,7 @@ var delayedSuggestBaidu = {
             keyword = decodeURIComponent(pair[1]).replace(/\+/g, " ");
           }
           return match;
-        })
+        });
       }
     } catch (e) {}
 
@@ -146,7 +139,7 @@ var delayedSuggestBaidu = {
         label: negative,
         accessKey: "N",
         callback() {
-          self.markNomore()
+          self.markNomore();
         }
       }]);
     notificationBar.persistence = 1;
@@ -293,7 +286,7 @@ var Frequent = {
           return {
             idx,
             rev_host: (host.split("").reverse().join("") + ".%")
-          }
+          };
         }),
         row => {
           let item = {
@@ -405,7 +398,7 @@ var Homepage = {
   overrideHomepage(reason) {
     if (!Services.prefs.prefHasUserValue(this.homepagePref)) {
       Services.prefs.setCharPref(this.homepagePref, this.defaultHomepage);
-      reason = `${reason}Write`
+      reason = `${reason}Write`;
     }
 
     this.originalHomepage = getPref(this.homepagePref, this.defaultHomepage,

@@ -4,11 +4,13 @@
 
 "use strict";
 
-/* global Cu, ExtensionAPI, Services, XPCOMUtils */
-ChromeUtils.import("resource://gre/modules/Services.jsm");
-ChromeUtils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
-  "resource://gre/modules/PlacesUtils.jsm");
+/* global ExtensionAPI */
+ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
+  "resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "PlacesUtils": "resource://gre/modules/PlacesUtils.jsm", /* global PlacesUtils */
+  "Services": "resource://gre/modules/Services.jsm" /* global Services */
+});
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
   "@mozilla.org/network/protocol;1?name=resource",
   "nsISubstitutingProtocolHandler");

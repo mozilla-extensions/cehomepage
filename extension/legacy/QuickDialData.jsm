@@ -1,7 +1,6 @@
 var EXPORTED_SYMBOLS = ["QuickDialData"];
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
+ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 let QuickDialData = {

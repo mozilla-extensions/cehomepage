@@ -1,10 +1,7 @@
 var EXPORTED_SYMBOLS = ["Tracking"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["XMLHttpRequest"]);
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
+ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
 let url = "http://addons.g-fox.cn/ntab.gif";
@@ -13,7 +10,7 @@ let _extend = function(src, target) {
     target[key] = src[key];
   }
   return target;
-}
+};
 
 let Tracking = {
   _cachedOptions: [],

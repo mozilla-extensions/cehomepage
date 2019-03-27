@@ -1,12 +1,7 @@
 /* eslint-env mozilla/frame-script */
 
-let {classes: Cc, interfaces: Ci, results: Cr, utils: Cu} = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
+/* global Services, XPCOMUtils */
+ChromeUtils.defineModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 
 let mozCNWebChannelContent = {

@@ -1,23 +1,17 @@
 this.EXPORTED_SYMBOLS = ["NTabWindow"];
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
+  "resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
   "@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService");
-XPCOMUtils.defineLazyModuleGetter(this, "CustomizableUI",
-  "resource:///modules/CustomizableUI.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PREFERENCES_LOADED_EVENT",
-  "resource://activity-stream/lib/AboutPreferences.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
-  "resource://gre/modules/PrivateBrowsingUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "NTabDB",
-  "resource://ntab/NTabDB.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Tracking",
-  "resource://ntab/Tracking.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "CustomizableUI": "resource:///modules/CustomizableUI.jsm", /* global CustomizableUI */
+  "NTabDB": "resource://ntab/NTabDB.jsm", /* global NTabDB */
+  "PREFERENCES_LOADED_EVENT": "resource://activity-stream/lib/AboutPreferences.jsm", /* global PREFERENCES_LOADED_EVENT */
+  "PrivateBrowsingUtils": "resource://gre/modules/PrivateBrowsingUtils.jsm", /* global PrivateBrowsingUtils */
+  "Services": "resource://gre/modules/Services.jsm", /* global Services */
+  "Tracking": "resource://ntab/Tracking.jsm" /* global Tracking */
+});
 
 this.overrideInstallation = {
   prefKey: "moa.ntab.oldinstalldate",
@@ -326,7 +320,7 @@ this.homepageReset = {
   reset() {
     this.homepage = this.defaultHomepage;
   }
-}
+};
 
 this.newTabPref = {
   extPrefKey: "moa.ntab.openInNewTab",
@@ -513,7 +507,7 @@ this.permanentPB = {
       getString("brandShortName");
     var msg = NTabWindow._("permanentPB.restart.message", [brandName]);
     var title = NTabWindow._("permanentPB.restart.title", [brandName]);
-    var shouldProceed = Services.prompt.confirm(win, title, msg)
+    var shouldProceed = Services.prompt.confirm(win, title, msg);
     if (shouldProceed) {
       var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
                           createInstance(Ci.nsISupportsPRBool);
@@ -522,10 +516,8 @@ this.permanentPB = {
       shouldProceed = !cancelQuit.data;
 
       if (shouldProceed) {
-        let appStartup = Cc["@mozilla.org/toolkit/app-startup;1"].
-                            getService(Ci.nsIAppStartup);
-        appStartup.quit(Ci.nsIAppStartup.eAttemptQuit |
-                        Ci.nsIAppStartup.eRestart);
+        Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |
+                              Ci.nsIAppStartup.eRestart);
       }
     }
   }

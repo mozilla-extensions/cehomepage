@@ -1,19 +1,14 @@
-let EXPORTED_SYMBOLS = ["NTabDB"];
+this.EXPORTED_SYMBOLS = ["NTabDB"];
 
-const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "OS",
-  "resource://gre/modules/osfile.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbs",
-  "resource://gre/modules/PageThumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "PageThumbsStorage",
-  "resource://gre/modules/PageThumbs.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "Services",
-  "resource://gre/modules/Services.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "getPref",
-  "resource://ntab/mozCNUtils.jsm");
+ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
+  "resource://gre/modules/XPCOMUtils.jsm");
+XPCOMUtils.defineLazyModuleGetters(this, {
+  "getPref": "resource://ntab/mozCNUtils.jsm", /* global getPref */
+  "OS": "resource://gre/modules/osfile.jsm", /* global OS */
+  "PageThumbs": "resource://gre/modules/PageThumbs.jsm", /* global PageThumbs */
+  "PageThumbsStorage": "resource://gre/modules/PageThumbs.jsm", /* global PageThumbsStorage */
+  "Services": "resource://gre/modules/Services.jsm" /* global Services */
+});
 
 Cu.importGlobalProperties(["indexedDB"]);
 
@@ -49,9 +44,9 @@ class NTabDBInternal {
   }
 
   get storageManager() {
-    let value = Cc["@mozilla.org/dom/localStorage-manager;1"].
-      getService(Ci.nsIDOMStorageManager);
-    Object.defineProperty(this, "storageManager", { value });
+    Object.defineProperty(this, "storageManager", {
+      value: Services.domStorageManager
+    });
     return this.storageManager;
   }
 
