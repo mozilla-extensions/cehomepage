@@ -461,14 +461,15 @@ this.permanentPB = {
       label: yesText,
       accessKey: "Y",
       callback() {
-        self.disablePBAutoStart(win);
-
         self.shouldNotify = false;
         Tracking.track({
           type: "permanent-pb",
           action: "click",
           sid: "yes"
         });
+
+        // Set pref etc. before we try to restart the browser.
+        self.disablePBAutoStart(win);
       }
     }, {
       label: moreText,

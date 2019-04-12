@@ -66,7 +66,7 @@ this.strings = {
 };
 
 this.searchEngines = {
-  expected: /^https?:\/\/www\.baidu\.com\/baidu\?wd=TEST&tn=monline(?:_|_4_)dg(?:&ie=utf-8)?$/,
+  expected: /^https?:\/\/www\.baidu\.com\/baidu\?wd=TEST&tn=monline(?:_|_4_|_7_)dg(?:&ie=utf-8)?$/,
 
   reportUnexpected(aKey, aAction, aEngine, aIncludeURL) {
     let url = "NA";
@@ -90,13 +90,20 @@ this.searchEngines = {
   },
 
   init() {
-    Services.search.init(() => {
+    let detect = () => {
       // See https://bugzil.la/1237648,1493483
       let current = Services.search.defaultEngine,
           baidu = Services.search.getEngineByName("\u767e\u5ea6");
       this.reportUnexpected("current", "detect", current, true);
       this.reportUnexpected("baidu", "detect", baidu, true);
-    });
+    };
+
+    // Since Fx 67, see https://bugzil.la/1524593
+    if (Ci.nsISearchService) {
+      Services.search.init().then(detect);
+    } else {
+      Services.search.init(detect);
+    }
   }
 };
 
