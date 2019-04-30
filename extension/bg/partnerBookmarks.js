@@ -3,11 +3,10 @@
   const distBookmarks = {
     "https://c.duomai.com/track.php?k=9QnJ9QWa1VmJxYTPklWYmcDNz0DZp9VZ0l2cmYiJt92YuQmauc3d3ZkMlYkMlE0MlMHc0RHa": "toolbar:jd",
     "https://www.baidu.com/index.php?tn=monline_3_dg": "baidu:home",
-    "http://weibo.com/?c=spr_web_sq_firefox_weibo_t001": "weibo:home",
-    "https://vip.iqiyi.com/waimeizhy_pc.html?fv=zz_5993b5deb9f24": "iqiyi:vip",
-    "http://ai.taobao.com/?pid=mm_28347190_2425761_17624777": "taobao:legacy",
+    "https://vip.iqiyi.com/?fv=zz_5993b5deb9f24": "iqiyi:vip",
+    "https://ai.taobao.com/?pid=mm_28347190_2425761_17624777": "taobao:legacy",
     "https://c.duomai.com/track.php?k=nJ9QWa1VmJxYTPklWYmcDOykzMx0DZp9VZ0l2cmYiJt92YuQmauc3d3ZkMlYkMlE0MlMHc0RHa9Q": "jd:union",
-    "https://apple.pvxt.net/c/1252180/435400/7639?u=https%3A%2F%2Fwww.apple.com%2Fcn%2F": "applestore:home",
+    "https://apple.pvxt.net/kN56d": "applestore:home",
     "https://www.amazon.cn/?source=Mozilla": "amazondotcn:home",
     "http://www.hao123.com/?tn=12092018_12_hao_pg": "hao123:home"
   };
