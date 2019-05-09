@@ -3,11 +3,9 @@
   const distBookmarks = {
     "https://c.duomai.com/track.php?k=9QnJ9QWa1VmJxYTPklWYmcDNz0DZp9VZ0l2cmYiJt92YuQmauc3d3ZkMlYkMlE0MlMHc0RHa": "toolbar:jd",
     "https://www.baidu.com/index.php?tn=monline_3_dg": "baidu:home",
-    "https://vip.iqiyi.com/?fv=zz_5993b5deb9f24": "iqiyi:vip",
     "https://ai.taobao.com/?pid=mm_28347190_2425761_17624777": "taobao:legacy",
     "https://c.duomai.com/track.php?k=nJ9QWa1VmJxYTPklWYmcDOykzMx0DZp9VZ0l2cmYiJt92YuQmauc3d3ZkMlYkMlE0MlMHc0RHa9Q": "jd:union",
-    "https://apple.pvxt.net/kN56d": "applestore:home",
-    "https://www.amazon.cn/?source=Mozilla": "amazondotcn:home",
+    "https://www.ctrip.com/?AllianceID=263200&sid=1851274&ouid=&app=0101F00": "ctrip:home",
     "http://www.hao123.com/?tn=12092018_12_hao_pg": "hao123:home"
   };
 
