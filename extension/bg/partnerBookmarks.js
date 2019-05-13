@@ -3,6 +3,8 @@
   const distBookmarks = {
     "https://c.duomai.com/track.php?k=9QnJ9QWa1VmJxYTPklWYmcDNz0DZp9VZ0l2cmYiJt92YuQmauc3d3ZkMlYkMlE0MlMHc0RHa": "toolbar:jd",
     "https://www.baidu.com/index.php?tn=monline_3_dg": "baidu:home",
+    "https://www.ifeng.com/?source=mozilla": "ifeng:home",
+    "https://weibo.com/?source=mozilla": "weibo:home",
     "https://ai.taobao.com/?pid=mm_28347190_2425761_17624777": "taobao:legacy",
     "https://c.duomai.com/track.php?k=nJ9QWa1VmJxYTPklWYmcDOykzMx0DZp9VZ0l2cmYiJt92YuQmauc3d3ZkMlYkMlE0MlMHc0RHa9Q": "jd:union",
     "https://www.ctrip.com/?AllianceID=263200&sid=1851274&ouid=&app=0101F00": "ctrip:home",
