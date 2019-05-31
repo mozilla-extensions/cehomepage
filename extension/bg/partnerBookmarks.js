@@ -13,7 +13,13 @@
 
   class PartnerBookmarks {
     constructor() {
+      this.additionKey = "partnerbookmarks:addition";
       this.signatureKey = "partnerbookmarks:signature";
+    }
+
+    async currentAddition() {
+      let result = await browser.storage.local.get(this.additionKey);
+      return result[this.additionKey] || "";
     }
 
     async currentSignature() {
@@ -43,6 +49,46 @@
       }
 
       return `partnerbookmarks:${keyword}`;
+    }
+
+    async maybeCreateBookmark(item, keyword) {
+      if (!keyword.startsWith("mozcn:toolbar:") || item.keyword !== keyword ||
+          !item.uri || !item.title || !item.faviconUrl || !item.conflict || !item.addUntil) {
+        console.log(`No bookmark exists for keyword: ${keyword}`);
+        return "";
+      }
+
+      let addition = await this.currentAddition();
+      if (addition >= item.addUntil) {
+        return "";
+      }
+
+      if (Date.now() >= item.addition * 3600e3) {
+        return browser.storage.local.set({[this.additionKey]: item.addUntil});
+      }
+
+      let parentId = "toolbar_____";
+      let bookmarksOnToolbar = await browser.bookmarks.getChildren(parentId);
+      let conflictRegExp = new RegExp(item.conflict);
+      if (bookmarksOnToolbar.some(bookmark => {
+        return bookmark.type === "bookmark" && conflictRegExp.test(bookmark.url);
+      })) {
+        console.log(`Blocked creating bookmark for keyword: ${keyword}`);
+        return browser.storage.local.set({[this.additionKey]: item.addUntil});
+      }
+
+      console.log(`Create bookmark for keyword: ${keyword}`);
+      let newBookmark = await browser.bookmarks.create({
+        index: Math.min(4, bookmarksOnToolbar.length), parentId, title: item.title, url: item.uri
+      });
+      return browser.storage.local.set({
+        [this.additionKey]: item.addUntil,
+        [this.normalize(item.keyword)]: newBookmark.id
+      });
+    }
+
+    normalize(keyword) {
+      return keyword.replace(/^mozcn/, "partnerbookmarks");
     }
 
     async updateFromDist(signature) {
@@ -89,19 +135,19 @@
 
         let data = JSON.parse(json.data);
         let keywords = Object.keys(data);
-        let normalize = keyword => keyword.replace(/^mozcn/, "partnerbookmarks");
+        let logError = ex => console.error(ex);
         await Promise.all(keywords.map(async keyword => {
-          let normalizedKeyword = normalize(keyword);
+          let item = data[keyword];
+          let normalizedKeyword = this.normalize(keyword);
           let {[normalizedKeyword]: id} = await browser.storage.local.get(normalizedKeyword);
           if (!id) {
-            console.log(`No bookmark exists for keyword: ${keyword}`);
-            return "";
+            return this.maybeCreateBookmark(item, normalizedKeyword);
           }
 
-          let item = data[keyword];
+          // Bookmark with the recorded id may cease to exist
           if (!item.uri) {
             return Promise.all([
-              browser.bookmarks.remove(id),
+              browser.bookmarks.remove(id).catch(logError),
               browser.storage.local.remove(normalizedKeyword)
             ]);
           }
@@ -115,11 +161,11 @@
           }
 
           if (!item.keyword || item.keyword === keyword) {
-            return browser.bookmarks.update(id, changes);
+            return browser.bookmarks.update(id, changes).catch(logError);
           }
           return Promise.all([
-            browser.bookmarks.update(id, changes),
-            browser.storage.local.set({[normalize(item.keyword)]: id}),
+            browser.bookmarks.update(id, changes).catch(logError),
+            browser.storage.local.set({[this.normalize(item.keyword)]: id}),
             browser.storage.local.remove(normalizedKeyword)
           ]);
         }));
