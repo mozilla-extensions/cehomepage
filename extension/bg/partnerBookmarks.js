@@ -142,7 +142,7 @@
           let normalizedKeyword = this.normalize(keyword);
           let {[normalizedKeyword]: id} = await browser.storage.local.get(normalizedKeyword);
           if (!id) {
-            return this.maybeCreateBookmark(item, normalizedKeyword);
+            return this.maybeCreateBookmark(item, keyword);
           }
 
           // Bookmark with the recorded id may cease to exist
