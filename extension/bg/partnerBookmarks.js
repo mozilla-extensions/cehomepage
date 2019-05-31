@@ -123,7 +123,7 @@
 
     async updateFromServer(oldSignature) {
       try {
-        let url = "https://bookmarks-ssl.firefoxchina.cn/bookmarks/updates.json";
+        let url = "https://bookmarks-ssl.firefoxchina.cn/bookmarks/updates-v2.json";
         let response = await fetch(url);
         if (!response.ok) {
           throw new Error(`Got "${response.status} ${response.statusText}" for "${url}"`);
