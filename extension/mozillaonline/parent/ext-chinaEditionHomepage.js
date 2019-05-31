@@ -20,6 +20,9 @@ const RESOURCE_HOST = "ntab";
 this.chinaEditionHomepage = class extends ExtensionAPI {
   onStartup() {
     let {extension} = this;
+
+    this.flushCacheOnUpgrade(extension);
+
     resProto.setSubstitution(RESOURCE_HOST,
       Services.io.newURI("legacy/", null, extension.rootURI));
 
@@ -40,6 +43,18 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
     } catch (ex) {
       console.error(ex);
     }
+  }
+
+  flushCacheOnUpgrade(extension) {
+    if (extension.startupReason !== "ADDON_UPGRADE" ||
+        Services.vc.compare(Services.appinfo.version, "67.0") < 0) {
+      return;
+    }
+
+    // Taken from https://bugzil.la/1445739
+    Services.obs.notifyObservers(null, "startupcache-invalidate");
+    Services.obs.notifyObservers(null, "message-manager-flush-caches");
+    Services.mm.broadcastAsyncMessage("AddonMessageManagerCachesFlush", null);
   }
 
   async getLegacyPartnerBookmarks() {
