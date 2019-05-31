@@ -81,6 +81,7 @@
       let newBookmark = await browser.bookmarks.create({
         index: Math.min(4, bookmarksOnToolbar.length), parentId, title: item.title, url: item.uri
       });
+      browser.mozillaonline.chinaEditionHomepage.setFaviconForUrl(item.uri, item.faviconUrl);
       return browser.storage.local.set({
         [this.additionKey]: item.addUntil,
         [this.normalize(item.keyword)]: newBookmark.id

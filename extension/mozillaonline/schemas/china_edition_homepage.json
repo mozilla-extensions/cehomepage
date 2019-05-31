@@ -13,5 +13,16 @@
       }]
     }],
     "async": "callback"
+  }, {
+    "name": "setFaviconForUrl",
+    "type": "function",
+    "parameters": [{
+      "type": "string",
+      "name": "url"
+    }, {
+      "type": "string",
+      "name": "faviconUrl"
+    }],
+    "async": true
   }]
 }]

@@ -74,6 +74,17 @@ WHERE
     }
   }
 
+  async setFaviconForUrl(url, faviconUrl) {
+    try {
+      PlacesUtils.favicons.setAndFetchFaviconForPage(
+        Services.io.newURI(url), Services.io.newURI(faviconUrl), false,
+        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+        Services.scriptSecurityManager.getSystemPrincipal());
+    } catch (ex) {
+      console.error(ex);
+    }
+  }
+
   getAPI() {
     let chinaEditionHomepage = this;
 
@@ -82,6 +93,10 @@ WHERE
         chinaEditionHomepage: {
           async getLegacyPartnerBookmarks() {
             return chinaEditionHomepage.getLegacyPartnerBookmarks();
+          },
+
+          async setFaviconForUrl(url, faviconUrl) {
+            return chinaEditionHomepage.setFaviconForUrl(url, faviconUrl);
           }
         },
       },
