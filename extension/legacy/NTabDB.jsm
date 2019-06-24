@@ -37,17 +37,18 @@ class NTabDBInternal {
   }
 
   get localStorage() {
-    this.storageManager.precacheStorage(this.principal);
-    let value = this.storageManager.getStorage(null, this.principal);
+    let principal = this.principal;
+    let storageManager = Services.domStorageManager;
+    let value;
+    // LSNG enabled since Fx 68: https://bugzil.la/1539835
+    if (storageManager.nextGenLocalStorageEnabled) {
+      value = storageManager.createStorage(null, principal, principal, "");
+    } else {
+      storageManager.precacheStorage(principal);
+      value = storageManager.getStorage(null, principal);
+    }
     Object.defineProperty(this, "localStorage", { value });
     return this.localStorage;
-  }
-
-  get storageManager() {
-    Object.defineProperty(this, "storageManager", {
-      value: Services.domStorageManager
-    });
-    return this.storageManager;
   }
 
   exportFromLocalStorage() {
