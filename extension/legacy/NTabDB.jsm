@@ -1,16 +1,9 @@
 this.EXPORTED_SYMBOLS = ["NTabDB"];
 
+ChromeUtils.defineModuleGetter(this, "Services",
+  "resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
-  "getPref": "resource://ntab/mozCNUtils.jsm", /* global getPref */
-  "OS": "resource://gre/modules/osfile.jsm", /* global OS */
-  "PageThumbs": "resource://gre/modules/PageThumbs.jsm", /* global PageThumbs */
-  "PageThumbsStorage": "resource://gre/modules/PageThumbs.jsm", /* global PageThumbsStorage */
-  "Services": "resource://gre/modules/Services.jsm" /* global Services */
-});
-
-Cu.importGlobalProperties(["indexedDB"]);
 
 class NTabDBInternal {
   constructor(prePath) {
@@ -37,18 +30,17 @@ class NTabDBInternal {
   }
 
   get localStorage() {
-    let principal = this.principal;
-    let storageManager = Services.domStorageManager;
-    let value;
-    // LSNG enabled since Fx 68: https://bugzil.la/1539835
-    if (storageManager.nextGenLocalStorageEnabled) {
-      value = storageManager.createStorage(null, principal, principal, "");
-    } else {
-      storageManager.precacheStorage(principal);
-      value = storageManager.getStorage(null, principal);
-    }
+    this.storageManager.precacheStorage(this.principal);
+    let value = this.storageManager.getStorage(null, this.principal);
     Object.defineProperty(this, "localStorage", { value });
     return this.localStorage;
+  }
+
+  get storageManager() {
+    Object.defineProperty(this, "storageManager", {
+      value: Services.domStorageManager
+    });
+    return this.storageManager;
   }
 
   exportFromLocalStorage() {
@@ -71,17 +63,18 @@ let insecureNTabDB = new NTabDBInternal("http://offlintab.firefoxchina.cn");
 let secureNTabDB = new NTabDBInternal("https://offlintab.firefoxchina.cn");
 
 let NTabDB = {
-  messageName: "mozCNUtils:NTabDB",
   get _internalDB() {
-    if (!Services.prefs.getBoolPref("moa.ntab.useSecure", false)) {
-      if (!insecureNTabDB.localStorage ||
-          !insecureNTabDB.localStorage.length) {
-        Services.prefs.setBoolPref("moa.ntab.useSecure", true);
-      } else if (this._useDefaultDials) {
-        let dataMap = insecureNTabDB.exportFromLocalStorage();
-        secureNTabDB.importIntoLocalStorage(dataMap);
+    let appinfo = Services.appinfo;
+    let prefKey = "moa.ntab.useSecure";
+    if (appinfo.processType !== appinfo.PROCESS_TYPE_DEFAULT) {
+      delete this._internalDB;
+      return this._internalDB = Services.prefs.getBoolPref(prefKey, false) ?
+                                secureNTabDB : insecureNTabDB;
+    }
 
-        Services.prefs.setBoolPref("moa.ntab.useSecure", true);
+    if (!Services.prefs.getBoolPref(prefKey, false)) {
+      if (!appinfo.replacedLockTime) {
+        Services.prefs.setBoolPref(prefKey, true);
       } else {
         delete this._internalDB;
         return this._internalDB = insecureNTabDB;
@@ -89,19 +82,6 @@ let NTabDB = {
     }
     delete this._internalDB;
     return this._internalDB = secureNTabDB;
-  },
-  // `_useDefaultDials` is set based on messages from offlintab, and only
-  // checked on subsequent initialization of `_internalDB`
-  get _useDefaultDials() {
-    return Services.prefs.getBoolPref("moa.ntab.useDefaultDials", false);
-  },
-  set _useDefaultDials(val) {
-    Services.prefs.setBoolPref("moa.ntab.useDefaultDials", !!val);
-  },
-  get mm() {
-    delete this.mm;
-    return this.mm = Cc["@mozilla.org/globalmessagemanager;1"].
-      getService(Ci.nsIMessageListenerManager || Ci.nsISupports);
   },
   get prePath() {
     delete this.prePath;
@@ -137,6 +117,12 @@ let NTabDB = {
   },
 
   _backupAndRestoreLocalStorage() {
+    // LSNG enabled since Fx 68: https://bugzil.la/1539835
+    // Unable to update NTabDBInternal.localStorage to work with it yet
+    if (Services.lsm && Services.lsm.nextGenLocalStorageEnabled) {
+      return;
+    }
+
     let dataMap = this._internalDB.exportFromLocalStorage();
 
     // Trigger the import asynchronously, after nsIDOMStorageManager's observe
@@ -173,20 +159,10 @@ let NTabDB = {
     this._addPermission();
     this._addExtraPermission();
     this._initKeepLocalStorageOnClearingCookie();
-
-    if (this.spec === secureNTabDB.spec) {
-      return;
-    }
-    this.mm.addMessageListener(this.messageName, this);
   },
 
   uninit() {
     this._uninitKeepLocalStorageOnClearingCookie();
-
-    if (this.spec === secureNTabDB.spec) {
-      return;
-    }
-    this.mm.removeMessageListener(this.messageName, this);
   },
 
   /**
@@ -203,14 +179,5 @@ let NTabDB = {
         this._backupAndRestoreLocalStorage();
         break;
     }
-  },
-
-  receiveMessage(message) {
-    if (message.name != this.messageName ||
-        !message.target.currentURI.equals(this.uri)) {
-      return;
-    }
-
-    this._useDefaultDials = message.data.useDefaultDials;
   }
 };
