@@ -34,9 +34,12 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
     }
   }
 
-  onShutdown(reason) {
+  onShutdown(isAppShutdownOrReason) {
     try {
-      this.mozCNUtils.uninit(reason === "APP_SHUTDOWN");
+      // Boolean isAppShutdown since Fx 68, https://bugzil.la/1549192
+      let isAppShutdown = isAppShutdownOrReason === true ||
+                          isAppShutdownOrReason === "APP_SHUTDOWN";
+      this.mozCNUtils.uninit(isAppShutdown);
       Cu.unload("resource://ntab/CEHomepage.jsm");
 
       resProto.setSubstitution(RESOURCE_HOST, null);
