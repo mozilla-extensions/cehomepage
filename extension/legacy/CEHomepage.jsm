@@ -499,37 +499,41 @@ this.mozCNWebChannel.prototype = {
     let self = this;
     switch (aMessage.key) {
       case "bookmark.query":
-        let db = PlacesUtils.history.DBConnection;
-        let sql = ("SELECT b.title as title, p.url as url " +
-                   "FROM moz_bookmarks b, moz_places p " +
-                   "WHERE b.type = 1 AND b.fk = p.id AND p.hidden = 0");
-        let statement = db.createAsyncStatement(sql);
         let links = [];
-        db.executeAsync([statement], 1, {
-          handleResult(aResultSet) {
-            let row = aResultSet.getNextRow();
-
-            for (; row; row = aResultSet.getNextRow()) {
+        PlacesUtils.promiseDBConnection().then(db => {
+          return db.executeCached(`
+SELECT
+  b.title as title,
+  p.url as url
+FROM
+  moz_bookmarks b,
+  moz_places p
+WHERE
+  b.type = 1 AND
+  b.fk = p.id AND
+  p.hidden = 0
+`,
+            null,
+            row => {
               links.push({
                 title: row.getResultByName("title"),
                 url: row.getResultByName("url")
               });
             }
-          },
-          handleError(aError) {
-            self.channel.send({
-              id: aMessage.id,
-              key: aMessage.key,
-              data: []
-            }, aSender);
-          },
-          handleCompletion(aReason) {
-            self.channel.send({
-              id: aMessage.id,
-              key: aMessage.key,
-              data: links
-            }, aSender);
-          }
+          );
+        }).then(() => {
+          self.channel.send({
+            id: aMessage.id,
+            key: aMessage.key,
+            data: links
+          }, aSender);
+        }, ex => {
+          Cu.reportError(ex);
+          self.channel.send({
+            id: aMessage.id,
+            key: aMessage.key,
+            data: []
+          }, aSender);
         });
         break;
       case "thumbs.getThumbnail":
