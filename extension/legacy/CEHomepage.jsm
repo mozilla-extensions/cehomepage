@@ -585,6 +585,7 @@ this.mozCNWebChannels = {
   contentURL: "resource://ntab/mozCNWebChannelContent.js",
   specs: {
     "https://home.firefoxchina.cn/": "",
+    "https://i.firefoxchina.cn/": "",
     "http://newtab.firefoxchina.cn/": "",
     "https://newtab.firefoxchina.cn/": "",
     "http://offlintab.firefoxchina.cn/": "offlintabListener",

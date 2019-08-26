@@ -7,6 +7,7 @@ ChromeUtils.defineModuleGetter(this, "NTabDB",
 let mozCNWebChannelContent = {
   specs: [
     "https://home.firefoxchina.cn/",
+    "https://i.firefoxchina.cn/",
     "http://newtab.firefoxchina.cn/",
     "https://newtab.firefoxchina.cn/",
     NTabDB.spec
