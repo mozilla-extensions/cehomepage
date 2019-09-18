@@ -23,8 +23,10 @@ class NTabDBInternal {
   }
 
   get principal() {
-    let value = Services.scriptSecurityManager.
-      createCodebasePrincipal(this.uri, {});
+    // Since Fx 70, https://bugzil.la/1560455
+    let value = Services.scriptSecurityManager.createContentPrincipal ?
+      Services.scriptSecurityManager.createContentPrincipal(this.uri, {}) :
+      Services.scriptSecurityManager.createCodebasePrincipal(this.uri, {});
     Object.defineProperty(this, "principal", { value });
     return this.principal;
   }
@@ -109,8 +111,13 @@ let NTabDB = {
       "http://newtab.firefoxchina.cn/",
       "https://newtab.firefoxchina.cn/"
     ].forEach(aSpec => {
-      extraPrincipals.push(Services.scriptSecurityManager.
-        createCodebasePrincipal(Services.io.newURI(aSpec), {}));
+      let uri = Services.io.newURI(aSpec);
+      // Since Fx 70, https://bugzil.la/1560455
+      let principal = Services.scriptSecurityManager.createContentPrincipal ?
+      Services.scriptSecurityManager.createContentPrincipal(uri, {}) :
+      Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
+
+      extraPrincipals.push(principal);
     });
     delete this.extraPrincipals;
     return this.extraPrincipals = extraPrincipals;
