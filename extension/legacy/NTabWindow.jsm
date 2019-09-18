@@ -423,7 +423,7 @@ this.newTabPref = {
       */
     if (this.inUse) {
       aboutNewTabService.newTabURL = NTabDB.spec;
-    } else {
+    } else if (aboutNewTabService.newTabURL === NTabDB.spec) {
       aboutNewTabService.resetNewTabURL();
     }
   },
