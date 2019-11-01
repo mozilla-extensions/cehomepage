@@ -13,69 +13,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   "Tracking": "resource://ntab/Tracking.jsm" /* global Tracking */
 });
 
-this.overrideInstallation = {
-  prefKey: "moa.ntab.oldinstalldate",
-
-  get oldInstallDate() {
-    return Services.prefs.getCharPref(this.prefKey, "");
-  },
-
-  set oldInstallDate(val) {
-    try {
-      Services.prefs.setCharPref(this.prefKey, val);
-    } catch (e) {}
-  },
-
-  get installDateFile() {
-    var installDateFile = Services.dirsvc.get("XREExeF", Ci.nsIFile);
-    installDateFile.leafName = "distribution";
-    installDateFile.append("myextensions");
-    installDateFile.append("installdate.ini");
-
-    return installDateFile;
-  },
-
-  get newInstallDate() {
-    var newInstallDate = "";
-    var installDateFile = this.installDateFile;
-    if (!installDateFile.exists() || installDateFile.isDirectory()) {
-      return "";
-    }
-
-    var iniParser = Cc["@mozilla.org/xpcom/ini-parser-factory;1"].
-                      getService(Ci.nsIINIParserFactory).
-                      createINIParser(installDateFile);
-    var sections = iniParser.getSections();
-    var section = null;
-
-    while (sections.hasMore()) {
-      section = sections.getNext();
-      try {
-        newInstallDate += iniParser.getString(section, "dwLowDateTime");
-        newInstallDate += iniParser.getString(section, "dwHighDateTime");
-      } catch (e) {
-        return "";
-      }
-    }
-
-    return newInstallDate;
-  },
-
-  get isOverride() {
-    var everSet = !!this.oldInstallDate;
-    var changed = this.oldInstallDate != this.newInstallDate;
-    if (!changed) {
-      delete this.isOverride;
-      return this.isOverride = false;
-    }
-
-    this.oldInstallDate = this.newInstallDate;
-    // only a change with an exisiting pref count as an override
-    delete this.isOverride;
-    return this.isOverride = everSet;
-  }
-};
-
 this.homepageReset = {
   prefKeyHomepage: "browser.startup.homepage",
   prefKeyOtherNav: "moa.homepagereset.othernav.latestcheck",
@@ -84,7 +21,8 @@ this.homepageReset = {
   notificationKey: "mo-reset-cehome",
 
   NO_REASON: 0,
-  REASON_OVERRIDE_INSTALL: 1,
+  // No longer used, but keep it here to avoid any confusion
+  // REASON_OVERRIDE_INSTALL: 1,
   REASON_OTHER_NAV: 2,
   REASON_POTENTIAL_HIJACK: 3,
 
@@ -159,9 +97,7 @@ this.homepageReset = {
       return this.NO_REASON;
     }
 
-    var ret = overrideInstallation.isOverride ?
-      this.REASON_OVERRIDE_INSTALL :
-      this.NO_REASON;
+    var ret = this.NO_REASON;
 
     var firstOtherNav = "";
     var usingOtherNav = this.otherNavs.some(function(regex) {
@@ -236,9 +172,6 @@ this.homepageReset = {
     }
 
     switch (reason) {
-      case this.REASON_OVERRIDE_INSTALL:
-        this.notify(aWindow, reason);
-        break;
       case this.REASON_OTHER_NAV:
         this.notify(aWindow, reason, shownCallback);
         break;
