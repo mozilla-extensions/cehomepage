@@ -11,6 +11,7 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   "BackgroundPageThumbs": "resource://gre/modules/BackgroundPageThumbs.jsm", /* global BackgroundPageThumbs */
   "clearTimeout": "resource://gre/modules/Timer.jsm", /* global clearTimeout */
   "CustomizableUI": "resource:///modules/CustomizableUI.jsm", /* global CustomizableUI */
+  "NewTabUtils": "resource://gre/modules/NewTabUtils.jsm", /* global NewTabUtils */
   "OS": "resource://gre/modules/osfile.jsm", /* global OS */
   "PageThumbs": "resource://gre/modules/PageThumbs.jsm", /* global PageThumbs */
   "PlacesUtils": "resource://gre/modules/PlacesUtils.jsm", /* global PlacesUtils */
@@ -167,6 +168,222 @@ this.morePermissionPromptHack = {
   }
 };
 
+this.newtabMigration = {
+  dialPref: "browser.newtabpage.pinned",
+  extId: "",
+  otherExtId: "china-newtab@mozillaonline.com",
+  otherExtPref: "extensions.chinaNewtab.prefVersion",
+  otherExtUrl: "https://download-ssl.firefox.com.cn/chinaedition/addons/china-newtab/china-newtab-latest.xpi",
+
+  STATUS_BLOCKED: 0,
+  STATUS_COMPAT: 1,
+  STATUS_READY: 2,
+  STATUS_PENDING: 3,
+  STATUS_DONE: 4,
+
+  statusPref: "extensions.cehomepage.splitNewtab",
+
+  thumbnailBase: "https://offlintab.firefoxchina.cn",
+
+  get isInstalled() {
+    return Services.prefs.getIntPref(this.otherExtPref, 0) > 0;
+  },
+
+  get searchTN() {
+    let searchTN = "error";
+    try {
+      let engine = Services.search.getEngineByName("\u767e\u5ea6");
+      let newtabUrl = engine.getSubmission("TEST", null, "newtab").uri.spec;
+      searchTN = (new URL(newtabUrl)).searchParams.get("tn") || "notset";
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    delete this.searchTN;
+    return this.searchTN = searchTN;
+  },
+
+  get status() {
+    return Services.prefs.getIntPref(this.statusPref, this.STATUS_BLOCKED);
+  },
+
+  set status(status) {
+    let oldStatus = this.status;
+    let newStatus = Math.max(oldStatus, status);
+    Services.prefs.setIntPref(this.statusPref, newStatus);
+    try {
+      if (newStatus > oldStatus) {
+        Tracking.track({
+          type: "split-newtab",
+          action: "advance",
+          sid: newStatus,
+          fid: oldStatus
+        });
+      }
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  },
+
+  init({ extension }) {
+    this.extId = extension.id;
+
+    if (this.isInstalled) {
+      this.status = this.STATUS_DONE;
+    }
+
+    if (this.status >= this.STATUS_DONE) {
+      return;
+    }
+
+    if (Services.vc.compare(Services.appinfo.version, "70.0") < 0) {
+      return;
+    }
+    // Don't override existing customizations, at least initially.
+    if (Services.prefs.prefHasUserValue(this.dialPref) &&
+        Services.prefs.getStringPref(this.dialPref) !== "[]") {
+      return;
+    }
+    // Or newtab search will be using `monline_4_dg`.
+    // We'll have to override this somehow, if there're enough users blocked.
+    if (this.searchTN !== "monline_3_dg") {
+      return;
+    }
+
+    this.status = this.STATUS_COMPAT;
+    Services.prefs.addObserver(this.otherExtPref, this);
+  },
+
+  uninit(isAppShutdown) {
+    if (isAppShutdown) {
+      return;
+    }
+
+    try {
+      Services.prefs.removeObserver(this.otherExtPref, this);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+  },
+
+  async installExt() {
+    if (this.status !== this.STATUS_READY) {
+      return;
+    }
+
+    // Suppress the prompt for reverting to "about:newtab"
+    let prefKey = `extensions.installedDistroAddon.${this.otherExtId}`;
+    Services.prefs.setBoolPref(prefKey, true);
+
+    let install = await AddonManager.getInstallForURL(this.otherExtUrl, {
+      telemetryInfo: { source: this.extId }
+    });
+
+    // Mostly from /browser/components/enterprisepolicies/Policies.jsm
+    if (install.addon && install.addon.appDisabled) {
+      install.cancel();
+      return;
+    }
+
+    let listener = {
+      onDownloadEnded: install => {
+        if (install.addon.id !== this.otherExtId) {
+          install.removeListener(listener);
+          install.cancel();
+        }
+        if (install.addon && install.addon.appDisabled) {
+          install.removeListener(listener);
+          install.cancel();
+        }
+      },
+      onDownloadFailed: () => {
+        install.removeListener(listener);
+      },
+      onInstallEnded: () => {
+        install.removeListener(listener);
+        this.status = this.STATUS_PENDING;
+      },
+      onInstallFailed: () => {
+        install.removeListener(listener);
+      }
+    };
+    install.addListener(listener);
+    install.install();
+  },
+
+  async migrate(data) {
+    try {
+      Tracking.track({
+        type: "split-newtab",
+        action: "migrate",
+        sid: this.status,
+        fid: `${Services.appinfo.version}-${this.searchTN}`
+      });
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+
+    if (this.status <= this.STATUS_BLOCKED ||
+        this.status >= this.STATUS_DONE) {
+      return;
+    }
+
+    let {
+      dialContent,
+      "dial.hideSearch": hideSearch,
+      "search.engine": searchEngine,
+      view
+    } = JSON.parse(data.state);
+
+    this.migrateDials(dialContent);
+    this.migrateSearch(hideSearch, searchEngine);
+    this.migrateView(view);
+
+    this.status = this.STATUS_READY;
+    await this.installExt();
+  },
+
+  migrateDials(dials) {
+    let pinned = [];
+    let keys = Object.keys(dials);
+    for (let key of keys) {
+      let dial = dials[key];
+
+      pinned[parseInt(key, 10) - 1] = {
+        customScreenshotURL: `${this.thumbnailBase}${dial.thumbnail}`,
+        label: dial.title,
+        url: dial.url,
+      };
+    }
+    Services.prefs.setStringPref(this.dialPref, JSON.stringify(pinned));
+
+    // Do we need to clear the `TopSitesFeed` cache here ?
+    NewTabUtils.pinnedLinks.resetCache();
+  },
+
+  // Not sure we want these two ?
+  migrateSearch(hideSearch, searchEngine) {},
+  migrateView(view) {},
+
+  observe(subject, topic, data) {
+    switch (topic) {
+      case "nsPref:changed":
+        let otherExtPref = newtabMigration.otherExtPref;
+        if (data !== otherExtPref) {
+          break;
+        }
+
+        if (!newtabMigration.isInstalled) {
+          break;
+        }
+        newtabMigration.status = newtabMigration.STATUS_DONE;
+        Services.prefs.removeObserver(otherExtPref, newtabMigration);
+        break;
+      default:
+        break;
+    }
+  }
+};
+
 this.mozCNUtils = {
   factories: new Map(),
 
@@ -229,6 +446,9 @@ this.mozCNUtils = {
     }
 
     switch (aMessage.name) {
+      case "mozCNUtils:NTabSync":
+        newtabMigration.migrate(aMessage.data);
+        break;
       case "mozCNUtils:Tracking":
         Tracking.track(aMessage.data);
         break;
@@ -266,6 +486,7 @@ this.mozCNUtils = {
   },
 
   MESSAGES: [
+    "mozCNUtils:NTabSync",
     "mozCNUtils:Tracking",
     "mozCNUtils:WebChannel"
   ],
@@ -393,6 +614,7 @@ this.mozCNUtils = {
     delayedSuggestBaidu.init(strings);
     Homepage.init(isAppStartup);
     mozCNWebChannels.init();
+    newtabMigration.init(context);
     NTabDB.init();
     NTabWindow.init(strings);
     searchEngines.init();
@@ -414,6 +636,7 @@ this.mozCNUtils = {
     Homepage.uninit(isAppShutdown);
     mozCNWebChannels.uninit();
     morePermissionPromptHack.uninit(isAppShutdown);
+    newtabMigration.uninit(isAppShutdown);
     NTabDB.uninit();
     NTabWindow.uninit();
 
