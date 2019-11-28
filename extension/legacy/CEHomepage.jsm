@@ -224,7 +224,7 @@ this.newtabMigration = {
     }
   },
 
-  init({ extension }) {
+  async init({ extension }) {
     this.extId = extension.id;
 
     if (this.isInstalled) {
@@ -239,13 +239,24 @@ this.newtabMigration = {
       return;
     }
     // Don't override existing customizations, at least initially.
-    if (Services.prefs.prefHasUserValue(this.dialPref) &&
-        Services.prefs.getStringPref(this.dialPref) !== "[]") {
-      return;
+    if (Services.prefs.prefHasUserValue(this.dialPref)) {
+      try {
+        let dials = JSON.parse(Services.prefs.getStringPref(this.dialPref));
+        let thumbnailDir = "https://offlintab.firefoxchina.cn/data/thumbnails/";
+        if (!dials.every(dial => {
+          return (dial.customScreenshotURL || "").startsWith(thumbnailDir);
+        })) {
+          return;
+        }
+      } catch (ex) {
+        Cu.reportError(ex);
+        return;
+      }
     }
     // Or newtab search will be using `monline_4_dg`.
     // We'll have to override this somehow, if there're enough users blocked.
-    if (this.searchTN !== "monline_3_dg") {
+    await Services.search.init();
+    if (!["monline_3_dg", "monline_7_dg"].includes(this.searchTN)) {
       return;
     }
 
