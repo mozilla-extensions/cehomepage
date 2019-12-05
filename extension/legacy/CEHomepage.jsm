@@ -244,6 +244,10 @@ this.newtabMigration = {
         let dials = JSON.parse(Services.prefs.getStringPref(this.dialPref));
         let thumbnailDir = "https://offlintab.firefoxchina.cn/data/thumbnails/";
         if (!dials.every(dial => {
+          if (dial === null) {
+            return true;
+          }
+
           return (dial.customScreenshotURL || "").startsWith(thumbnailDir);
         })) {
           return;
