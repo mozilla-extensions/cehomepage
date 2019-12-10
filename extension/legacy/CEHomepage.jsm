@@ -215,8 +215,8 @@ this.newtabMigration = {
         Tracking.track({
           type: "split-newtab",
           action: "advance",
-          sid: newStatus,
-          fid: oldStatus
+          sid: `${newStatus}`,
+          fid: `${oldStatus}`
         });
       }
     } catch (ex) {
@@ -330,7 +330,7 @@ this.newtabMigration = {
       Tracking.track({
         type: "split-newtab",
         action: "migrate",
-        sid: this.status,
+        sid: `${this.status}`, // Number 0 is a falsy value
         fid: `${Services.appinfo.version}-${this.searchTN}`
       });
     } catch (ex) {
