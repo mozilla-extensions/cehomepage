@@ -5,12 +5,11 @@ ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
   "@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService");
 XPCOMUtils.defineLazyModuleGetters(this, {
-  "CustomizableUI": "resource:///modules/CustomizableUI.jsm", /* global CustomizableUI */
-  "NTabDB": "resource://ntab/NTabDB.jsm", /* global NTabDB */
-  "PREFERENCES_LOADED_EVENT": "resource://activity-stream/lib/AboutPreferences.jsm", /* global PREFERENCES_LOADED_EVENT */
-  "PrivateBrowsingUtils": "resource://gre/modules/PrivateBrowsingUtils.jsm", /* global PrivateBrowsingUtils */
-  "Services": "resource://gre/modules/Services.jsm", /* global Services */
-  "Tracking": "resource://ntab/Tracking.jsm" /* global Tracking */
+  NTabDB: "resource://ntab/NTabDB.jsm",
+  PREFERENCES_LOADED_EVENT: "resource://activity-stream/lib/AboutPreferences.jsm",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  Tracking: "resource://ntab/Tracking.jsm",
 });
 
 this.homepageReset = {
@@ -28,7 +27,7 @@ this.homepageReset = {
 
   defaultHomepage: "https://home.firefoxchina.cn/",
   defaultHomepages: [
-    /^https?:\/\/[a-z]+\.firefoxchina\.cn/
+    /^https?:\/\/[a-z]+\.firefoxchina\.cn/,
   ],
 
   otherNavs: [
@@ -37,7 +36,7 @@ this.homepageReset = {
     /^https?:\/\/.*\.baidu\.com/,
     /^https?:\/\/.*\.duba\.com/,
     /^https?:\/\/.*\.hao123\.com/,
-    /^https?:\/\/.*\.sogou\.com/
+    /^https?:\/\/.*\.sogou\.com/,
   ],
   firstOtherNavUrl: null,
 
@@ -185,7 +184,7 @@ this.homepageReset = {
     Tracking.track({
       type: "homepagereset",
       action: "notify",
-      sid: reason
+      sid: reason,
     });
   },
 
@@ -209,9 +208,9 @@ this.homepageReset = {
           type: "homepagereset",
           action: "click",
           sid: "yes",
-          href: (self.firstOtherNavUrl && self.firstOtherNavUrl.spec)
+          href: (self.firstOtherNavUrl && self.firstOtherNavUrl.spec),
         });
-      }
+      },
     }, {
       label: noText,
       accessKey: "N",
@@ -219,9 +218,9 @@ this.homepageReset = {
         Tracking.track({
           type: "homepagereset",
           action: "click",
-          sid: "no"
+          sid: "no",
         });
-      }
+      },
     }];
 
     if (aNomoreCallback) {
@@ -234,9 +233,9 @@ this.homepageReset = {
           Tracking.track({
             type: "homepagereset",
             action: "click",
-            sid: "nomore"
+            sid: "nomore",
           });
-        }
+        },
       });
     }
 
@@ -252,7 +251,7 @@ this.homepageReset = {
 
   reset() {
     this.homepage = this.defaultHomepage;
-  }
+  },
 };
 
 this.newTabPref = {
@@ -292,7 +291,7 @@ this.newTabPref = {
     this.specByWindow.set(win, spec);
 
     win.gInitialPages = win.gInitialPages.concat([
-      spec, NTabDB.readOnlySpec
+      spec, NTabDB.readOnlySpec,
     ]);
 
     homepageReset.check(win);
@@ -363,7 +362,7 @@ this.newTabPref = {
 
   specForWindow(win) {
     return this.specByWindow.get(win) || NTabDB.spec;
-  }
+  },
 };
 
 this.permanentPB = {
@@ -398,12 +397,12 @@ this.permanentPB = {
         Tracking.track({
           type: "permanent-pb",
           action: "click",
-          sid: "yes"
+          sid: "yes",
         });
 
         // Set pref etc. before we try to restart the browser.
         self.disablePBAutoStart(win);
-      }
+      },
     }, {
       label: moreText,
       accessKey: "M",
@@ -414,9 +413,9 @@ this.permanentPB = {
         Tracking.track({
           type: "permanent-pb",
           action: "click",
-          sid: "more"
+          sid: "more",
         });
-      }
+      },
     }];
 
     var notificationBox = win.gBrowser.getNotificationBox();
@@ -430,7 +429,7 @@ this.permanentPB = {
     Tracking.track({
       type: "permanent-pb",
       action: "notify",
-      sid: "shown"
+      sid: "shown",
     });
   },
 
@@ -454,7 +453,7 @@ this.permanentPB = {
                               Ci.nsIAppStartup.eRestart);
       }
     }
-  }
+  },
 };
 
 this.browserOpenTab = function(evt) {
@@ -479,9 +478,7 @@ this.browserOpenTab = function(evt) {
     }
 
     var spec = newTabPref.specForWindow(win);
-    // Available since Fx 61 <https://bugzil.la/1374741>, required since Fx 63 <https://bugzil.la/1362034>
-    var openLinkIn = (win.openWebLinkIn || win.openUILinkIn).bind(win);
-    openLinkIn(spec, where, { relatedToCurrent });
+    win.openWebLinkIn(spec, where, { relatedToCurrent });
 
     // focus automatically for cases not covered by openUILinkIn
     if (!win.isBlankPageURL(spec)) {
@@ -496,7 +493,7 @@ this.browserOpenTab = function(evt) {
     Tracking.track({
       type: "opentab",
       action: "click",
-      sid: "ntab"
+      sid: "ntab",
     });
   } else {
     win.MOA.NTab.BrowserOpenTab.call(win, evt);
@@ -504,7 +501,7 @@ this.browserOpenTab = function(evt) {
     Tracking.track({
       type: "opentab",
       action: "click",
-      sid: "newtab"
+      sid: "newtab",
     });
   }
 };
@@ -530,5 +527,5 @@ this.NTabWindow = {
 
   onWindowClosed(win) {
     newTabPref.onWindowClosed(win);
-  }
+  },
 };

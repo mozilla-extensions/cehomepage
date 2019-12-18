@@ -2,47 +2,37 @@ this.EXPORTED_SYMBOLS = ["mozCNUtils"];
 
 const { manager: Cm } = Components;
 
-Cu.importGlobalProperties(["Blob"]);
-
 ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
-  "AddonManager": "resource://gre/modules/AddonManager.jsm", /* global AddonManager */
-  "BackgroundPageThumbs": "resource://gre/modules/BackgroundPageThumbs.jsm", /* global BackgroundPageThumbs */
-  "clearTimeout": "resource://gre/modules/Timer.jsm", /* global clearTimeout */
-  "CustomizableUI": "resource:///modules/CustomizableUI.jsm", /* global CustomizableUI */
-  "NewTabUtils": "resource://gre/modules/NewTabUtils.jsm", /* global NewTabUtils */
-  "OS": "resource://gre/modules/osfile.jsm", /* global OS */
-  "PageThumbs": "resource://gre/modules/PageThumbs.jsm", /* global PageThumbs */
-  "PlacesUtils": "resource://gre/modules/PlacesUtils.jsm", /* global PlacesUtils */
-  "Services": "resource://gre/modules/Services.jsm", /* global Services */
-  "setTimeout": "resource://gre/modules/Timer.jsm", /* global setTimeout */
-  "WebChannel": "resource://gre/modules/WebChannel.jsm" /* global WebChannel */
+  AddonManager: "resource://gre/modules/AddonManager.jsm",
+  BackgroundPageThumbs: "resource://gre/modules/BackgroundPageThumbs.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  NewTabUtils: "resource://gre/modules/NewTabUtils.jsm",
+  OS: "resource://gre/modules/osfile.jsm",
+  PageThumbs: "resource://gre/modules/PageThumbs.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  WebChannel: "resource://gre/modules/WebChannel.jsm",
 });
 
 XPCOMUtils.defineLazyGetter(this, "gMM", () => {
   return Cc["@mozilla.org/globalmessagemanager;1"].
     getService(Ci.nsIMessageListenerManager || Ci.nsISupports);
 });
-XPCOMUtils.defineLazyGetter(this, "generateQI", () => {
-  // ChromeUtils one introduced in Fx 61, mandatory in https://bugzil.la/1484466
-  return XPCOMUtils.generateQI ?
-    XPCOMUtils.generateQI.bind(XPCOMUtils) :
-    ChromeUtils.generateQI.bind(ChromeUtils);
-});
 
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  "AboutCEhome": "resource://ntab/AboutCEhome.jsm", /* global AboutCEhome */
-  "delayedSuggestBaidu": "resource://ntab/mozCNUtils.jsm", /* global delayedSuggestBaidu */
-  "Frequent": "resource://ntab/mozCNUtils.jsm", /* global Frequent */
-  "getPref": "resource://ntab/mozCNUtils.jsm", /* global getPref */
-  "Homepage": "resource://ntab/mozCNUtils.jsm", /* global Homepage */
-  "NTabDB": "resource://ntab/NTabDB.jsm", /* global NTabDB */
-  "NTabWindow": "resource://ntab/NTabWindow.jsm", /* global NTabWindow */
-  "QuickDialData": "resource://ntab/QuickDialData.jsm", /* global QuickDialData */
-  "Session": "resource://ntab/mozCNUtils.jsm", /* global Session */
-  "Tracking": "resource://ntab/Tracking.jsm" /* global Tracking */
+  AboutCEhome: "resource://ntab/AboutCEhome.jsm",
+  delayedSuggestBaidu: "resource://ntab/mozCNUtils.jsm",
+  Frequent: "resource://ntab/mozCNUtils.jsm",
+  getPref: "resource://ntab/mozCNUtils.jsm",
+  Homepage: "resource://ntab/mozCNUtils.jsm",
+  NTabDB: "resource://ntab/NTabDB.jsm",
+  NTabWindow: "resource://ntab/NTabWindow.jsm",
+  QuickDialData: "resource://ntab/QuickDialData.jsm",
+  Session: "resource://ntab/mozCNUtils.jsm",
+  Tracking: "resource://ntab/Tracking.jsm",
 });
 
 this.strings = {
@@ -63,7 +53,7 @@ this.strings = {
 
     let cloneScope = this._ctx.cloneScope;
     return this._ctx.extension.localizeMessage(name, subs, {cloneScope});
-  }
+  },
 };
 
 this.searchEngines = {
@@ -86,26 +76,20 @@ this.searchEngines = {
       action: aAction,
       sid: aKey,
       fid: isExpected,
-      href
+      href,
     });
   },
 
   init() {
     let detect = () => {
-      // See https://bugzil.la/1237648,1493483
       let current = Services.search.defaultEngine,
           baidu = Services.search.getEngineByName("\u767e\u5ea6");
       this.reportUnexpected("current", "detect", current, true);
       this.reportUnexpected("baidu", "detect", baidu, true);
     };
 
-    // Since Fx 67, see https://bugzil.la/1524593
-    if (Ci.nsISearchService) {
-      Services.search.init().then(detect);
-    } else {
-      Services.search.init(detect);
-    }
-  }
+    Services.search.init().then(detect);
+  },
 };
 
 this.morePermissionPromptHack = {
@@ -165,7 +149,7 @@ this.morePermissionPromptHack = {
     }
 
     Services.obs.removeObserver(this, this.topic);
-  }
+  },
 };
 
 this.newtabMigration = {
@@ -197,6 +181,7 @@ this.newtabMigration = {
       searchTN = (new URL(newtabUrl)).searchParams.get("tn") || "notset";
     } catch (ex) {
       Cu.reportError(ex);
+      return searchTN;
     }
     delete this.searchTN;
     return this.searchTN = searchTN;
@@ -216,7 +201,7 @@ this.newtabMigration = {
           type: "split-newtab",
           action: "advance",
           sid: `${newStatus}`,
-          fid: `${oldStatus}`
+          fid: `${oldStatus}`,
         });
       }
     } catch (ex) {
@@ -289,7 +274,7 @@ this.newtabMigration = {
     Services.prefs.setBoolPref(prefKey, true);
 
     let install = await AddonManager.getInstallForURL(this.otherExtUrl, {
-      telemetryInfo: { source: this.extId }
+      telemetryInfo: { source: this.extId },
     });
 
     // Mostly from /browser/components/enterprisepolicies/Policies.jsm
@@ -324,7 +309,7 @@ this.newtabMigration = {
       },
       onInstallFailed: () => {
         install.removeListener(listener);
-      }
+      },
     };
     install.addListener(listener);
     install.install();
@@ -336,7 +321,7 @@ this.newtabMigration = {
         type: "split-newtab",
         action: "migrate",
         sid: `${this.status}`, // Number 0 is a falsy value
-        fid: `${Services.appinfo.version}-${this.searchTN}`
+        fid: `${Services.appinfo.version}-${this.searchTN}`,
       });
     } catch (ex) {
       Cu.reportError(ex);
@@ -351,7 +336,7 @@ this.newtabMigration = {
       dialContent,
       "dial.hideSearch": hideSearch,
       "search.engine": searchEngine,
-      view
+      view,
     } = JSON.parse(data.state);
 
     this.migrateDials(dialContent);
@@ -401,14 +386,14 @@ this.newtabMigration = {
       default:
         break;
     }
-  }
+  },
 };
 
 this.mozCNUtils = {
   factories: new Map(),
 
-  QueryInterface: generateQI([Ci.nsIObserver,
-                              Ci.nsIMessageListener]),
+  QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
+                                          Ci.nsIMessageListener]),
 
   // nsIObserver
   observe(aSubject, aTopic, aData) {
@@ -422,7 +407,7 @@ this.mozCNUtils = {
   },
 
   frameScripts: [
-    "resource://ntab/ntabContent.js"
+    "resource://ntab/ntabContent.js",
   ],
   initFrameScripts() {
     this.frameScripts.forEach(frameScript => {
@@ -442,7 +427,7 @@ this.mozCNUtils = {
     if (![
       NTabDB.prePath,
       "http://i.g-fox.cn",
-      "https://home.firefoxchina.cn"
+      "https://home.firefoxchina.cn",
     ].includes(channel.URI.prePath) ||
         !(channel.loadFlags & Ci.nsIChannel.LOAD_DOCUMENT_URI)) {
       return;
@@ -454,7 +439,7 @@ this.mozCNUtils = {
         sid: channel.responseStatus,
         action: aTopic,
         href: channel.URI.spec,
-        altBase: "http://robust.g-fox.cn/ntab.gif"
+        altBase: "http://robust.g-fox.cn/ntab.gif",
       });
     }
   },
@@ -479,7 +464,7 @@ this.mozCNUtils = {
             aMessage.target.messageManager.sendAsyncMessage(aMessage.name, {
               type: aMessage.data.type,
               data: (this.shellService &&
-                     this.shellService.isDefaultBrowser(false, false))
+                     this.shellService.isDefaultBrowser(false, false)),
             });
             break;
           case "setFxAsDefaultBrowser":
@@ -508,7 +493,7 @@ this.mozCNUtils = {
   MESSAGES: [
     "mozCNUtils:NTabSync",
     "mozCNUtils:Tracking",
-    "mozCNUtils:WebChannel"
+    "mozCNUtils:WebChannel",
   ],
   initMessageListener() {
     for (let msg of this.MESSAGES) {
@@ -657,7 +642,6 @@ this.mozCNUtils = {
     mozCNWebChannels.uninit();
     morePermissionPromptHack.uninit(isAppShutdown);
     newtabMigration.uninit(isAppShutdown);
-    NTabDB.uninit();
     NTabWindow.uninit();
 
     for (let jsModule of [
@@ -674,7 +658,7 @@ this.mozCNUtils = {
         Cu.reportError(ex);
       }
     }
-  }
+  },
 };
 
 this.mozCNWebChannel = function(aChannelID, aURI, aListener) {
@@ -689,7 +673,7 @@ this.mozCNWebChannel.prototype = {
           this.channel.send({
             id: aMessage.id,
             key: aMessage.key,
-            data: aEntries
+            data: aEntries,
           }, aSender);
         }, aMessage.parameters.limit);
         break;
@@ -697,7 +681,7 @@ this.mozCNWebChannel.prototype = {
         Frequent.remove(() => {
           this.channel.send({
             id: aMessage.id,
-            key: aMessage.key
+            key: aMessage.key,
           }, aSender);
         }, [aMessage.parameters.url]);
         break;
@@ -706,7 +690,7 @@ this.mozCNWebChannel.prototype = {
           this.channel.send({
             id: aMessage.id,
             key: aMessage.key,
-            data: aEntries
+            data: aEntries,
           }, aSender);
         }, aMessage.parameters.hosts);
         break;
@@ -715,7 +699,7 @@ this.mozCNWebChannel.prototype = {
           this.channel.send({
             id: aMessage.id,
             key: aMessage.key,
-            data: aEntries
+            data: aEntries,
           }, aSender);
         }, aMessage.parameters.limit);
         break;
@@ -723,7 +707,7 @@ this.mozCNWebChannel.prototype = {
         Session.remove(() => {
           this.channel.send({
             id: aMessage.id,
-            key: aMessage.key
+            key: aMessage.key,
           }, aSender);
         }, [aMessage.parameters.url]);
         break;
@@ -731,7 +715,7 @@ this.mozCNWebChannel.prototype = {
         this.channel.send({
           id: aMessage.id,
           key: aMessage.key,
-          data: getPref("app.chinaedition.channel", "www.firefox.com.cn")
+          data: getPref("app.chinaedition.channel", "www.firefox.com.cn"),
         }, aSender);
         break;
     }
@@ -760,7 +744,7 @@ WHERE
             row => {
               links.push({
                 title: row.getResultByName("title"),
-                url: row.getResultByName("url")
+                url: row.getResultByName("url"),
               });
             }
           );
@@ -768,14 +752,14 @@ WHERE
           self.channel.send({
             id: aMessage.id,
             key: aMessage.key,
-            data: links
+            data: links,
           }, aSender);
         }, ex => {
           Cu.reportError(ex);
           self.channel.send({
             id: aMessage.id,
             key: aMessage.key,
-            data: []
+            data: [],
           }, aSender);
         });
         break;
@@ -790,37 +774,37 @@ WHERE
             let path = PageThumbs.getThumbnailPath(url);
             OS.File.read(path).then(aData => {
               let blob = new Blob([aData], {
-                type: PageThumbs.contentType
+                type: PageThumbs.contentType,
               });
               self.channel.send({
                 id: aMessage.id,
                 key: aMessage.key,
                 data: {
                   url,
-                  blob
-                }
+                  blob,
+                },
               }, aSender);
             }, aError => {
               self.channel.send({
                 id: aMessage.id,
                 key: aMessage.key,
                 data: {
-                  url
-                }
+                  url,
+                },
               }, aSender);
             });
-          }
+          },
         });
         break;
       case "variant.channel":
         this.channel.send({
           id: aMessage.id,
           key: aMessage.key,
-          data: QuickDialData.variant
+          data: QuickDialData.variant,
         }, aSender);
         break;
     }
-  }
+  },
 };
 
 this.mozCNWebChannels = {
@@ -832,7 +816,7 @@ this.mozCNWebChannels = {
     "http://newtab.firefoxchina.cn/": "",
     "https://newtab.firefoxchina.cn/": "",
     "http://offlintab.firefoxchina.cn/": "offlintabListener",
-    "https://offlintab.firefoxchina.cn/": "offlintabListener"
+    "https://offlintab.firefoxchina.cn/": "offlintabListener",
   },
   webChannels: [],
   init() {
@@ -849,5 +833,5 @@ this.mozCNWebChannels = {
       webChan.channel.stopListening();
     }
     gMM.removeDelayedFrameScript(this.contentURL);
-  }
+  },
 };

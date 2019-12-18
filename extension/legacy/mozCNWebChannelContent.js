@@ -10,7 +10,7 @@ let mozCNWebChannelContent = {
     "https://i.firefoxchina.cn/",
     "http://newtab.firefoxchina.cn/",
     "https://newtab.firefoxchina.cn/",
-    NTabDB.spec
+    NTabDB.spec,
   ],
   channelID: "moz_cn_channel_v2",
   messageName: "mozCNUtils:WebChannel",
@@ -78,17 +78,17 @@ let mozCNWebChannelContent = {
         let { button } = aEvt.detail.elements;
         button.addEventListener("click", () => {
           sendAsyncMessage(self.messageName, {
-            type: "setFxAsDefaultBrowser"
+            type: "setFxAsDefaultBrowser",
           });
           button.setAttribute("hidden", "true");
         }, false, /** wantsUntrusted */false);
         button.removeAttribute("hidden");
-      }
+      },
     };
     addMessageListener(this.messageName, listener);
     sendAsyncMessage(this.messageName, {
-      type: messageType
+      type: messageType,
     });
-  }
+  },
 };
 mozCNWebChannelContent.init();

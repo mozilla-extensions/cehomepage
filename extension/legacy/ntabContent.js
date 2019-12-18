@@ -38,7 +38,7 @@ let NTab = {
         sendAsyncMessage(messageName, aEvt.detail.data);
       }
     }, true, true);
-  }
+  },
 };
 
 Services.obs.addObserver(NTab, "content-document-global-created");

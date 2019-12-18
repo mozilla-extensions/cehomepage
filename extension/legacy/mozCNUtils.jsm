@@ -1,20 +1,17 @@
 this.EXPORTED_SYMBOLS = [
-  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session"
+  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session",
 ];
 
 ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
-  "AddonManager": "resource://gre/modules/AddonManager.jsm", /* global AddonManager */
-  "clearTimeout": "resource://gre/modules/Timer.jsm", /* global clearTimeout */
-  "PlacesUtils": "resource://gre/modules/PlacesUtils.jsm", /* global PlacesUtils */
-  "Preferences": "resource://gre/modules/Preferences.jsm", /* global Preferences */
-  "Services": "resource://gre/modules/Services.jsm", /* global Services */
-  "setTimeout": "resource://gre/modules/Timer.jsm", /* global setTimeout */
-  "Tracking": "resource://ntab/Tracking.jsm" /* global Tracking */
+  clearTimeout: "resource://gre/modules/Timer.jsm",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Preferences: "resource://gre/modules/Preferences.jsm",
+  Services: "resource://gre/modules/Services.jsm",
+  setTimeout: "resource://gre/modules/Timer.jsm",
+  Tracking: "resource://ntab/Tracking.jsm",
 });
-XPCOMUtils.defineLazyServiceGetter(this, "sessionStore",
-  "@mozilla.org/browser/sessionstore;1", "nsISessionStore");
 
 var delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
@@ -134,19 +131,19 @@ var delayedSuggestBaidu = {
         accessKey: "Y",
         callback() {
           self.searchAndSwitchEngine(aBrowser, keyword);
-        }
+        },
       }, {
         label: negative,
         accessKey: "N",
         callback() {
           self.markNomore();
-        }
+        },
       }]);
     notificationBar.persistence = 1;
     Tracking.track({
       type: "delayedsuggestbaidu",
       action: "notify",
-      sid: "dummy"
+      sid: "dummy",
     });
   },
 
@@ -160,7 +157,6 @@ var delayedSuggestBaidu = {
       (w.openWebLinkIn || w.openUILinkIn)(this.baidu.searchForm, "current");
     }
 
-    // See https://bugzil.la/1237648,1493483
     if (Services.search.defaultEngine.name == "Google") {
       this.baidu.hidden = false;
       Services.search.defaultEngine = this.baidu;
@@ -168,14 +164,14 @@ var delayedSuggestBaidu = {
       Tracking.track({
         type: "delayedsuggestbaidu",
         action: "click",
-        sid: "switch"
+        sid: "switch",
       });
     }
 
     Tracking.track({
       type: "delayedsuggestbaidu",
       action: "click",
-      sid: "search"
+      sid: "search",
     });
   },
 
@@ -187,9 +183,9 @@ var delayedSuggestBaidu = {
     Tracking.track({
       type: "delayedsuggestbaidu",
       action: "click",
-      sid: "nomore"
+      sid: "nomore",
     });
-  }
+  },
 };
 
 var Frequent = {
@@ -199,7 +195,7 @@ var Frequent = {
     /^https?:\/\/[a-z]+.firefoxchina.cn\/redirect\/adblock/,
     /^https?:\/\/[a-z]+.firefoxchina.cn\/(redirect\/)?search/,
     /^http:\/\/i.g-fox.cn\/(rd|search)/,
-    /^http:\/\/www5.1616.net\/q/
+    /^http:\/\/www5.1616.net\/q/,
   ],
   needsDeduplication: false,
   order: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING,
@@ -245,21 +241,12 @@ var Frequent = {
 
       handleCompletion(aReason) {
         aCallback(links);
-      }
+      },
     };
 
     let query = PlacesUtils.history.getNewQuery();
     let db = PlacesUtils.history;
-    // Fx 62, https://bugzil.la/1458910
-    if (Ci.nsPIPlacesDatabase) {
-      db = db.QueryInterface(Ci.nsPIPlacesDatabase);
-    }
-    // Fx 61, https://bugzil.la/1446951
-    if (db.asyncExecuteLegacyQuery) {
-      db.asyncExecuteLegacyQuery(query, options, callback);
-    } else {
-      db.asyncExecuteLegacyQueries([query], 1, options, callback);
-    }
+    db.asyncExecuteLegacyQuery(query, options, callback);
   },
 
   remove(aCallback, aUrls) {
@@ -285,13 +272,13 @@ var Frequent = {
         aHosts.map((host, idx) => {
           return {
             idx,
-            rev_host: (host.split("").reverse().join("") + ".%")
+            rev_host: (host.split("").reverse().join("") + ".%"),
           };
         }),
         row => {
           let item = {
             idx: row.getResultByName("idx"),
-            count: row.getResultByName("count")
+            count: row.getResultByName("count"),
           };
           if (item.count < 1) {
             return;
@@ -313,12 +300,12 @@ var Frequent = {
       Cu.reportError(err);
       aCallback([]);
     });
-  }
+  },
 };
 
 var DefaultPreferences = new Preferences({
   branch: "",
-  defaultBranch: true
+  defaultBranch: true,
 });
 var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
   let prefs = useDefaultBranch ? DefaultPreferences : Preferences;
@@ -331,13 +318,13 @@ var Homepage = {
   distributionTopic: "distribution-customization-complete",
   historicalHomepages: [
     /^http:\/\/(home|e|n|i)\.firefoxchina\.cn\/?$/,
-    /^about:cehome$/
+    /^about:cehome$/,
   ],
   homepagePref: "browser.startup.homepage",
   originalHomepage: "",
   vanillaHomepages: [
     /^https?:\/\/start\.firefoxchina\.cn\/?$/,
-    /^about:home$/
+    /^about:home$/,
   ],
 
   init(isAppStartup) {
@@ -424,7 +411,7 @@ var Homepage = {
     Tracking.track({
       type: "homepage",
       action: "override",
-      sid: reason
+      sid: reason,
     });
   },
 
@@ -438,14 +425,14 @@ var Homepage = {
       // so that this.defaultHomepage can be saved on user branch
       this.setAsDefault(this.originalHomepage);
     }
-  }
+  },
 };
 
 var Session = Object.create(Frequent, {
   needsDeduplication: {
-    value: true
+    value: true,
   },
   order: {
-    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING
-  }
+    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING,
+  },
 });

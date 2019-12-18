@@ -8,7 +8,7 @@
     "https://ai.taobao.com/?pid=mm_28347190_2425761_17624777": "taobao:legacy",
     "https://c.duomai.com/track.php?k=nJ9QWa1VmJxYTPklWYmcDOykzMx0DZp9VZ0l2cmYiJt92YuQmauc3d3ZkMlYkMlE0MlMHc0RHa9Q": "jd:union",
     "https://www.ctrip.com/?AllianceID=263200&sid=1851274&ouid=&app=0101F00": "ctrip:home",
-    "http://www.hao123.com/?tn=12092018_12_hao_pg": "hao123:home"
+    "http://www.hao123.com/?tn=12092018_12_hao_pg": "hao123:home",
   };
 
   class PartnerBookmarks {
@@ -79,12 +79,12 @@
 
       console.log(`Create bookmark for keyword: ${keyword}`);
       let newBookmark = await browser.bookmarks.create({
-        index: Math.min(4, bookmarksOnToolbar.length), parentId, title: item.title, url: item.uri
+        index: Math.min(4, bookmarksOnToolbar.length), parentId, title: item.title, url: item.uri,
       });
       browser.mozillaonline.chinaEditionHomepage.setFaviconForUrl(item.uri, item.faviconUrl);
       return browser.storage.local.set({
         [this.additionKey]: item.addUntil,
-        [this.normalize(item.keyword)]: newBookmark.id
+        [this.normalize(item.keyword)]: newBookmark.id,
       });
     }
 
@@ -149,7 +149,7 @@
           if (!item.uri) {
             return Promise.all([
               browser.bookmarks.remove(id).catch(logError),
-              browser.storage.local.remove(normalizedKeyword)
+              browser.storage.local.remove(normalizedKeyword),
             ]);
           }
 
@@ -167,7 +167,7 @@
           return Promise.all([
             browser.bookmarks.update(id, changes).catch(logError),
             browser.storage.local.set({[this.normalize(item.keyword)]: id}),
-            browser.storage.local.remove(normalizedKeyword)
+            browser.storage.local.remove(normalizedKeyword),
           ]);
         }));
 

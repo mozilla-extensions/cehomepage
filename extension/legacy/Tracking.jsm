@@ -1,6 +1,5 @@
 var EXPORTED_SYMBOLS = ["Tracking"];
 
-Cu.importGlobalProperties(["XMLHttpRequest"]);
 ChromeUtils.defineModuleGetter(this, "Services",
   "resource://gre/modules/Services.jsm");
 
@@ -50,7 +49,7 @@ let Tracking = {
       sid: "",
       href: "",
       title: "",
-      altBase: ""
+      altBase: "",
     });
 
     let args = [];
@@ -89,5 +88,5 @@ let Tracking = {
     let xhr = new XMLHttpRequest();
     xhr.open("GET", ((option.altBase || url) + "?" + args.join("&")), true);
     xhr.send();
-  }
+  },
 };

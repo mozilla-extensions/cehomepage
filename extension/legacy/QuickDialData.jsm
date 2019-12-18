@@ -10,7 +10,7 @@ let QuickDialData = {
 
     delete this.variant;
     return this.variant = {
-      "firefox.xbsafe.jiangxi-telecom": "jxtel"
+      "firefox.xbsafe.jiangxi-telecom": "jxtel",
     }[channel] || "master-ii";
-  }
+  },
 };

@@ -8,8 +8,8 @@
 ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
-  "PlacesUtils": "resource://gre/modules/PlacesUtils.jsm", /* global PlacesUtils */
-  "Services": "resource://gre/modules/Services.jsm" /* global Services */
+  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+  Services: "resource://gre/modules/Services.jsm",
 });
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
   "@mozilla.org/network/protocol;1?name=resource",
@@ -34,11 +34,8 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
     }
   }
 
-  onShutdown(isAppShutdownOrReason) {
+  onShutdown(isAppShutdown) {
     try {
-      // Boolean isAppShutdown since Fx 68, https://bugzil.la/1549192
-      let isAppShutdown = isAppShutdownOrReason === true ||
-                          isAppShutdownOrReason === "APP_SHUTDOWN";
       this.mozCNUtils.uninit(isAppShutdown);
       Cu.unload("resource://ntab/CEHomepage.jsm");
 
@@ -49,8 +46,7 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
   }
 
   flushCacheOnUpgrade(extension) {
-    if (extension.startupReason !== "ADDON_UPGRADE" ||
-        Services.vc.compare(Services.appinfo.version, "67.0") < 0) {
+    if (extension.startupReason !== "ADDON_UPGRADE") {
       return;
     }
 
@@ -115,7 +111,7 @@ WHERE
 
           async setFaviconForUrl(url, faviconUrl) {
             return chinaEditionHomepage.setFaviconForUrl(url, faviconUrl);
-          }
+          },
         },
       },
     };

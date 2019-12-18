@@ -28,35 +28,6 @@ class NTabDBInternal {
     Object.defineProperty(this, "principal", { value });
     return this.principal;
   }
-
-  get localStorage() {
-    this.storageManager.precacheStorage(this.principal);
-    let value = this.storageManager.getStorage(null, this.principal);
-    Object.defineProperty(this, "localStorage", { value });
-    return this.localStorage;
-  }
-
-  get storageManager() {
-    Object.defineProperty(this, "storageManager", {
-      value: Services.domStorageManager
-    });
-    return this.storageManager;
-  }
-
-  exportFromLocalStorage() {
-    let dataMap = new Map();
-    for (let i = 0, l = this.localStorage.length; i < l; i++) {
-      let key = this.localStorage.key(i);
-      dataMap.set(key, this.localStorage.getItem(key));
-    }
-    return dataMap;
-  }
-
-  importIntoLocalStorage(dataMap) {
-    for (let [aKey, aValue] of dataMap) {
-      this.localStorage.setItem(aKey, aValue);
-    }
-  }
 }
 
 let insecureNTabDB = new NTabDBInternal("http://offlintab.firefoxchina.cn");
@@ -107,7 +78,7 @@ let NTabDB = {
     let extraPrincipals = [];
     [
       "http://newtab.firefoxchina.cn/",
-      "https://newtab.firefoxchina.cn/"
+      "https://newtab.firefoxchina.cn/",
     ].forEach(aSpec => {
       let uri = Services.io.newURI(aSpec);
       // Since Fx 70, https://bugzil.la/1560455
@@ -121,34 +92,11 @@ let NTabDB = {
     return this.extraPrincipals = extraPrincipals;
   },
 
-  _backupAndRestoreLocalStorage() {
-    // LSNG enabled since Fx 68: https://bugzil.la/1539835
-    // Unable to update NTabDBInternal.localStorage to work with it yet
-    if (Services.lsm && Services.lsm.nextGenLocalStorageEnabled) {
-      return;
-    }
-
-    let dataMap = this._internalDB.exportFromLocalStorage();
-
-    // Trigger the import asynchronously, after nsIDOMStorageManager's observe
-    Services.tm.mainThread.dispatch(() => {
-      this._internalDB.importIntoLocalStorage(dataMap);
-    }, Ci.nsIThread.DISPATCH_NORMAL);
-  },
-
-  _initKeepLocalStorageOnClearingCookie() {
-    Services.obs.addObserver(this, "cookie-changed");
-  },
-
-  _uninitKeepLocalStorageOnClearingCookie() {
-    Services.obs.removeObserver(this, "cookie-changed");
-  },
-
   _addPermission(aPrincipal) {
     let principal = aPrincipal || this._internalDB.principal;
     [
       Ci.nsIPermissionManager.ALLOW_ACTION,
-      Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN
+      Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN,
     ].forEach(aPerm => {
       Services.perms.addFromPrincipal(principal, "offline-app", aPerm);
     });
@@ -163,26 +111,5 @@ let NTabDB = {
   init() {
     this._addPermission();
     this._addExtraPermission();
-    this._initKeepLocalStorageOnClearingCookie();
   },
-
-  uninit() {
-    this._uninitKeepLocalStorageOnClearingCookie();
-  },
-
-  /**
-   * nsIDOMStorageManager will asynchronously clear the data on receiving
-   * the notifications, so we have the chance to back them up here.
-   */
-  observe(aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "cookie-changed":
-        if (aData !== "cleared") {
-          break;
-        }
-
-        this._backupAndRestoreLocalStorage();
-        break;
-    }
-  }
 };
