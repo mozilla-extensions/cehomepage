@@ -173,7 +173,7 @@ this.newtabMigration = {
   extId: "",
   otherExtId: "china-newtab@mozillaonline.com",
   otherExtPref: "extensions.chinaNewtab.prefVersion",
-  otherExtUrl: "https://download-ssl.firefox.com.cn/chinaedition/addons/china-newtab/china-newtab-latest.xpi",
+  otherExtUrl: "https://download-ssl.firefox.com.cn/chinaedition/addons/china-newtab/china-newtab-latest.xpi?cachebust=20191219",
 
   STATUS_BLOCKED: 0,
   STATUS_COMPAT: 1,
@@ -257,10 +257,9 @@ this.newtabMigration = {
         return;
       }
     }
-    // Or newtab search will be using `monline_4_dg`.
-    // We'll have to override this somehow, if there're enough users blocked.
+    // Skip non-official search codes, for now.
     await Services.search.init();
-    if (!["monline_3_dg", "monline_7_dg"].includes(this.searchTN)) {
+    if (!/monline_[347]_dg/.test(this.searchTN)) {
       return;
     }
 
@@ -306,6 +305,12 @@ this.newtabMigration = {
           install.cancel();
         }
         if (install.addon && install.addon.appDisabled) {
+          install.removeListener(listener);
+          install.cancel();
+        }
+        if (this.searchTN === "monline_4_dg" &&
+            install.addon &&
+            Services.vc.compare(install.addon.version, "4.71") < 0) {
           install.removeListener(listener);
           install.cancel();
         }
