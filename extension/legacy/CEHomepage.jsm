@@ -220,7 +220,7 @@ this.newtabMigration = {
       return;
     }
 
-    if (Services.vc.compare(Services.appinfo.version, "70.0") < 0) {
+    if (Services.vc.compare(Services.appinfo.version, "68.0") < 0) {
       return;
     }
     // Don't override existing customizations, at least initially.
