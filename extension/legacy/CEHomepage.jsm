@@ -353,11 +353,14 @@ this.newtabMigration = {
     for (let key of keys) {
       let dial = dials[key];
 
-      pinned[parseInt(key, 10) - 1] = {
-        customScreenshotURL: `${this.thumbnailBase}${dial.thumbnail}`,
+      let item = {
         label: dial.title,
         url: dial.url,
       };
+      if (dial.thumbnail) {
+        item.customScreenshotURL = `${this.thumbnailBase}${dial.thumbnail}`;
+      }
+      pinned[parseInt(key, 10) - 1] = item;
     }
     Services.prefs.setStringPref(this.dialPref, JSON.stringify(pinned));
 
