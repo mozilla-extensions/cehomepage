@@ -5,6 +5,7 @@ ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
 XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
   "@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService");
 XPCOMUtils.defineLazyModuleGetters(this, {
+  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
   NTabDB: "resource://ntab/NTabDB.jsm",
   PREFERENCES_LOADED_EVENT: "resource://activity-stream/lib/AboutPreferences.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
@@ -353,7 +354,14 @@ this.newTabPref = {
       * reset the new tab url to make sure about:privatebrowsing will be
       * opened in (non-permanent) pb mode.
       */
-    if (this.inUse) {
+    // Since Fx 76, see https://bugzil.la/1619992
+    if (AboutNewTab.hasOwnProperty("newTabURL")) {
+      if (this.inUse) {
+        AboutNewTab.newTabURL = NTabDB.spec;
+      } else if (AboutNewTab.newTabURL === NTabDB.spec) {
+        AboutNewTab.resetNewTabURL();
+      }
+    } else if (this.inUse) {
       aboutNewTabService.newTabURL = NTabDB.spec;
     } else if (aboutNewTabService.newTabURL === NTabDB.spec) {
       aboutNewTabService.resetNewTabURL();
