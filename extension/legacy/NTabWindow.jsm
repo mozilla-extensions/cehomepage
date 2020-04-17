@@ -490,7 +490,12 @@ this.browserOpenTab = function(evt) {
 
     // focus automatically for cases not covered by openUILinkIn
     if (!win.isBlankPageURL(spec)) {
-      win.focusAndSelectUrlBar();
+      // Removed in Fx 76, see https://bugzil.la/1362866,1610479
+      if (win.focusAndSelectUrlBar) {
+        win.focusAndSelectUrlBar();
+      } else {
+        win.gURLBar.select();
+      }
     }
 
     if (PrivateBrowsingUtils.isWindowPrivate(win) &&
