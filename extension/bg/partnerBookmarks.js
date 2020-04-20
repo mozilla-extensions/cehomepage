@@ -1,7 +1,7 @@
 (function() {
   // this needs to be kept up to date with distribution.ini
   const distBookmarks = {
-    "https://cps.youmai.com/track.php?k=Ddm0DZpVXZmITNzITPklWYmcDNz0DZp9VZ0l2cmYiRyUSbvNmLkpmL3d3dGJTJGJTJBNTJwRHdo1": "toolbar:jd",
+    "https://c.duomai.com/track.php?k=hlWc1h2c9QWa1VmJxYTPklWYmcDNz0DZp9VZ0l2cmYSbvNmLkpmL3d3dGJTJGJTJBNTJzBHd0hWP0Zib": "toolbar:jd",
     "https://www.baidu.com/index.php?tn=monline_3_dg": "baidu:home",
     "https://www.ifeng.com/?source=mozilla": "ifeng:home",
     "https://weibo.com/?source=mozilla": "weibo:home",
