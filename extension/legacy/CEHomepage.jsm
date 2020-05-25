@@ -121,7 +121,7 @@ this.newtabMigration = {
   extId: "",
   otherExtId: "china-newtab@mozillaonline.com",
   otherExtPref: "extensions.chinaNewtab.prefVersion",
-  otherExtUrl: "https://download-ssl.firefox.com.cn/chinaedition/addons/china-newtab/china-newtab-latest.xpi?cachebust=20191219",
+  otherExtUrl: "https://download-ssl.firefox.com.cn/chinaedition/addons/china-newtab/china-newtab-latest.xpi?cachebust=20200616",
 
   STATUS_BLOCKED: 0,
   STATUS_COMPAT: 1,
@@ -257,9 +257,8 @@ this.newtabMigration = {
           install.removeListener(listener);
           install.cancel();
         }
-        if (this.searchTN === "monline_4_dg" &&
-            install.addon &&
-            Services.vc.compare(install.addon.version, "4.71") < 0) {
+        if (install.addon &&
+            Services.vc.compare(install.addon.version, "4.77.4") < 0) {
           install.removeListener(listener);
           install.cancel();
         }
@@ -321,8 +320,9 @@ this.newtabMigration = {
         label: dial.title,
         url: dial.url,
       };
-      if (dial.thumbnail) {
-        item.customScreenshotURL = `${this.thumbnailBase}${dial.thumbnail}`;
+      let defaultPosition = parseInt(dial.defaultposition, 10) - 1;
+      if (dial.thumbnail && !isNaN(defaultPosition)) {
+        item.customScreenshotURL = `${this.thumbnailBase}${dial.thumbnail}?mococn_dp=${defaultPosition}`;
       }
       pinned[parseInt(key, 10) - 1] = item;
     }
