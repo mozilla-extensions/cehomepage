@@ -56,42 +56,6 @@ this.strings = {
   },
 };
 
-this.searchEngines = {
-  expected: /^https?:\/\/www\.baidu\.com\/baidu\?wd=TEST&tn=monline(?:_|_4_|_7_)dg(?:&ie=utf-8)?$/,
-
-  reportUnexpected(aKey, aAction, aEngine, aIncludeURL) {
-    let url = "NA";
-    try {
-      url = aEngine.getSubmission("TEST").uri.asciiSpec;
-    } catch (e) {}
-
-    let isExpected = this.expected.test(url);
-    let href = "";
-    if (!isExpected && !!aIncludeURL) {
-      href = url;
-    }
-
-    Tracking.track({
-      type: "searchplugins",
-      action: aAction,
-      sid: aKey,
-      fid: isExpected,
-      href,
-    });
-  },
-
-  init() {
-    let detect = () => {
-      let current = Services.search.defaultEngine,
-          baidu = Services.search.getEngineByName("\u767e\u5ea6");
-      this.reportUnexpected("current", "detect", current, true);
-      this.reportUnexpected("baidu", "detect", baidu, true);
-    };
-
-    Services.search.init().then(detect);
-  },
-};
-
 this.morePermissionPromptHack = {
   extensionId: "",
   prefKey: "extensions.chinaEditionHomepage.pendingNextVersion",
@@ -625,7 +589,6 @@ this.mozCNUtils = {
     newtabMigration.init(context);
     NTabDB.init();
     NTabWindow.init(strings);
-    searchEngines.init();
 
     // this needs to run after NTabWindow.init for strings
     this.initWindowListener();
