@@ -1,6 +1,6 @@
 {
   "name": "cehomepage",
-  "version": "3.76.0",
+  "version": "3.78.0",
   "description": "Customizied Home Page for Firefox",
   "scripts": {
     "build": "npm-run-all clean build:web-ext build:finalize",
