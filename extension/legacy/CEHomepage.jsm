@@ -197,6 +197,10 @@ this.newtabMigration = {
             return true;
           }
 
+          if (dial.searchTopSite === true) {
+            return true;
+          }
+
           return (dial.customScreenshotURL || "").startsWith(thumbnailDir);
         })) {
           return;
