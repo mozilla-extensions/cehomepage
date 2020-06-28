@@ -23,7 +23,6 @@ XPCOMUtils.defineLazyGetter(this, "gMM", () => {
 
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutCEhome: "resource://ntab/AboutCEhome.jsm",
   delayedSuggestBaidu: "resource://ntab/mozCNUtils.jsm",
   Frequent: "resource://ntab/mozCNUtils.jsm",
   getPref: "resource://ntab/mozCNUtils.jsm",
@@ -361,8 +360,6 @@ this.newtabMigration = {
 };
 
 this.mozCNUtils = {
-  factories: new Map(),
-
   QueryInterface: ChromeUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsIMessageListener]),
 
@@ -515,32 +512,6 @@ this.mozCNUtils = {
     defBranch.setBoolPref("services.sync.engine.mozcn.ntab", false);
   },
 
-  initFactories() {
-    Cm.QueryInterface(Ci.nsIComponentRegistrar);
-
-    [AboutCEhome].forEach(targetConstructor => {
-      let proto = targetConstructor.prototype;
-      let factory = XPCOMUtils._getFactory(targetConstructor);
-      this.factories.set(proto.classID, factory);
-      Cm.registerFactory(proto.classID, proto.classDescription,
-                         proto.contractID, factory);
-
-      for (let xpcom_category of (proto._xpcom_categories || [])) {
-        XPCOMUtils.categoryManager.addCategoryEntry(xpcom_category.category,
-          (xpcom_category.entry || proto.classDescription),
-          (xpcom_category.value || proto.contractID),
-          false, true);
-      }
-    });
-  },
-
-  uninitFactories() {
-    for (let [classID, factory] of this.factories) {
-      Cm.unregisterFactory(classID, factory);
-    }
-    this.factories = new Map();
-  },
-
   initWindowListener() {
     for (let win of CustomizableUI.windows) {
       this.onWindowOpened(win);
@@ -583,7 +554,6 @@ this.mozCNUtils = {
     Services.obs.addObserver(this, "http-on-examine-merged-response");
 
     this.initDefaultPrefs();
-    this.initFactories();
     this.initFrameScripts();
     this.initMessageListener();
 
@@ -603,7 +573,6 @@ this.mozCNUtils = {
     Services.obs.removeObserver(this, "http-on-examine-cached-response");
     Services.obs.removeObserver(this, "http-on-examine-merged-response");
 
-    this.uninitFactories();
     this.uninitFrameScripts();
     this.uninitMessageListener();
     this.uninitWindowListener();
@@ -615,7 +584,6 @@ this.mozCNUtils = {
     NTabWindow.uninit();
 
     for (let jsModule of [
-      "AboutCEhome",
       "mozCNUtils",
       "NTabDB",
       "NTabWindow",
