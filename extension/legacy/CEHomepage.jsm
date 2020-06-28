@@ -1,7 +1,5 @@
 this.EXPORTED_SYMBOLS = ["mozCNUtils"];
 
-const { manager: Cm } = Components;
-
 ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
