@@ -373,97 +373,6 @@ this.newTabPref = {
   },
 };
 
-this.permanentPB = {
-  prefKey: "moa.permanent-pb.notify",
-  notificationKey: "mo-permanent-pb",
-
-  get shouldNotify() {
-    return Services.prefs.getBoolPref(this.prefKey, true);
-  },
-
-  set shouldNotify(aShouldNotify) {
-    try {
-      Services.prefs.setBoolPref(this.prefKey, !!aShouldNotify);
-    } catch (e) {}
-  },
-
-  notify(win) {
-    if (!this.shouldNotify) {
-      return;
-    }
-
-    var message = NTabWindow._("permanentPB.notification.message");
-    var yesText = NTabWindow._("permanentPB.notification.yes");
-    var moreText = NTabWindow._("permanentPB.notification.more");
-
-    var self = this;
-    var buttons = [{
-      label: yesText,
-      accessKey: "Y",
-      callback() {
-        self.shouldNotify = false;
-        Tracking.track({
-          type: "permanent-pb",
-          action: "click",
-          sid: "yes",
-        });
-
-        // Set pref etc. before we try to restart the browser.
-        self.disablePBAutoStart(win);
-      },
-    }, {
-      label: moreText,
-      accessKey: "M",
-      callback() {
-        win.openPreferences("panePrivacy");
-
-        self.shouldNotify = false;
-        Tracking.track({
-          type: "permanent-pb",
-          action: "click",
-          sid: "more",
-        });
-      },
-    }];
-
-    var notificationBox = win.gBrowser.getNotificationBox();
-    var notificationBar =
-      notificationBox.appendNotification(message, this.notificationKey,
-        "chrome://browser/skin/Privacy-16.png",
-        notificationBox.PRIORITY_INFO_MEDIUM, buttons);
-    // persist across the about:blank -> newTabPref.specForWindow(win) change
-    notificationBar.persistence = 1;
-
-    Tracking.track({
-      type: "permanent-pb",
-      action: "notify",
-      sid: "shown",
-    });
-  },
-
-  disablePBAutoStart(win) {
-    Services.prefs.setBoolPref("browser.privatebrowsing.autostart", false);
-
-    var brandName = win.document.getElementById("bundle_brand").
-      getString("brandShortName");
-    var msg = NTabWindow._("permanentPB.restart.message", [brandName]);
-    var title = NTabWindow._("permanentPB.restart.title", [brandName]);
-    var shouldProceed = Services.prompt.confirm(win, title, msg);
-    if (shouldProceed) {
-      var cancelQuit = Cc["@mozilla.org/supports-PRBool;1"].
-                          createInstance(Ci.nsISupportsPRBool);
-      Services.obs.notifyObservers(cancelQuit, "quit-application-requested",
-                                    "restart");
-      shouldProceed = !cancelQuit.data;
-
-      if (shouldProceed) {
-        Services.startup.quit(Ci.nsIAppStartup.eAttemptQuit |
-                              Ci.nsIAppStartup.eRestart);
-      }
-    }
-  },
-};
-
 this.browserOpenTab = function(evt) {
   let win = evt.target.ownerGlobal || this;
 
@@ -496,11 +405,6 @@ this.browserOpenTab = function(evt) {
       } else {
         win.gURLBar.select();
       }
-    }
-
-    if (PrivateBrowsingUtils.isWindowPrivate(win) &&
-        PrivateBrowsingUtils.permanentPrivateBrowsing) {
-      permanentPB.notify(win);
     }
 
     Tracking.track({

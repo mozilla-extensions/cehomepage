@@ -28,30 +28,5 @@
   },
   "homepageReset.notification.reset": {
     "message": "是"
-  },
-  "permanentPB.notification.message": {
-    "message": "您正处于永久隐私浏览模式，建议恢复为正常浏览模式，只在需要时使用隐私浏览窗口。是否恢复？"
-  },
-  "permanentPB.notification.more": {
-    "message": "了解详情"
-  },
-  "permanentPB.notification.yes": {
-    "message": "是"
-  },
-  "permanentPB.restart.message": {
-    "message": "$appname$ 必须重新启动才能禁用此功能。",
-    "placeholders": {
-      "appname": {
-        "content": "$1"
-      }
-    }
-  },
-  "permanentPB.restart.title": {
-    "message": "重新启动 $appname$",
-    "placeholders": {
-      "appname": {
-        "content": "$1"
-      }
-    }
   }
 }

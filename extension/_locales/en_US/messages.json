@@ -28,30 +28,5 @@
   },
   "homepageReset.notification.reset": {
     "message": "Reset"
-  },
-  "permanentPB.notification.message": {
-    "message": "You may be accidentally using permanent private browsing mode, do you want Firefox to remember your browsing history? Separate private browsing window is always available if necessary."
-  },
-  "permanentPB.notification.more": {
-    "message": "Learn More"
-  },
-  "permanentPB.notification.yes": {
-    "message": "Yes"
-  },
-  "permanentPB.restart.message": {
-    "message": "$appname$ must restart to disable this feature.",
-    "placeholders": {
-      "appname": {
-        "content": "$1"
-      }
-    }
-  },
-  "permanentPB.restart.title": {
-    "message": "Restart $appname$",
-    "placeholders": {
-      "appname": {
-        "content": "$1"
-      }
-    }
   }
 }
