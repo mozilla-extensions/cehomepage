@@ -1,6 +1,6 @@
 /* eslint-env mozilla/frame-script */
 
-/* global Services */
+const { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 ChromeUtils.defineModuleGetter(this, "NTabDB",
   "resource://ntab/NTabDB.jsm");
 
