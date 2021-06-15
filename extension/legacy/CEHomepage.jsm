@@ -559,7 +559,6 @@ this.mozCNUtils = {
     Homepage.init(isAppStartup);
     mozCNWebChannels.init();
     newtabMigration.init(context);
-    NTabDB.init();
     NTabWindow.init(strings);
 
     // this needs to run after NTabWindow.init for strings

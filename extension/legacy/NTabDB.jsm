@@ -19,15 +19,6 @@ class NTabDBInternal {
     Object.defineProperty(this, "uri", { value });
     return this.uri;
   }
-
-  get principal() {
-    // Since Fx 70, https://bugzil.la/1560455
-    let value = Services.scriptSecurityManager.createContentPrincipal ?
-      Services.scriptSecurityManager.createContentPrincipal(this.uri, {}) :
-      Services.scriptSecurityManager.createCodebasePrincipal(this.uri, {});
-    Object.defineProperty(this, "principal", { value });
-    return this.principal;
-  }
 }
 
 let insecureNTabDB = new NTabDBInternal("http://offlintab.firefoxchina.cn");
@@ -73,43 +64,5 @@ let NTabDB = {
   get uri() {
     delete this.uri;
     return this.uri = this._internalDB.uri;
-  },
-  get extraPrincipals() {
-    let extraPrincipals = [];
-    [
-      "http://newtab.firefoxchina.cn/",
-      "https://newtab.firefoxchina.cn/",
-    ].forEach(aSpec => {
-      let uri = Services.io.newURI(aSpec);
-      // Since Fx 70, https://bugzil.la/1560455
-      let principal = Services.scriptSecurityManager.createContentPrincipal ?
-      Services.scriptSecurityManager.createContentPrincipal(uri, {}) :
-      Services.scriptSecurityManager.createCodebasePrincipal(uri, {});
-
-      extraPrincipals.push(principal);
-    });
-    delete this.extraPrincipals;
-    return this.extraPrincipals = extraPrincipals;
-  },
-
-  _addPermission(aPrincipal) {
-    let principal = aPrincipal || this._internalDB.principal;
-    [
-      Ci.nsIPermissionManager.ALLOW_ACTION,
-      Ci.nsIOfflineCacheUpdateService.ALLOW_NO_WARN,
-    ].forEach(aPerm => {
-      Services.perms.addFromPrincipal(principal, "offline-app", aPerm);
-    });
-  },
-
-  _addExtraPermission() {
-    for (let aPrincipal of this.extraPrincipals) {
-      this._addPermission(aPrincipal);
-    }
-  },
-
-  init() {
-    this._addPermission();
-    this._addExtraPermission();
   },
 };
