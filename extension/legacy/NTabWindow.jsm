@@ -241,9 +241,23 @@ this.homepageReset = {
     }
 
     var notificationBox = aWindow.gBrowser.getNotificationBox();
-    var notificationBar =
-      notificationBox.appendNotification(message, this.notificationKey, "",
-        notificationBox.PRIORITY_INFO_MEDIUM, buttons);
+    // Since Fx 94, see https://bugzil.la/1690390
+    var notificationBar = notificationBox.isShown !== undefined ?
+      notificationBox.appendNotification(
+        this.notificationKey,
+        {
+          label: message,
+          image: "",
+          priority: notificationBox.PRIORITY_INFO_MEDIUM,
+        },
+        buttons
+      ) : notificationBox.appendNotification(
+        message,
+        this.notificationKey,
+        "",
+        notificationBox.PRIORITY_INFO_MEDIUM,
+        buttons
+      );
     if (aShownCallback) {
       aShownCallback();
     }

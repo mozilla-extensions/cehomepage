@@ -122,23 +122,38 @@ var delayedSuggestBaidu = {
     let positive = this._strings._(prefix + "positive");
     let negative = this._strings._(prefix + "negative");
 
-    let notificationBar = notificationBox.appendNotification(message,
-      this.notificationKey,
-      this.icon,
-      notificationBox.PRIORITY_INFO_HIGH,
-      [{
-        label: positive,
-        accessKey: "Y",
-        callback() {
-          self.searchAndSwitchEngine(aBrowser, keyword);
+    let buttons = [{
+      label: positive,
+      accessKey: "Y",
+      callback() {
+        self.searchAndSwitchEngine(aBrowser, keyword);
+      },
+    }, {
+      label: negative,
+      accessKey: "N",
+      callback() {
+        self.markNomore();
+      },
+    }];
+    let image = this.icon;
+
+    // Since Fx 94, see https://bugzil.la/1690390
+    let notificationBar = notificationBox.isShown !== undefined ?
+      notificationBox.appendNotification(
+        this.notificationKey,
+        {
+          label: message,
+          image,
+          priority: notificationBox.PRIORITY_INFO_HIGH,
         },
-      }, {
-        label: negative,
-        accessKey: "N",
-        callback() {
-          self.markNomore();
-        },
-      }]);
+        buttons
+      ) : notificationBox.appendNotification(
+        message,
+        this.notificationKey,
+        image,
+        notificationBox.PRIORITY_INFO_HIGH,
+        buttons
+      );
     notificationBar.persistence = 1;
     Tracking.track({
       type: "delayedsuggestbaidu",
