@@ -141,8 +141,6 @@ tasks:
                                 then:
                                     source: '${repoUrl}/raw/${head_sha}/.taskcluster.yml'
                                 else:
-                                    # XXX revisit after https://github.com/taskcluster/taskcluster/pull/2812
-                                    #     is deployed to the firefoxci cluster.
                                     source: 'ssh://github.com/${repoUrl[15:-4]}/raw/${head_sha}/.taskcluster.yml'
                               - $if: 'tasks_for in ["github-push", "github-pull-request"]'
                                 then:
@@ -178,7 +176,6 @@ tasks:
                                     - "index.${trustDomain}.v2.${project}.revision.${head_sha}.taskgraph.decision"
                                 else: []
                       scopes:
-                          # `https://` is 8 characters so, ${repoUrl[8:]} is the repository without the protocol.
                           $if: 'tasks_for == "github-push"'
                           then:
                               $let:
