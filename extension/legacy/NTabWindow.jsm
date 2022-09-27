@@ -1,3 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* global globalThis */
+
 this.EXPORTED_SYMBOLS = ["NTabWindow"];
 
 ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
@@ -9,9 +15,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   NTabDB: "resource://ntab/NTabDB.jsm",
   PREFERENCES_LOADED_EVENT: "resource://activity-stream/lib/AboutPreferences.jsm",
   PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   Tracking: "resource://ntab/Tracking.jsm",
 });
+
+// Since Fx 104, see https://bugzil.la/1667455,1780695
+const Services =
+  globalThis.Services ||
+  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
 this.homepageReset = {
   prefKeyHomepage: "browser.startup.homepage",

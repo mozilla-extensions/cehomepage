@@ -1,3 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* global globalThis */
+
 this.EXPORTED_SYMBOLS = [
   "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session",
 ];
@@ -8,10 +14,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
   Tracking: "resource://ntab/Tracking.jsm",
 });
+// Since Fx 104, see https://bugzil.la/1667455,1780695
+const Services =
+  globalThis.Services ||
+  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
 var delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",

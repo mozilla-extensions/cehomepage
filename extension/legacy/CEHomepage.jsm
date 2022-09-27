@@ -1,3 +1,9 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* global globalThis */
+
 this.EXPORTED_SYMBOLS = ["mozCNUtils"];
 
 ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
@@ -10,9 +16,13 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   OS: "resource://gre/modules/osfile.jsm",
   PageThumbs: "resource://gre/modules/PageThumbs.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Services: "resource://gre/modules/Services.jsm",
   WebChannel: "resource://gre/modules/WebChannel.jsm",
 });
+
+// Since Fx 104, see https://bugzil.la/1667455,1780695
+const Services =
+  globalThis.Services ||
+  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
 XPCOMUtils.defineLazyGetter(this, "gMM", () => {
   return Cc["@mozilla.org/globalmessagemanager;1"].
@@ -27,7 +37,6 @@ XPCOMUtils.defineLazyModuleGetters(this, {
   Homepage: "resource://ntab/mozCNUtils.jsm",
   NTabDB: "resource://ntab/NTabDB.jsm",
   NTabWindow: "resource://ntab/NTabWindow.jsm",
-  QuickDialData: "resource://ntab/QuickDialData.jsm",
   Session: "resource://ntab/mozCNUtils.jsm",
   Tracking: "resource://ntab/Tracking.jsm",
 });
@@ -584,7 +593,6 @@ this.mozCNUtils = {
       "mozCNUtils",
       "NTabDB",
       "NTabWindow",
-      "QuickDialData",
       "Tracking",
     ]) {
       try {
@@ -735,7 +743,7 @@ WHERE
         this.channel.send({
           id: aMessage.id,
           key: aMessage.key,
-          data: QuickDialData.variant,
+          data: "master-ii",
         }, aSender);
         break;
     }
