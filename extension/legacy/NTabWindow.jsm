@@ -328,7 +328,7 @@ this.newTabPref = {
     win.MOA = win.MOA || {};
     win.MOA.NTab = win.MOA.NTab || {};
     win.MOA.NTab.BrowserOpenTab = win.BrowserOpenTab;
-    win.BrowserOpenTab = browserOpenTab;
+    win.BrowserOpenTab = browserOpenTab.bind(win);
   },
 
   onWindowClosed(win) {
@@ -397,8 +397,13 @@ this.newTabPref = {
   },
 };
 
-this.browserOpenTab = function(evt) {
-  let win = evt.target.ownerGlobal || this;
+this.browserOpenTab = function(objectOrEvent) {
+  let evt;
+  // Since Fx 108, see https://bugzil.la/1533058
+  if (objectOrEvent) {
+    evt = objectOrEvent.hasOwnProperty("event") ? objectOrEvent.event : objectOrEvent;
+  }
+  let win = (evt && evt.target && evt.target.ownerGlobal) || this;
 
   if (newTabPref.inUse) {
     let where = "tab";
@@ -437,7 +442,7 @@ this.browserOpenTab = function(evt) {
       sid: "ntab",
     });
   } else {
-    win.MOA.NTab.BrowserOpenTab.call(win, evt);
+    win.MOA.NTab.BrowserOpenTab.call(win, objectOrEvent);
 
     Tracking.track({
       type: "opentab",
