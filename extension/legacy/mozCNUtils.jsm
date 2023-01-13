@@ -278,7 +278,7 @@ var Frequent = {
     aUrls.forEach(aUrl => {
       urls.push(Services.io.newURI(aUrl));
     });
-    PlacesUtils.history.remove(urls).then(aCallback, Cu.reportError);
+    PlacesUtils.history.remove(urls).then(aCallback, console.error);
   },
 
   topHosts(aCallback, aHosts) {
@@ -321,7 +321,7 @@ var Frequent = {
         return item.idx;
       }));
     }, err => {
-      Cu.reportError(err);
+      console.error(err);
       aCallback([]);
     });
   },

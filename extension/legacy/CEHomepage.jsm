@@ -150,7 +150,7 @@ this.newtabMigration = {
       let newtabUrl = engine.getSubmission("TEST", null, "newtab").uri.spec;
       searchTN = (new URL(newtabUrl)).searchParams.get("tn") || "notset";
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
       return searchTN;
     }
     delete this.searchTN;
@@ -175,7 +175,7 @@ this.newtabMigration = {
         });
       }
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
@@ -212,7 +212,7 @@ this.newtabMigration = {
           return;
         }
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
         return;
       }
     }
@@ -234,7 +234,7 @@ this.newtabMigration = {
     try {
       Services.prefs.removeObserver(this.otherExtPref, this);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
@@ -297,7 +297,7 @@ this.newtabMigration = {
         fid: `${Services.appinfo.version}-${this.searchTN}`,
       });
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
 
     if (this.status <= this.STATUS_BLOCKED ||
@@ -598,7 +598,7 @@ this.mozCNUtils = {
       try {
         Cu.unload(`resource://ntab/${jsModule}.jsm`);
       } catch (ex) {
-        Cu.reportError(ex);
+        console.error(ex);
       }
     }
   },
@@ -698,7 +698,7 @@ WHERE
             data: links,
           }, aSender);
         }, ex => {
-          Cu.reportError(ex);
+          console.error(ex);
           self.channel.send({
             id: aMessage.id,
             key: aMessage.key,

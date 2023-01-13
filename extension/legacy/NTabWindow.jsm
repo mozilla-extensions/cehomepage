@@ -293,7 +293,7 @@ this.newTabPref = {
     try {
       Services.obs.addObserver(this, PREFERENCES_LOADED_EVENT);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
@@ -305,7 +305,7 @@ this.newTabPref = {
     try {
       Services.obs.removeObserver(this, PREFERENCES_LOADED_EVENT);
     } catch (ex) {
-      Cu.reportError(ex);
+      console.error(ex);
     }
   },
 
