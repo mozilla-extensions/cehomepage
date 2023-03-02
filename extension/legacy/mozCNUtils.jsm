@@ -12,6 +12,8 @@ ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
   "resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetters(this, {
   clearTimeout: "resource://gre/modules/Timer.jsm",
+  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
+  HomePage: "resource:///modules/HomePage.jsm",
   PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
   Preferences: "resource://gre/modules/Preferences.jsm",
   setTimeout: "resource://gre/modules/Timer.jsm",
@@ -344,6 +346,7 @@ var Homepage = {
     /^http:\/\/(home|e|n|i)\.firefoxchina\.cn\/?$/,
     /^about:cehome$/,
   ],
+  homeButtonPref: "extensions.cehomepage.homeButtonRestored",
   homepagePref: "browser.startup.homepage",
   originalHomepage: "",
   vanillaHomepages: [
@@ -352,6 +355,11 @@ var Homepage = {
   ],
 
   init(isAppStartup) {
+    // Run this as soon as possible in a fresh profile
+    if (!Services.appinfo.replacedLockTime) {
+      this.maybeAddHomeButton();
+    }
+
     if (!isAppStartup) {
       return;
     }
@@ -361,6 +369,50 @@ var Homepage = {
       Services.obs.addObserver(this, this.distributionTopic);
     } else {
       this.maybeOverrideHomepage();
+      this.maybeAddHomeButton();
+    }
+  },
+
+  markAsAdded(reason) {
+    this.track(reason, "button");
+    Services.prefs.setBoolPref(this.homeButtonPref, true);
+  },
+
+  maybeAddHomeButton() {
+    if (Services.prefs.getBoolPref(this.homeButtonPref, false)) {
+      return;
+    }
+
+    if (Services.vc.compare(Services.appinfo.version, "89.0") < 0) {
+      this.track("notUpdated", "button");
+      return;
+    }
+
+    if (CustomizableUI.getWidget("home-button").areaType) {
+      this.markAsAdded("available");
+      return;
+    }
+
+    if (Services.appinfo.replacedLockTime) {
+      let prefs = Services.prefs.getDefaultBranch("distribution.");
+      if (prefs.getCharPref("id", "") !== "MozillaOnline") {
+        this.track("notDist", "button");
+        return;
+      }
+      let version = prefs.getCharPref("version", "2007.6");
+      if (Services.vc.compare(version, "2021.6") < 0) {
+        this.track("notRecent", "button");
+        return;
+      }
+    }
+
+    if (HomePage && HomePage._maybeAddHomeButtonToToolbar) {
+      HomePage._maybeAddHomeButtonToToolbar(this.defaultHomepage);
+
+      this.markAsAdded("attempt");
+      if (CustomizableUI.getWidget("home-button").areaType) {
+        this.track("restored", "button");
+      }
     }
   },
 
@@ -400,6 +452,7 @@ var Homepage = {
     switch (aTopic) {
       case this.distributionTopic:
         this.maybeOverrideHomepage();
+        this.maybeAddHomeButton();
         break;
       default:
         break;
@@ -431,10 +484,10 @@ var Homepage = {
       Ci.nsIPrefLocalizedString, localizedStr);
   },
 
-  track(reason) {
+  track(reason, action = "override") {
     Tracking.track({
       type: "homepage",
-      action: "override",
+      action,
       sid: reason,
     });
   },
