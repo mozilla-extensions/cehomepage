@@ -178,9 +178,11 @@ var delayedSuggestBaidu = {
     if (aKeyword) {
       let submission = this.baidu.getSubmission(aKeyword);
       // always replace in the current tab
-      (w.openWebLinkIn || w.openUILinkIn)(submission.uri.spec, "current", null, submission.postData);
+      w.openWebLinkIn(submission.uri.spec, "current", {
+        postData: submission.postData,
+      });
     } else {
-      (w.openWebLinkIn || w.openUILinkIn)(this.baidu.searchForm, "current");
+      w.openWebLinkIn(this.baidu.searchForm, "current");
     }
 
     if (Services.search.defaultEngine.name == "Google") {
