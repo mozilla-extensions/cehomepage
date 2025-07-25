@@ -2,29 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global globalThis */
+const lazy = {};
 
-this.EXPORTED_SYMBOLS = [
-  "delayedSuggestBaidu", "Frequent", "getPref", "Homepage", "Session",
-];
-
-ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
-  "resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
-  clearTimeout: "resource://gre/modules/Timer.jsm",
-  CustomizableUI: "resource:///modules/CustomizableUI.jsm",
-  HomePage: "resource:///modules/HomePage.jsm",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
-  Preferences: "resource://gre/modules/Preferences.jsm",
-  setTimeout: "resource://gre/modules/Timer.jsm",
-  Tracking: "resource://ntab/Tracking.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+  HomePage: "resource:///modules/HomePage.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  Preferences: "resource://gre/modules/Preferences.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
-// Since Fx 104, see https://bugzil.la/1667455,1780695
-const Services =
-  globalThis.Services ||
-  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
-var delayedSuggestBaidu = {
+export var delayedSuggestBaidu = {
   attribute: "mozCNDelayedSuggestBaidu",
   delay: 10e3,
   icon: "resource://ntab/skin/delayed-suggest-baidu.png",
@@ -71,7 +60,7 @@ var delayedSuggestBaidu = {
       return;
     }
 
-    let timeoutId = setTimeout(() => {
+    let timeoutId = lazy.setTimeout(() => {
       this.notify(aBrowser, aURI);
     }, this.delay);
     aBrowser.setAttribute(this.attribute, timeoutId);
@@ -81,7 +70,7 @@ var delayedSuggestBaidu = {
     if (aBrowser.hasAttribute(this.attribute)) {
       let timeoutId = aBrowser.getAttribute(this.attribute);
       aBrowser.removeAttribute(this.attribute);
-      clearTimeout(parseInt(timeoutId, 10));
+      lazy.clearTimeout(parseInt(timeoutId, 10));
     }
 
     if (!this.knownStatus.includes(aStatus)) {
@@ -148,9 +137,7 @@ var delayedSuggestBaidu = {
     }];
     let image = this.icon;
 
-    // Since Fx 94, see https://bugzil.la/1690390
-    let notificationBar = notificationBox.isShown !== undefined ?
-      notificationBox.appendNotification(
+    let notificationBar  = notificationBox.appendNotification(
         this.notificationKey,
         {
           label: message,
@@ -158,19 +145,8 @@ var delayedSuggestBaidu = {
           priority: notificationBox.PRIORITY_INFO_HIGH,
         },
         buttons
-      ) : notificationBox.appendNotification(
-        message,
-        this.notificationKey,
-        image,
-        notificationBox.PRIORITY_INFO_HIGH,
-        buttons
       );
     notificationBar.persistence = 1;
-    Tracking.track({
-      type: "delayedsuggestbaidu",
-      action: "notify",
-      sid: "dummy",
-    });
   },
 
   searchAndSwitchEngine(aBrowser, aKeyword) {
@@ -188,160 +164,28 @@ var delayedSuggestBaidu = {
     if (Services.search.defaultEngine.name == "Google") {
       this.baidu.hidden = false;
       Services.search.defaultEngine = this.baidu;
-
-      Tracking.track({
-        type: "delayedsuggestbaidu",
-        action: "click",
-        sid: "switch",
-      });
     }
-
-    Tracking.track({
-      type: "delayedsuggestbaidu",
-      action: "click",
-      sid: "search",
-    });
   },
 
   markNomore() {
     try {
       Services.prefs.setIntPref(this.prefKey, this.version);
     } catch (e) {}
-
-    Tracking.track({
-      type: "delayedsuggestbaidu",
-      action: "click",
-      sid: "nomore",
-    });
   },
 };
 
-var Frequent = {
-  excludes: [
-    /^https?:\/\/[a-z]+.firefoxchina.cn\/n(ew)?tab/,
-    /^https?:\/\/[a-z]+.firefoxchina.cn\/parts\/google_rdr/,
-    /^https?:\/\/[a-z]+.firefoxchina.cn\/redirect\/adblock/,
-    /^https?:\/\/[a-z]+.firefoxchina.cn\/(redirect\/)?search/,
-    /^http:\/\/i.g-fox.cn\/(rd|search)/,
-    /^http:\/\/www5.1616.net\/q/,
-  ],
-  needsDeduplication: false,
-  order: Ci.nsINavHistoryQueryOptions.SORT_BY_FRECENCY_DESCENDING,
-
-  query(aCallback, aLimit) {
-    let options = PlacesUtils.history.getNewQueryOptions();
-    options.maxResults = aLimit + 16;
-    options.sortingMode = this.order;
-
-    let deduplication = {};
-    let links = [];
-    let self = this;
-
-    let callback = {
-      handleResult(aResultSet) {
-        let row = aResultSet.getNextRow();
-
-        for (; row; row = aResultSet.getNextRow()) {
-          if (links.length >= aLimit) {
-            break;
-          }
-          let url = row.getResultByIndex(1);
-          let title = row.getResultByIndex(2);
-
-          if (self.needsDeduplication) {
-            if (deduplication[title]) {
-              continue;
-            }
-            deduplication[title] = 1;
-          }
-
-          if (!self.excludes.some(aExclude => {
-            return aExclude.test(url);
-          })) {
-            links.push({url, title});
-          }
-        }
-      },
-
-      handleError(aError) {
-        aCallback([]);
-      },
-
-      handleCompletion(aReason) {
-        aCallback(links);
-      },
-    };
-
-    let query = PlacesUtils.history.getNewQuery();
-    let db = PlacesUtils.history;
-    db.asyncExecuteLegacyQuery(query, options, callback);
-  },
-
-  remove(aCallback, aUrls) {
-    let urls = [];
-    aUrls.forEach(aUrl => {
-      urls.push(Services.io.newURI(aUrl));
-    });
-    PlacesUtils.history.remove(urls).then(aCallback, console.error);
-  },
-
-  topHosts(aCallback, aHosts) {
-    if (aHosts.length < 100) {
-      aCallback([]);
-      return;
-    }
-    let start = Date.now();
-    let indexes = [];
-    PlacesUtils.promiseDBConnection().then(db => {
-      return db.execute(`SELECT :idx AS idx, count(v.id) As count
-        FROM moz_historyvisits AS v JOIN moz_places AS h ON v.place_id = h.id
-        WHERE v.visit_date >= strftime('%s', 'now', 'localtime', 'start of day', '-1 month', 'utc') * 1000000
-          AND h.rev_host LIKE :rev_host;`,
-        aHosts.map((host, idx) => {
-          return {
-            idx,
-            rev_host: (host.split("").reverse().join("") + ".%"),
-          };
-        }),
-        row => {
-          let item = {
-            idx: row.getResultByName("idx"),
-            count: row.getResultByName("count"),
-          };
-          if (item.count < 1) {
-            return;
-          }
-          indexes.push(item);
-        }
-      );
-    }).then(() => {
-      let msg = "Frequent.topHosts: " + (Date.now() - start) + "ms";
-      Services.console.logStringMessage(msg);
-
-      indexes.sort((x, y) => {
-        return (y.count - x.count) || (x.idx - y.idx);
-      });
-      aCallback(indexes.slice(0, 20).map(item => {
-        return item.idx;
-      }));
-    }, err => {
-      console.error(err);
-      aCallback([]);
-    });
-  },
-};
-
-var DefaultPreferences = new Preferences({
+var DefaultPreferences = new lazy.Preferences({
   branch: "",
   defaultBranch: true,
 });
-var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
-  let prefs = useDefaultBranch ? DefaultPreferences : Preferences;
+
+export var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
+  let prefs = useDefaultBranch ? DefaultPreferences : lazy.Preferences;
 
   return prefs.get(prefName, defaultValue, valueType);
 };
 
-var Homepage = {
+export var Homepage = {
   defaultHomepage: "https://home.firefoxchina.cn/",
   distributionTopic: "distribution-customization-complete",
   historicalHomepages: [
@@ -376,7 +220,6 @@ var Homepage = {
   },
 
   markAsAdded(reason) {
-    this.track(reason, "button");
     Services.prefs.setBoolPref(this.homeButtonPref, true);
   },
 
@@ -386,11 +229,10 @@ var Homepage = {
     }
 
     if (Services.vc.compare(Services.appinfo.version, "89.0") < 0) {
-      this.track("notUpdated", "button");
       return;
     }
 
-    if (CustomizableUI.getWidget("home-button").areaType) {
+    if (lazy.CustomizableUI.getWidget("home-button").areaType) {
       this.markAsAdded("available");
       return;
     }
@@ -398,22 +240,19 @@ var Homepage = {
     if (Services.appinfo.replacedLockTime) {
       let prefs = Services.prefs.getDefaultBranch("distribution.");
       if (prefs.getCharPref("id", "") !== "MozillaOnline") {
-        this.track("notDist", "button");
         return;
       }
       let version = prefs.getCharPref("version", "2007.6");
       if (Services.vc.compare(version, "2021.6") < 0) {
-        this.track("notRecent", "button");
         return;
       }
     }
 
-    if (HomePage && HomePage._maybeAddHomeButtonToToolbar) {
-      HomePage._maybeAddHomeButtonToToolbar(this.defaultHomepage);
+    if (lazy.HomePage && lazy.HomePage._maybeAddHomeButtonToToolbar) {
+      lazy.HomePage._maybeAddHomeButtonToToolbar(this.defaultHomepage);
 
       this.markAsAdded("attempt");
-      if (CustomizableUI.getWidget("home-button").areaType) {
-        this.track("restored", "button");
+      if (lazy.CustomizableUI.getWidget("home-button").areaType) {
       }
     }
   },
@@ -422,7 +261,6 @@ var Homepage = {
     let defaultHomepage = getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString, true);
     if (defaultHomepage === this.defaultHomepage) {
-      this.track("defaultVal");
       return;
     }
 
@@ -442,8 +280,6 @@ var Homepage = {
       this.overrideHomepage("vanilla");
       return;
     }
-
-    this.track("otherDefault");
 
     try {
       Services.obs.removeObserver(this, this.distributionTopic);
@@ -470,8 +306,6 @@ var Homepage = {
     this.originalHomepage = getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString, true);
     this.setAsDefault(this.defaultHomepage);
-
-    this.track(reason);
   },
 
   setAsDefault(homepage) {
@@ -486,14 +320,6 @@ var Homepage = {
       Ci.nsIPrefLocalizedString, localizedStr);
   },
 
-  track(reason, action = "override") {
-    Tracking.track({
-      type: "homepage",
-      action,
-      sid: reason,
-    });
-  },
-
   uninit(isAppShutdown) {
     // revert on disable/uninstall ?
     if (!isAppShutdown) {
@@ -506,12 +332,3 @@ var Homepage = {
     }
   },
 };
-
-var Session = Object.create(Frequent, {
-  needsDeduplication: {
-    value: true,
-  },
-  order: {
-    value: Ci.nsINavHistoryQueryOptions.SORT_BY_DATE_DESCENDING,
-  },
-});

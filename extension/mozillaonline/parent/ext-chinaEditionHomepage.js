@@ -4,19 +4,17 @@
 
 "use strict";
 
-/* global ExtensionAPI, globalThis */
-ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
-  "resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyModuleGetters(this, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.jsm",
+const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
+
+const lazy = {};
+
+ChromeUtils.defineESModuleGetters(lazy, {
+  PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
 });
+
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
   "@mozilla.org/network/protocol;1?name=resource",
   "nsISubstitutingProtocolHandler");
-// Since Fx 104, see https://bugzil.la/1667455,1780695
-const Services =
-  globalThis.Services ||
-  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
 
 const RESOURCE_HOST = "ntab";
 
@@ -26,12 +24,13 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
 
     this.flushCacheOnUpgrade(extension);
 
-    resProto.setSubstitution(RESOURCE_HOST,
-      Services.io.newURI("legacy/", null, extension.rootURI));
+    resProto.setSubstitutionWithFlags(RESOURCE_HOST,
+      Services.io.newURI("legacy/", null, extension.rootURI), Ci.nsISubstitutingProtocolHandler.ALLOW_CONTENT_ACCESS);
 
     try {
-      ChromeUtils.import("resource://ntab/CEHomepage.jsm", this);
-      this.mozCNUtils.init({ extension });
+      const { mozCNUtils } = ChromeUtils.importESModule("resource://ntab/CEHomepage.sys.mjs");
+      this.mozCNUtils = mozCNUtils;
+       this.mozCNUtils.init({ extension });
     } catch (ex) {
       console.error(ex);
     }
@@ -40,7 +39,6 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
   onShutdown(isAppShutdown) {
     try {
       this.mozCNUtils.uninit(isAppShutdown);
-      Cu.unload("resource://ntab/CEHomepage.jsm");
 
       resProto.setSubstitution(RESOURCE_HOST, null);
     } catch (ex) {
