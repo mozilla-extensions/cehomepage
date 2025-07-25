@@ -2,28 +2,18 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* global globalThis */
+const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
 
-this.EXPORTED_SYMBOLS = ["NTabWindow"];
+const lazy = {};
 
-ChromeUtils.defineModuleGetter(this, "XPCOMUtils",
-  "resource://gre/modules/XPCOMUtils.jsm");
-XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
-  "@mozilla.org/browser/aboutnewtab-service;1", "nsIAboutNewTabService");
-XPCOMUtils.defineLazyModuleGetters(this, {
-  AboutNewTab: "resource:///modules/AboutNewTab.jsm",
-  NTabDB: "resource://ntab/NTabDB.jsm",
-  PREFERENCES_LOADED_EVENT: "resource://activity-stream/lib/AboutPreferences.jsm",
-  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.jsm",
-  Tracking: "resource://ntab/Tracking.jsm",
+ChromeUtils.defineESModuleGetters(lazy, {
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
+  NTabDB: "resource://ntab/NTabDB.sys.mjs",
+  PREFERENCES_LOADED_EVENT: "resource://newtab/lib/AboutPreferences.sys.mjs",
+  PrivateBrowsingUtils: "resource://gre/modules/PrivateBrowsingUtils.sys.mjs",
 });
 
-// Since Fx 104, see https://bugzil.la/1667455,1780695
-const Services =
-  globalThis.Services ||
-  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
-
-this.homepageReset = {
+let homepageReset = {
   prefKeyHomepage: "browser.startup.homepage",
   prefKeyOtherNav: "moa.homepagereset.othernav.latestcheck",
   prefKeyPotentialHijack: "moa.homepagereset.potentialhijack.",
@@ -191,12 +181,6 @@ this.homepageReset = {
       default:
         break;
     }
-
-    Tracking.track({
-      type: "homepagereset",
-      action: "notify",
-      sid: reason,
-    });
   },
 
   notify(aWindow, aReason, aShownCallback, aNomoreCallback) {
@@ -214,23 +198,11 @@ this.homepageReset = {
       accessKey: "R",
       callback() {
         self.reset();
-
-        Tracking.track({
-          type: "homepagereset",
-          action: "click",
-          sid: "yes",
-          href: (self.firstOtherNavUrl && self.firstOtherNavUrl.spec),
-        });
       },
     }, {
       label: noText,
       accessKey: "N",
       callback() {
-        Tracking.track({
-          type: "homepagereset",
-          action: "click",
-          sid: "no",
-        });
       },
     }];
 
@@ -240,32 +212,18 @@ this.homepageReset = {
         accessKey: "D",
         callback() {
           aNomoreCallback();
-
-          Tracking.track({
-            type: "homepagereset",
-            action: "click",
-            sid: "nomore",
-          });
         },
       });
     }
 
     var notificationBox = aWindow.gBrowser.getNotificationBox();
-    // Since Fx 94, see https://bugzil.la/1690390
-    var notificationBar = notificationBox.isShown !== undefined ?
-      notificationBox.appendNotification(
+    var notificationBar = notificationBox.appendNotification(
         this.notificationKey,
         {
           label: message,
           image: "",
           priority: notificationBox.PRIORITY_INFO_MEDIUM,
         },
-        buttons
-      ) : notificationBox.appendNotification(
-        message,
-        this.notificationKey,
-        "",
-        notificationBox.PRIORITY_INFO_MEDIUM,
         buttons
       );
     if (aShownCallback) {
@@ -279,7 +237,7 @@ this.homepageReset = {
   },
 };
 
-this.newTabPref = {
+let newTabPref = {
   extPrefKey: "moa.ntab.openInNewTab",
   inUse: true,
 
@@ -291,7 +249,7 @@ this.newTabPref = {
     this.refresh(Services.prefs.getBoolPref(this.extPrefKey));
 
     try {
-      Services.obs.addObserver(this, PREFERENCES_LOADED_EVENT);
+      Services.obs.addObserver(this, lazy.PREFERENCES_LOADED_EVENT);
     } catch (ex) {
       console.error(ex);
     }
@@ -303,20 +261,20 @@ this.newTabPref = {
     this.refresh(false);
 
     try {
-      Services.obs.removeObserver(this, PREFERENCES_LOADED_EVENT);
+      Services.obs.removeObserver(this, lazy.PREFERENCES_LOADED_EVENT);
     } catch (ex) {
       console.error(ex);
     }
   },
 
   onWindowOpened(win) {
-    let isPrivate = PrivateBrowsingUtils.isWindowPrivate(win);
-    let spec = NTabDB[isPrivate ? "privateSpec" : "spec"];
+    let isPrivate = lazy.PrivateBrowsingUtils.isWindowPrivate(win);
+    let spec = lazy.NTabDB[isPrivate ? "privateSpec" : "spec"];
 
     this.specByWindow.set(win, spec);
 
     win.gInitialPages = win.gInitialPages.concat([
-      spec, NTabDB.readOnlySpec,
+      spec, lazy.NTabDB.readOnlySpec,
     ]);
 
     homepageReset.check(win);
@@ -350,7 +308,7 @@ this.newTabPref = {
         }
         newTabPref.refresh(Services.prefs.getBoolPref(aData));
         break;
-      case PREFERENCES_LOADED_EVENT:
+      case lazy.PREFERENCES_LOADED_EVENT:
         let doc = aSubject.document;
         let encodedCSS = encodeURIComponent(`
 #homeContentsGroup {
@@ -379,25 +337,25 @@ this.newTabPref = {
       * opened in (non-permanent) pb mode.
       */
     // Since Fx 76, see https://bugzil.la/1619992
-    if (AboutNewTab.hasOwnProperty("newTabURL")) {
+    if (lazy.AboutNewTab.hasOwnProperty("newTabURL")) {
       if (this.inUse) {
-        AboutNewTab.newTabURL = NTabDB.spec;
-      } else if (AboutNewTab.newTabURL === NTabDB.spec) {
-        AboutNewTab.resetNewTabURL();
+        lazy.AboutNewTab.newTabURL = lazy.NTabDB.spec;
+      } else if (lazy.AboutNewTab.newTabURL === lazy.NTabDB.spec) {
+        lazy.AboutNewTab.resetNewTabURL();
       }
     } else if (this.inUse) {
-      aboutNewTabService.newTabURL = NTabDB.spec;
-    } else if (aboutNewTabService.newTabURL === NTabDB.spec) {
-      aboutNewTabService.resetNewTabURL();
+      aboutNewTabService.newTabURL = lazy.NTabDB.spec;
+    } else if (aboutNewTabService.newTabURL === lazy.NTabDB.spec) {
+      lazy.AboutNewTab.resetNewTabURL();
     }
   },
 
   specForWindow(win) {
-    return this.specByWindow.get(win) || NTabDB.spec;
+    return this.specByWindow.get(win) || lazy.NTabDB.spec;
   },
 };
 
-this.browserOpenTab = function(objectOrEvent) {
+let browserOpenTab = function(objectOrEvent) {
   let evt;
   // Since Fx 108, see https://bugzil.la/1533058
   if (objectOrEvent) {
@@ -435,24 +393,12 @@ this.browserOpenTab = function(objectOrEvent) {
         win.gURLBar.select();
       }
     }
-
-    Tracking.track({
-      type: "opentab",
-      action: "click",
-      sid: "ntab",
-    });
   } else {
     win.MOA.NTab.BrowserOpenTab.call(win, objectOrEvent);
-
-    Tracking.track({
-      type: "opentab",
-      action: "click",
-      sid: "newtab",
-    });
   }
 };
 
-this.NTabWindow = {
+export let NTabWindow = {
   _(key, args) {
     return this._strings ? this._strings._(key, args) : "";
   },
