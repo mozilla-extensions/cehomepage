@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+/* global ExtensionAPI, Services */
+
 "use strict";
 
 const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
@@ -9,7 +11,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMU
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUIUtils: "moz-src:///browser/components/places/PlacesUIUtils.sys.mjs",
+  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
 });
 
 XPCOMUtils.defineLazyServiceGetter(this, "resProto",
@@ -60,7 +62,7 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
   async getLegacyPartnerBookmarks() {
     let updates = {};
     try {
-      let db = await PlacesUtils.promiseDBConnection();
+      let db = await lazy.PlacesUtils.promiseDBConnection();
       await db.execute(`
 SELECT
   b.guid,
@@ -91,9 +93,9 @@ WHERE
 
   async setFaviconForUrl(url, faviconUrl) {
     try {
-      PlacesUtils.favicons.setAndFetchFaviconForPage(
+      lazy.PlacesUtils.favicons.setAndFetchFaviconForPage(
         Services.io.newURI(url), Services.io.newURI(faviconUrl), false,
-        PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
+        lazy.PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE, null,
         Services.scriptSecurityManager.getSystemPrincipal());
     } catch (ex) {
       console.error(ex);
