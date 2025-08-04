@@ -55,7 +55,7 @@ export var Homepage = {
     }
   },
 
-  markAsAdded(reason) {
+  markAsAdded() {
     Services.prefs.setBoolPref(this.homeButtonPref, true);
   },
 
@@ -69,7 +69,7 @@ export var Homepage = {
     }
 
     if (lazy.CustomizableUI.getWidget("home-button").areaType) {
-      this.markAsAdded("available");
+      this.markAsAdded();
       return;
     }
 
@@ -87,7 +87,7 @@ export var Homepage = {
     if (lazy.HomePage && lazy.HomePage._maybeAddHomeButtonToToolbar) {
       lazy.HomePage._maybeAddHomeButtonToToolbar(this.defaultHomepage);
 
-      this.markAsAdded("attempt");
+      this.markAsAdded();
       if (lazy.CustomizableUI.getWidget("home-button").areaType) {
       }
     }
@@ -103,17 +103,17 @@ export var Homepage = {
     let userHomepage = getPref(this.homepagePref, this.defaultHomepage,
       Ci.nsIPrefLocalizedString);
     if (userHomepage === this.defaultHomepage) {
-      this.overrideHomepage("userVal");
+      this.overrideHomepage();
       return;
     }
 
     if (this.historicalHomepages.some(h => h.test(defaultHomepage))) {
-      this.overrideHomepage("legacyDist");
+      this.overrideHomepage();
       return;
     }
 
     if (this.vanillaHomepages.some(v => v.test(defaultHomepage))) {
-      this.overrideHomepage("vanilla");
+      this.overrideHomepage();
       return;
     }
 
@@ -133,10 +133,9 @@ export var Homepage = {
     }
   },
 
-  overrideHomepage(reason) {
+  overrideHomepage() {
     if (!Services.prefs.prefHasUserValue(this.homepagePref)) {
       Services.prefs.setCharPref(this.homepagePref, this.defaultHomepage);
-      reason = `${reason}Write`;
     }
 
     this.originalHomepage = getPref(this.homepagePref, this.defaultHomepage,
