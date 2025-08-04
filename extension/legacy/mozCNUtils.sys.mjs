@@ -5,12 +5,9 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
   HomePage: "resource:///modules/HomePage.sys.mjs",
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
   Preferences: "resource://gre/modules/Preferences.sys.mjs",
-  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 var DefaultPreferences = new lazy.Preferences({
@@ -18,7 +15,7 @@ var DefaultPreferences = new lazy.Preferences({
   defaultBranch: true,
 });
 
-export var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
+var getPref = (prefName, defaultValue, valueType, useDefaultBranch) => {
   let prefs = useDefaultBranch ? DefaultPreferences : lazy.Preferences;
 
   return prefs.get(prefName, defaultValue, valueType);
