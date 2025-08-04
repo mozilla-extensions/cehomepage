@@ -8,7 +8,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
 
   // Internal modules
-  delayedSuggestBaidu: "resource://ntab/mozCNUtils.sys.mjs",
   Homepage: "resource://ntab/mozCNUtils.sys.mjs",
   NTabDB: "resource://ntab/NTabDB.sys.mjs",
   NTabWindow: "resource://ntab/NTabWindow.sys.mjs",
@@ -44,15 +43,6 @@ export let mozCNUtils = {
       let isStop = aStateFlags & Ci.nsIWebProgressListener.STATE_STOP;
       if (!isStart && !isStop) {
         return;
-      }
-
-      if (lazy.delayedSuggestBaidu.isGoogleSearch(aRequest.URI)) {
-        if (isStart) {
-          lazy.delayedSuggestBaidu.attach(aBrowser, aRequest.URI);
-        }
-        if (isStop) {
-          lazy.delayedSuggestBaidu.remove(aBrowser, aStatus);
-        }
       }
     }
   },
@@ -112,7 +102,6 @@ export let mozCNUtils = {
 
     this.initDefaultPrefs();
 
-    lazy.delayedSuggestBaidu.init(strings);
     lazy.Homepage.init(isAppStartup);
     lazy.NTabWindow.init(strings);
 
