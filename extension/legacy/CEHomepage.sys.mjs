@@ -5,7 +5,6 @@
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
   CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
 
   // Internal modules
@@ -33,66 +32,6 @@ let strings = {
 
     let cloneScope = this._ctx.cloneScope;
     return this._ctx.extension.localizeMessage(name, subs, {cloneScope});
-  },
-};
-
-let morePermissionPromptHack = {
-  extensionId: "",
-  prefKey: "extensions.chinaEditionHomepage.pendingNextVersion",
-  topic: "webextension-update-permissions",
-
-  get nextVersion() {
-    return Services.prefs.getCharPref(this.prefKey, "0");
-  },
-  set nextVersion(version) {
-    if (version) {
-      Services.prefs.setCharPref(this.prefKey, version);
-    } else {
-      Services.prefs.clearUserPref(this.prefKey);
-    }
-  },
-
-  async init({extension}) {
-    this.extensionId = extension.id;
-    Services.obs.addObserver(this, this.topic);
-
-    if (this.nextVersion &&
-        Services.vc.compare(extension.version, this.nextVersion) >= 0) {
-      this.nextVersion = null;
-      return;
-    }
-
-    let addon = await lazy.AddonManager.getAddonByID(this.extensionId);
-    addon.findUpdates({
-      onUpdateAvailable(addon, install) {
-        if (addon.permissions & lazy.AddonManager.PERM_CAN_UPGRADE &&
-            lazy.AddonManager.shouldAutoUpdate(addon)) {
-          // Trigger the installation w/o the permission prompt
-          install.install();
-        }
-      },
-    }, lazy.AddonManager.UPDATE_WHEN_PERIODIC_UPDATE);
-  },
-
-  observe(subject, topic, data) {
-    if (topic !== this.topic) {
-      return;
-    }
-
-    let { addon, type } = subject.wrappedJSObject;
-    if (addon.id !== this.extensionId || type !== "update") {
-      return;
-    }
-
-    this.nextVersion = addon.version;
-  },
-
-  uninit(isAppShutdown) {
-    if (isAppShutdown) {
-      return;
-    }
-
-    Services.obs.removeObserver(this, this.topic);
   },
 };
 
@@ -168,7 +107,6 @@ export let mozCNUtils = {
   },
 
   init(context) {
-    morePermissionPromptHack.init(context);
     let isAppStartup = context.extension.startupReason === "APP_STARTUP";
     strings.init(context);
 
@@ -186,7 +124,6 @@ export let mozCNUtils = {
     this.uninitWindowListener();
 
     lazy.Homepage.uninit(isAppShutdown);
-    morePermissionPromptHack.uninit(isAppShutdown);
     lazy.NTabWindow.uninit();
   },
 };
