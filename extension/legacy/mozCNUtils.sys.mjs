@@ -86,10 +86,7 @@ export var Homepage = {
 
     if (lazy.HomePage && lazy.HomePage._maybeAddHomeButtonToToolbar) {
       lazy.HomePage._maybeAddHomeButtonToToolbar(this.defaultHomepage);
-
       this.markAsAdded();
-      if (lazy.CustomizableUI.getWidget("home-button").areaType) {
-      }
     }
   },
 
