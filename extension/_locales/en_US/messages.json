@@ -5,15 +5,6 @@
   "extensionName": {
     "message": "Firefox Homepage"
   },
-  "delayedSuggestBaidu.notification.message": {
-    "message": "The service you are trying to access may not be available. Search with Baidu?"
-  },
-  "delayedSuggestBaidu.notification.negative": {
-    "message": "Don't ask again"
-  },
-  "delayedSuggestBaidu.notification.positive": {
-    "message": "Search Now"
-  },
   "homepageReset.notification.message": {
     "message": "Your homepage seems to be changed, reset it now."
   },

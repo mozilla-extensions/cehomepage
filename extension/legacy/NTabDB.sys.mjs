@@ -4,13 +4,6 @@
 
 /* global globalThis */
 
-this.EXPORTED_SYMBOLS = ["NTabDB"];
-
-// Since Fx 104, see https://bugzil.la/1667455,1780695
-const Services =
-  globalThis.Services ||
-  ChromeUtils.import("resource://gre/modules/Services.jsm").Services;
-
 class NTabDBInternal {
   constructor(prePath) {
     this.prePath = prePath;
@@ -32,7 +25,7 @@ class NTabDBInternal {
 let insecureNTabDB = new NTabDBInternal("http://offlintab.firefoxchina.cn");
 let secureNTabDB = new NTabDBInternal("https://offlintab.firefoxchina.cn");
 
-let NTabDB = {
+export let NTabDB = {
   get _internalDB() {
     let appinfo = Services.appinfo;
     let prefKey = "moa.ntab.useSecure";
