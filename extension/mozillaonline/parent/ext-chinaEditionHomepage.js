@@ -20,6 +20,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "resProto",
 
 const RESOURCE_HOST = "ntab";
 
+if (Services.prefs.getCharPref("distribution.id", "").trim().toLowerCase() !== "mozillaonline") {
+  throw new Error("This extension is not supported for this distribution!");
+}
+
 this.chinaEditionHomepage = class extends ExtensionAPI {
   onStartup() {
     let {extension} = this;
