@@ -4,9 +4,26 @@
 
 const lazy = {};
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  CustomizableUI: "resource:///modules/CustomizableUI.sys.mjs",
+Object.defineProperty(lazy, "CustomizableUI", {
+  configurable: true,
+  enumerable: true,
+  get() {
+    delete this.CustomizableUI;
+    try {
+      const mod = ChromeUtils.importESModule(
+        "resource:///modules/CustomizableUI.sys.mjs"
+      );
+      return (this.CustomizableUI = mod.CustomizableUI);
+    } catch (e1) {
+      const mod = ChromeUtils.importESModule(
+        "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs"
+      );
+      return (this.CustomizableUI = mod.CustomizableUI);
+    }
+  }
+});
 
+ChromeUtils.defineESModuleGetters(lazy, {
   // Internal modules
   Homepage: "resource://ntab/mozCNUtils.sys.mjs",
   NTabDB: "resource://ntab/NTabDB.sys.mjs",
