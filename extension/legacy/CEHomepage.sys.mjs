@@ -4,22 +4,17 @@
 
 const lazy = {};
 
-Object.defineProperty(lazy, "CustomizableUI", {
-  configurable: true,
-  enumerable: true,
-  get() {
-    delete this.CustomizableUI;
-    try {
-      const mod = ChromeUtils.importESModule(
-        "resource:///modules/CustomizableUI.sys.mjs"
-      );
-      return (this.CustomizableUI = mod.CustomizableUI);
-    } catch (e1) {
-      const mod = ChromeUtils.importESModule(
-        "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs"
-      );
-      return (this.CustomizableUI = mod.CustomizableUI);
-    }
+ChromeUtils.defineLazyGetter(lazy, "CustomizableUI", () => {
+  try {
+    const mod = ChromeUtils.importESModule(
+      "resource:///modules/CustomizableUI.sys.mjs"
+    );
+    return mod.CustomizableUI;
+  } catch (e1) {
+    const mod = ChromeUtils.importESModule(
+      "moz-src:///browser/components/customizableui/CustomizableUI.sys.mjs"
+    );
+    return mod.CustomizableUI;
   }
 });
 
