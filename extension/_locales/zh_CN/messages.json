@@ -1,23 +1,8 @@
 {
   "extensionDescription": {
-    "message": "火狐定制主页，包括最近访问页面、最常访问页面以及新标签页等"
+    "message": "将 Firefox 主页和新建标签页恢复为默认值，并保持扩展处于空闲状态。"
   },
   "extensionName": {
     "message": "火狐主页"
-  },
-  "homepageReset.notification.message": {
-    "message": "您的火狐主页已被修改，需要立即恢复。"
-  },
-  "homepageReset.notification.message_alt": {
-    "message": "您的火狐主页已被篡改，需要立即恢复。"
-  },
-  "homepageReset.notification.no": {
-    "message": "否"
-  },
-  "homepageReset.notification.nomore": {
-    "message": "不再提示"
-  },
-  "homepageReset.notification.reset": {
-    "message": "是"
   }
 }

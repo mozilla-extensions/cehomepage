@@ -1,6 +1,6 @@
 {
   "name": "cehomepage",
-  "version": "4.0",
+  "version": "4.1",
   "description": "Customizied Home Page for Firefox",
   "scripts": {
     "build": "web-ext build --filename cehomepage.xpi",
@@ -9,7 +9,7 @@
   },
   "author": "Mozilla Online Limited",
   "license": "MPL-2.0",
-  "repository": "ssh://git@git.mozilla.com.cn/repository/git/repositories/cehp.git",
+  "repository": "https://github.com/mozilla-extensions/cehomepage",
   "devDependencies": {
     "eslint": "5.16.0",
     "eslint-plugin-mozilla": "1.2.1",
