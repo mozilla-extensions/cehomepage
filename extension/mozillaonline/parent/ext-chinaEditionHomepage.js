@@ -6,19 +6,11 @@
 
 "use strict";
 
-const { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
-
 const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
-  PlacesUtils: "resource://gre/modules/PlacesUtils.sys.mjs",
+  AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
 });
-
-XPCOMUtils.defineLazyServiceGetter(this, "resProto",
-  "@mozilla.org/network/protocol;1?name=resource",
-  "nsISubstitutingProtocolHandler");
-
-const RESOURCE_HOST = "ntab";
 
 if (Services.prefs.getCharPref("distribution.id", "").trim().toLowerCase() !== "mozillaonline") {
   throw new Error("This extension is not supported for this distribution!");
@@ -26,40 +18,24 @@ if (Services.prefs.getCharPref("distribution.id", "").trim().toLowerCase() !== "
 
 this.chinaEditionHomepage = class extends ExtensionAPI {
   onStartup() {
-    let {extension} = this;
-
-    this.flushCacheOnUpgrade(extension);
-
-    resProto.setSubstitutionWithFlags(RESOURCE_HOST,
-      Services.io.newURI("legacy/", null, extension.rootURI), Ci.nsISubstitutingProtocolHandler.ALLOW_CONTENT_ACCESS);
-
+    // If user homepage points to any firefoxchina.cn or firefox.com.cn domain
+    // (incl. subdomains), clear it to default and reset New Tab behavior
     try {
-      const { mozCNUtils } = ChromeUtils.importESModule("resource://ntab/CEHomepage.sys.mjs");
-      this.mozCNUtils = mozCNUtils;
-       this.mozCNUtils.init({ extension });
+      if (Services.prefs.prefHasUserValue("browser.startup.homepage")) {
+        const userHP = Services.prefs.getCharPref("browser.startup.homepage", "");
+        if (userHP.includes("firefoxchina.cn") || userHP.includes("firefox.com.cn")) {
+          Services.prefs.clearUserPref("browser.startup.homepage");
+
+          if (lazy.AboutNewTab && typeof lazy.AboutNewTab.resetNewTabURL === "function") {
+            lazy.AboutNewTab.resetNewTabURL();
+          }
+        }
+      }
     } catch (ex) {
-      console.error(ex);
+      console.error("Failed to clear user homepage when matching CN defaults", ex);
     }
   }
 
   onShutdown(isAppShutdown) {
-    try {
-      this.mozCNUtils.uninit(isAppShutdown);
-
-      resProto.setSubstitution(RESOURCE_HOST, null);
-    } catch (ex) {
-      console.error(ex);
-    }
-  }
-
-  flushCacheOnUpgrade(extension) {
-    if (extension.startupReason !== "ADDON_UPGRADE") {
-      return;
-    }
-
-    // Taken from https://bugzil.la/1445739
-    Services.obs.notifyObservers(null, "startupcache-invalidate");
-    Services.obs.notifyObservers(null, "message-manager-flush-caches");
-    Services.mm.broadcastAsyncMessage("AddonMessageManagerCachesFlush", null);
   }
 };

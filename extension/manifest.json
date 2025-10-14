@@ -23,18 +23,13 @@
       }
     }
   },
-  "homepage_url": "http://www.firefox.com.cn/",
+  "homepage_url": "http://www.firefox.com/",
   "icons": {
     "48": "icons/icon-48.png",
     "64": "icons/icon-64.png"
   },
   "manifest_version": 2,
   "name": "__MSG_extensionName__",
-  "permissions": [
-    "bookmarks",
-    "mozillaAddons",
-    "storage",
-    "https://*.firefoxchina.cn/*"
-  ],
-  "version": "4.0"
+  "permissions": [],
+  "version": "4.1"
 }

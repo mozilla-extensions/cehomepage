@@ -1,23 +1,8 @@
 {
   "extensionDescription": {
-    "message": "Customizied Home Page for Firefox"
+    "message": "Restores Firefox homepage and New Tab to defaults and remains inert."
   },
   "extensionName": {
     "message": "Firefox Homepage"
-  },
-  "homepageReset.notification.message": {
-    "message": "Your homepage seems to be changed, reset it now."
-  },
-  "homepageReset.notification.message_alt": {
-    "message": "Your homepage seems to be hijacked, reset it now."
-  },
-  "homepageReset.notification.no": {
-    "message": "No"
-  },
-  "homepageReset.notification.nomore": {
-    "message": "Don't ask again"
-  },
-  "homepageReset.notification.reset": {
-    "message": "Reset"
   }
 }
