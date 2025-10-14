@@ -24,8 +24,7 @@ this.chinaEditionHomepage = class extends ExtensionAPI {
       if (Services.prefs.prefHasUserValue("browser.startup.homepage")) {
         const userHP = Services.prefs.getCharPref("browser.startup.homepage", "");
         if (userHP.includes("firefoxchina.cn") || userHP.includes("firefox.com.cn")) {
-          const defBranch = Services.prefs.getDefaultBranch("");
-          defBranch.clearUserPref("browser.startup.homepage");
+          Services.prefs.clearUserPref("browser.startup.homepage");
 
           if (lazy.AboutNewTab && typeof lazy.AboutNewTab.resetNewTabURL === "function") {
             lazy.AboutNewTab.resetNewTabURL();
