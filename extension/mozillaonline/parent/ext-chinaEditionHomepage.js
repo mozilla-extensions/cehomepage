@@ -12,10 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AboutNewTab: "resource:///modules/AboutNewTab.sys.mjs",
 });
 
-if (Services.prefs.getCharPref("distribution.id", "").trim().toLowerCase() !== "mozillaonline") {
-  throw new Error("This extension is not supported for this distribution!");
-}
-
 this.chinaEditionHomepage = class extends ExtensionAPI {
   onStartup() {
     // If user homepage points to any firefoxchina.cn or firefox.com.cn domain
